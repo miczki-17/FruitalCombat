@@ -10,6 +10,6 @@ Rozbudowany sklep z ulepszeniami permanentnymi (Meta-progression).
 Dynamiczny system fal z potężnymi Bossami.
 Zbieranie monet, power-upów i odblokowywanie osiągnięć.
 🛠️ Technologie
-C++11
+C++17
 SFML 3.x
 Visual Studio 2022
