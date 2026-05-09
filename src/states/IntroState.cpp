@@ -5,12 +5,12 @@
 namespace game::states
 {
 	IntroState::IntroState(game::Game* game)
-		: State(game), currentFrame(1), totalFrames(193), elapsedTime(0.f)
+		: State(game), currentFrame(1), totalFrames(240), elapsedTime(0.f)
 	{
 		frameDuration = 1.0f / 30.0f;
 
 		// intro textures pre-load
-		std::cout << "Loading intro frames...\n";
+		std::cout << "[INTRO] Loading intro frames...\n";
 		for (int i = 1; i <= totalFrames; ++i)
 		{
 			std::string filename = std::format("../../../assets/textures/intro/ezgif-frame-{:03}.jpg", i);
@@ -22,7 +22,7 @@ namespace game::states
 			}
 			else
 			{
-				std::cerr << "not found: " << filename << '\n';
+				std::cerr << "[INTRO ERROR] not found: " << filename << '\n';
 			}
 		}
 
@@ -50,7 +50,7 @@ namespace game::states
 		}
 		else
 		{
-			std::cerr << "can not load intro music.\n";
+			std::cerr << "[INTRO ERROR] can not load intro music.\n";
 		}
 
 		//async downloading
@@ -69,17 +69,47 @@ namespace game::states
 	{
 		std::cout << "[ASYNC] menu loading...\n";
 
+		game->menuImageBuffer.clear();
+		game->menuUiBuffer.clear();
+
+		std::vector<std::string> buttonsNames = {
+			"start",
+			"achievements",
+			"shop",
+			"settings",
+			"back"
+		};
+
+		// load bg
 		for (int i = 1; i <= 6; ++i)
 		{
-			std::string filename = std::format("../../../assets/textures/menu/menu_bg_{:01}.png", i);
+			std::string filename = std::format("../../../assets/textures/menu/bg_{:01}.png", i);
 			sf::Image img;
 			if (img.loadFromFile(filename))
 			{
 				game->menuImageBuffer.push_back(std::move(img));
 			}
+			else
+			{
+				std::cerr << "[AYNC ERROR] can not find " << filename << '\n';
+			}
+		}
+		
+		// load Btns
+		for (const auto& name : buttonsNames) {
+			std::string filename = "../../../assets/textures/menu/" + name + ".png";
+			sf::Image img;
+			if (img.loadFromFile(filename))
+			{
+				game->menuUiBuffer[name] = std::move(img);
+			}
+			else
+			{
+				std::cerr << "[ASYNC ERROR] can not find " << filename << '\n';
+			}
 		}
 
-		std::cout << "[ASYNC] mnu loaded\n";
+		std::cout << "[ASYNC] menu loaded\n";
 		isMenuLoaded = true;
 	}
 
@@ -104,7 +134,7 @@ namespace game::states
 				}
 				else
 				{
-					std::cout << "menu still loading...\n";
+					std::cout << "[ASYNC] menu still loading...\n";
 					// graphics ev
 				}
 			}
@@ -122,7 +152,6 @@ namespace game::states
 		{
 			elapsedTime -= frameDuration;
 
-			// Zwiêkszamy klatkê TYLKO jeœli nie dotarliœmy jeszcze do koñca
 			if (currentFrame < totalFrames)
 			{
 				currentFrame++;
