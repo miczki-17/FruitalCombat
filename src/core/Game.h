@@ -27,5 +27,8 @@ namespace game
 
 		StateMachine& getStateMachine();
 		sf::RenderWindow& getWindow();
+
+
+		std::vector<sf::Image> menuImageBuffer;
 	};
 }

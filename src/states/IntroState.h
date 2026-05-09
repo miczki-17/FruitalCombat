@@ -1,31 +1,40 @@
 #pragma once
 
-#include <iostream>
-#include <optional>
-
-#include <SFML/Audio.hpp>
 #include "../core/State.h"
+#include <thread>
+#include <atomic>
+
 
 namespace game::states
 {
 	class IntroState : public State
 	{
 	private:
+		// intro textures vector
 		std::vector<sf::Texture> introTextures;
 
-		sf::Texture frameTexture;
 		std::optional<sf::Sprite> frameSprite;
 		sf::Music introMusic;
 
+		// intro logic
 		int currentFrame;
 		int totalFrames;
 		float frameDuration;
 		float elapsedTime;
 
-		void loadNextFrame();
+
+		// async menu loading
+		std::unique_ptr<std::thread> workerThread;
+		std::atomic<bool> isMenuLoaded{ false };
+
+		void loadMenuAssetsInBg();
+
+
+		//void loadNextFrame();
 
 	public:
 		IntroState(game::Game* game);
+		~IntroState();
 
 		StateType getType() const override;
 

@@ -1,6 +1,12 @@
 #pragma once
 
+#include <iostream>
+#include <optional>
+#include <memory>
+#include <vector>
+
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 namespace game
 {

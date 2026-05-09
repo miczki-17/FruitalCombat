@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "../core/State.h"
 
 
@@ -9,6 +7,19 @@ namespace game::states
 {
 	class MenuState : public State
 	{
+	private:
+		// bg textures vector
+		std::vector<sf::Texture> bgTextures;
+		
+		std::optional<sf::Sprite> frameSprite;
+		sf::Music bgMusic;
+
+		// bg logic
+		int currentFrame;
+		int totalFrames;
+		float frameDuration;
+		float elapsedTime;
+
 	public:
 		MenuState(game::Game* game);
 
