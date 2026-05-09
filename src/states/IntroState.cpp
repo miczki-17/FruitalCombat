@@ -5,8 +5,11 @@
 namespace game::states
 {
 	IntroState::IntroState(game::Game* game)
-		: State(game), currentFrame(1), totalFrames(240), elapsedTime(0.f)
+		: State(game), currentFrame(1), totalFrames(24), elapsedTime(0.f)
 	{
+		//std::cout << SFML_VERSION_MAJOR << "."
+		//	<< SFML_VERSION_MINOR << "."
+		//	<< SFML_VERSION_PATCH << std::endl;
 		frameDuration = 1.0f / 30.0f;
 
 		// intro textures pre-load

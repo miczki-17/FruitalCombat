@@ -3,6 +3,7 @@
 #include "../states/IntroState.h"
 #include "../states/MenuState.h"
 #include "../states/PlayingState.h"
+#include "../states/SettingsState.h"
 
 
 namespace game
@@ -25,6 +26,9 @@ namespace game
 		case states::StateType::Playing:
 			return std::make_unique<states::PlayingState>(game);
 
+		case states::StateType::Settings:
+			return std::make_unique<states::SettingsState>(game);
+
 		default:
 			return nullptr;
 		}
@@ -34,25 +38,48 @@ namespace game
 
 	void StateMachine::changeState(states::StateType type)
 	{
-		currentState = createState(type);
+		stateStack.clear();
+		stateStack.push_back(createState(type));
 	}
 
 	void StateMachine::handleEvent(const sf::Event& event)
 	{
-		if (currentState)
-			currentState->handleEvent(event);
+		if (!stateStack.empty())
+		{
+			stateStack.back()->handleEvent(event);
+		}
 	}
 
 	void StateMachine::update(float dt)
 	{
-		if (currentState)
-			currentState->update(dt);
+		if (!stateStack.empty())
+		{
+			stateStack.back()->update(dt);
+		}
 	}
 
 	void StateMachine::render(sf::RenderWindow& window)
 	{
-		if (currentState)
-			currentState->render(window);
+		for (const auto& state : stateStack)
+		{
+			if (state)
+			{
+				state->render(window);
+			}
+		}
+	}
+
+	void StateMachine::pushState(states::StateType type)
+	{
+		stateStack.push_back(createState(type));
+	}
+
+	void StateMachine::popState()
+	{
+		if (!stateStack.empty())
+		{
+			stateStack.pop_back();
+		}
 	}
 
 }

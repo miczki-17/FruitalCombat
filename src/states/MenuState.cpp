@@ -20,7 +20,7 @@ namespace game::states
 		}
 
 		// clear buffer
-		//game->menuImageBuffer.clear();
+		game->menuImageBuffer.clear();
 
 
 		auto setupButton = [&](const std::string& key, sf::Texture& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
@@ -95,7 +95,7 @@ namespace game::states
 		}
 
 		// clear buffer
-		//game->menuUiBuffer.clear();
+		game->menuUiBuffer.clear();
 
 
 
@@ -143,10 +143,44 @@ namespace game::states
 			{
 				sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
 				sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(pixelPos);
-				if (startBtnSprite->getGlobalBounds().contains(worldPos))
+
+				if (startBtnSprite.has_value())
 				{
-					// PLAYING state
-					game->getStateMachine().changeState(StateType::Playing);
+					if (startBtnSprite->getGlobalBounds().contains(worldPos))
+					{
+						game->playUIClick();
+
+						bgMusic.stop();
+						game->getStateMachine().changeState(StateType::Playing);
+						return;
+					}
+				}
+
+				if (settingsBtnSprite.has_value())
+				{
+					if (settingsBtnSprite->getGlobalBounds().contains(worldPos))
+					{
+						game->playUIClick();
+
+						game->getStateMachine().pushState(StateType::Settings);
+						return;
+					}
+				}
+
+				if (achievementsBtnSprite.has_value())
+				{
+					if (achievementsBtnSprite->getGlobalBounds().contains(worldPos))
+					{
+						game->playUIClick();
+					}
+				}
+
+				if (shopBtnSprite.has_value())
+				{
+					if (shopBtnSprite->getGlobalBounds().contains(worldPos))
+					{
+						game->playUIClick();
+					}
 				}
 			}
 		}
@@ -155,6 +189,10 @@ namespace game::states
 	// UPDATE
 	void MenuState::update(float dt)
 	{
+		// safe
+		if (bgTextures.empty() || !frameSprite.has_value())
+			return;
+
 		elapsedTime += dt;
 		sf::Vector2f viewSize = game->getWindow().getView().getSize();
 
@@ -189,6 +227,35 @@ namespace game::states
 
 			frameSprite->setScale({ scaleX, scaleY });
 		}
+
+		// UI animate
+		sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
+		sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(pixelPos);
+
+		auto updateButtonHover = [&](std::optional<sf::Sprite>& btnSprite)
+		{
+			if (!btnSprite.has_value()) return;
+
+			if (btnSprite->getGlobalBounds().contains(worldPos))
+			{
+				btnSprite->setColor(sf::Color(180, 180, 180));
+			}
+			else
+			{
+				btnSprite->setColor(sf::Color::White);
+			}
+		};
+
+		updateButtonHover(startBtnSprite);
+		updateButtonHover(settingsBtnSprite);
+		updateButtonHover(shopBtnSprite);
+		updateButtonHover(achievementsBtnSprite);
+
+
+		if (startBtnSprite.has_value())
+		{
+			buttonPulse(startBtnSprite, { 300.0f, 120.0f });
+		}
 	}
 
 	// RENDER
@@ -202,10 +269,6 @@ namespace game::states
 		if (settingsBtnSprite.has_value())		window.draw(*settingsBtnSprite);
 		if (shopBtnSprite.has_value())			window.draw(*shopBtnSprite);
 		if (achievementsBtnSprite.has_value())	window.draw(*achievementsBtnSprite);
-
-
-		// UI animate
-		buttonPulse(startBtnSprite, {300.0f, 120.0f});
 	}
 
 

@@ -10,7 +10,7 @@ find_package(SFML CONFIG REQUIRED COMPONENTS System Window Graphics Audio)
 add_executable(MyGame
     src/main.cpp
     src/core/Game.cpp
-     "src/states/PlayingState.h" "src/states/PlayingState.cpp" "src/entities/Player.h" "src/states/MenuState.cpp" "src/states/IntroState.h" "src/states/IntroState.cpp" "src/core/StateMachine.h" "src/core/StateMachine.cpp")
+     "src/states/PlayingState.h" "src/states/PlayingState.cpp" "src/entities/Player.h" "src/states/MenuState.cpp" "src/states/IntroState.h" "src/states/IntroState.cpp" "src/core/StateMachine.h" "src/core/StateMachine.cpp" "src/states/SettingsState.h" "src/states/SettingsState.cpp")
 
 target_include_directories(MyGame PRIVATE include)
 

@@ -12,13 +12,20 @@ namespace game
     private:
         Game* game;
 
-        std::unique_ptr<states::State> currentState;
+        std::vector<std::unique_ptr<states::State>> stateStack;
         std::unique_ptr<states::State> createState(states::StateType type);
 
     public:
         StateMachine(Game* game);
 
+        // kill all states, set one
         void changeState(states::StateType type);
+
+        // add new state
+        void pushState(states::StateType type);
+
+        //kill last state
+        void popState();
 
         void handleEvent(const sf::Event& event);
         void update(float dt);

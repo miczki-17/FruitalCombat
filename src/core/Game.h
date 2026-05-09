@@ -25,12 +25,26 @@ namespace game
 
 		void run();
 
+		// UI
+		void playUIClick();
+
+
 		StateMachine& getStateMachine();
 		sf::RenderWindow& getWindow();
 
 
 		// pre-loading data buffers
-		std::vector<sf::Image> menuImageBuffer;
 		std::map<std::string, sf::Image> menuUiBuffer;
+		std::vector<sf::Image> menuImageBuffer;
+
+		// --- WSAD ---
+		sf::Keyboard::Key keyUp = sf::Keyboard::Key::W;
+		sf::Keyboard::Key keyLeft = sf::Keyboard::Key::A;
+		sf::Keyboard::Key keyDown = sf::Keyboard::Key::S;
+		sf::Keyboard::Key keyRight = sf::Keyboard::Key::D;
+
+		// sounds
+		sf::SoundBuffer uiClickBuffer;
+		std::optional<sf::Sound> uiClickSound;
 	};
 }

@@ -1,4 +1,5 @@
 #include "PlayingState.h"
+#include "../core/Game.h"
 
 namespace game::states
 {

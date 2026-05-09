@@ -20,7 +20,8 @@ namespace game::states
 	{
 		Intro,
 		Menu,
-		Playing
+		Playing,
+		Settings
 	};
 
 

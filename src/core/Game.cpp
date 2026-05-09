@@ -1,6 +1,5 @@
 #include "Game.h"
 
-
 namespace game
 {
 	Game::Game()
@@ -8,6 +7,10 @@ namespace game
 	{
 		window.create(sf::VideoMode({ config::WINDOW_WIDTH, config::WINDOW_LENGTH }), "Eco War");
 		window.setFramerateLimit(config::FPS_LIMIT);
+
+		// load global sounds
+		uiClickBuffer.loadFromFile("../../../assets/audio/ui/click.mp3");
+		uiClickSound.emplace(uiClickBuffer);
 
 		stateMachine.changeState(states::StateType::Intro);
 	}
@@ -19,7 +22,6 @@ namespace game
 		while (window.isOpen())
 		{
 			float dt = clock.restart().asSeconds();
-
 
 			// EVENTS
 			while (auto event = window.pollEvent())
@@ -34,7 +36,6 @@ namespace game
 
 			// UPDATE
 			stateMachine.update(dt);
-			
 
 			// RENDER
 			window.clear();
@@ -42,8 +43,6 @@ namespace game
 			window.display();
 		}
 	}
-
-
 
 	StateMachine& Game::getStateMachine()
 	{
@@ -53,5 +52,13 @@ namespace game
 	sf::RenderWindow& Game::getWindow()
 	{
 		return window;
+	}
+
+
+	// UI helpers
+	void Game::playUIClick()
+	{
+		uiClickSound->stop();
+		uiClickSound->play();
 	}
 }
