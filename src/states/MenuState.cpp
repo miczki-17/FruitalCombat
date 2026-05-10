@@ -98,7 +98,6 @@ namespace game::states
 		game->menuUiBuffer.clear();
 
 
-
 		// strech + scale
 		if (!bgTextures.empty())
 		{

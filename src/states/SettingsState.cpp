@@ -3,13 +3,14 @@
 #include <format>
 #include <iostream>
 #include <stdexcept>
+#include <algorithm> // Wymagane dla std::clamp
 
 namespace game::states
 {
 	SettingsState::SettingsState(game::Game* game)
 		: State(game)
 	{
-		sf::Vector2f viewSize = game->getWindow().getView().getSize();
+		sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
 
 		// blacked bg
 		darkOverlay.setSize(viewSize);
@@ -18,19 +19,18 @@ namespace game::states
 		// Font load
 		if (!font.openFromFile("../../../assets/fonts/ARIAL.TTF"))
 		{
-			std::cerr << "[SETTINGS ERROR] " << "can not load font\n";
+			std::cerr << "[SETTINGS ERROR] can not load font\n";
 		}
 		std::cout << "FONT LOADED\n";
-
 
 		// --- LEFT SECTION: AUDIO ---
 		float leftColX = viewSize.x * 0.25f;
 
 		audioTitle = sf::Text(font, "Audio Settings", 32);
-		(* audioTitle).setPosition({leftColX - 100.f, 150.f});
+		(*audioTitle).setPosition({ leftColX - 100.f, 150.f });
 
 		volumeLabel = sf::Text(font, "Master Volume", 20);
-		(* volumeLabel).setPosition({leftColX - 150.f, 250.f});
+		(*volumeLabel).setPosition({ leftColX - 150.f, 250.f });
 
 		sliderTrack.setSize({ 200.f, 10.f });
 		sliderTrack.setFillColor(sf::Color(100, 100, 100));
@@ -44,7 +44,6 @@ namespace game::states
 		volumeValueText = sf::Text(font, "100%", 20);
 		(*volumeValueText).setPosition({ leftColX + 240.f, 250.f });
 
-
 		// --- RIGHT SECTION ---
 		float rightColX = viewSize.x * 0.7f;
 
@@ -54,7 +53,7 @@ namespace game::states
 		auto setupBindRow = [&](std::optional<sf::Text>& label, std::optional<sf::Text>& btn, const std::string& labelStr, float yPos)
 		{
 			label = sf::Text(font, labelStr, 20);
-			(* label).setPosition({rightColX - 150.f, yPos});
+			(*label).setPosition({ rightColX - 150.f, yPos });
 
 			btn = sf::Text(font, "", 20);
 			(*btn).setPosition({ rightColX + 50.f, yPos });
@@ -64,7 +63,6 @@ namespace game::states
 		setupBindRow(leftLabel, leftBtnText, "Move Left", 310.f);
 		setupBindRow(downLabel, downBtnText, "Move Down", 370.f);
 		setupBindRow(rightLabel, rightBtnText, "Move Right", 430.f);
-
 
 		// --- BACK BUTTON ---
 		backBtnText = sf::Text(font, "[ BACK ]", 28);
@@ -84,9 +82,11 @@ namespace game::states
 
 	void SettingsState::handleEvent(const sf::Event& event)
 	{
-		sf::Vector2f mousePos = game->getWindow().mapPixelToCoords(sf::Mouse::getPosition(game->getWindow()));
+		// POPRAWKA: Bezwzglêdnie mapujemy kursor na sta³y widok UI kamery okna!
+		sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
+		sf::Vector2f mousePos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
 
-		// key listenig
+		// key listening
 		if (currentRebind != RebindTarget::None)
 		{
 			if (event.is<sf::Event::KeyPressed>())
@@ -107,7 +107,7 @@ namespace game::states
 			return;
 		}
 
-		// mouse listenig
+		// mouse listening
 		if (event.is<sf::Event::MouseButtonPressed>())
 		{
 			auto mouseEvent = event.getIf<sf::Event::MouseButtonPressed>();
@@ -144,7 +144,8 @@ namespace game::states
 
 	void SettingsState::update(float dt)
 	{
-		sf::Vector2f mousePos = game->getWindow().mapPixelToCoords(sf::Mouse::getPosition(game->getWindow()));
+		sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
+		sf::Vector2f uiMousePos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
 
 		// --- slider update ---
 		if (isDraggingSlider)
@@ -152,7 +153,7 @@ namespace game::states
 			float trackX = sliderTrack.getPosition().x;
 			float trackWidth = sliderTrack.getSize().x;
 
-			float newVol = ((mousePos.x - trackX) / trackWidth) * 100.0f;
+			float newVol = ((uiMousePos.x - trackX) / trackWidth) * 100.0f;
 			currentVolume = std::clamp(newVol, 0.0f, 100.0f);
 
 			sf::Listener::setGlobalVolume(currentVolume);
@@ -162,14 +163,13 @@ namespace game::states
 		sliderHandle.setPosition({ handleX, sliderHandle.getPosition().y });
 		(*volumeValueText).setString(std::format("{:.0f}%", currentVolume));
 
-
 		// --- binds update ---
 		(*upBtnText).setString(currentRebind == RebindTarget::Up ? "[ ... ]" : "[ " + keyToString(game->keyUp) + " ]");
 		(*leftBtnText).setString(currentRebind == RebindTarget::Left ? "[ ... ]" : "[ " + keyToString(game->keyLeft) + " ]");
 		(*downBtnText).setString(currentRebind == RebindTarget::Down ? "[ ... ]" : "[ " + keyToString(game->keyDown) + " ]");
 		(*rightBtnText).setString(currentRebind == RebindTarget::Right ? "[ ... ]" : "[ " + keyToString(game->keyRight) + " ]");
 
-		if ((*backBtnText).getGlobalBounds().contains(mousePos))
+		if ((*backBtnText).getGlobalBounds().contains(uiMousePos))
 			(*backBtnText).setFillColor(sf::Color::Yellow);
 		else
 			(*backBtnText).setFillColor(sf::Color::White);
@@ -177,23 +177,34 @@ namespace game::states
 
 	void SettingsState::render(sf::RenderWindow& window)
 	{
+		sf::View uiView = window.getDefaultView();
+		window.setView(uiView);
+
 		window.draw(darkOverlay);
 
-		if (audioTitle.has_value())
-			window.draw(*audioTitle);
-		
-		window.draw(*volumeLabel);
+		if (audioTitle.has_value())       window.draw(*audioTitle);
+		if (volumeLabel.has_value())      window.draw(*volumeLabel);
+
 		window.draw(sliderTrack);
 		window.draw(sliderHandle);
-		window.draw(*volumeValueText);
 
-		window.draw(*controlsTitle);
-		window.draw(*upLabel);    window.draw(*upBtnText);
-		window.draw(*leftLabel);  window.draw(*leftBtnText);
-		window.draw(*downLabel);  window.draw(*downBtnText);
-		window.draw(*rightLabel); window.draw(*rightBtnText);
+		if (volumeValueText.has_value())  window.draw(*volumeValueText);
 
-		window.draw(*backBtnText);
+		if (controlsTitle.has_value())    window.draw(*controlsTitle);
+
+		if (upLabel.has_value())          window.draw(*upLabel);
+		if (upBtnText.has_value())        window.draw(*upBtnText);
+
+		if (leftLabel.has_value())        window.draw(*leftLabel);
+		if (leftBtnText.has_value())      window.draw(*leftBtnText);
+
+		if (downLabel.has_value())        window.draw(*downLabel);
+		if (downBtnText.has_value())      window.draw(*downBtnText);
+
+		if (rightLabel.has_value())       window.draw(*rightLabel);
+		if (rightBtnText.has_value())     window.draw(*rightBtnText);
+
+		if (backBtnText.has_value())      window.draw(*backBtnText);
 	}
 
 	std::string SettingsState::keyToString(sf::Keyboard::Key key)

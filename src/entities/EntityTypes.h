@@ -6,9 +6,10 @@ namespace game::entities
 	// Fruits
 	enum class FruitType
 	{
-		Apple,		// Shooter
-		Banana,		// Fast killer
-		Orange		// Tank
+		Apple,
+		Banana,
+		Orange,
+		Broccoli
 	};
 
 	enum class VeggieType

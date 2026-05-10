@@ -1,7 +1,8 @@
 #pragma once
-
 #include <SFML/Graphics.hpp>
-#include "../EntityTypes.h"
+#include <memory>
+#include <optional>
+#include "../../components/Ability.h"
 #include "../../core/Game.h"
 
 namespace game::entities
@@ -9,34 +10,46 @@ namespace game::entities
 	class Player
 	{
 	private:
-		sf::CircleShape shape;
 		sf::Vector2f position;
+		sf::Vector2f velocity;
+		sf::Vector2f smoothedInput;
 
-		// --- FIZYKA P£YNNEGO RUCHU (SMOOTH GLIDE / DRIFT) ---
-		sf::Vector2f velocity{ 0.f, 0.f };
+		float maxSpeed = 400.0f;
+		float acceleration = 2500.0f;
+		float activeDrag = 4.0f;
+		float stopDrag = 8.0f;
+		float turnSpeed = 15.0f;
 
-		// Pamiêæ wirtualnego joysticka
-		sf::Vector2f smoothedInput{ 0.f, 0.f };
-		float turnSpeed = 50.0f;       // Jak p³ynnie wektor skrêca (mniejsza = szersze ósemki, wiêksza = ostrzejsze)
+		int hp = 100;
+		int maxHp = 100;
 
-		float maxSpeed = 500.0f;
-		float acceleration = 3500.0f; // Nieco ³agodniejszy zryw, ¿eby daæ przestrzeñ na pêd
+		sf::Texture playerTexture;
+		std::optional<sf::Sprite> playerSprite;
+		sf::CircleShape shape;
 
-		float activeDrag = 7.5f;     // Ma³e tarcie w ruchu = swobodne p³yniêcie w zakrêtach
-		float stopDrag = 20.0f;       // £agodne, estetyczne wyhamowanie (skating)
+		std::unique_ptr<game::components::Ability> primaryAbility;
 
-		float maxHealth = 100.0f;
-		float currentHealth = 100.0f;
+		void handleMovement(float dt, game::Game* game, sf::Vector2f mapLimits, const sf::Image& collisionMask, float mapScale);
 
 	public:
 		Player();
 
-		void initFruit(FruitType type);
-		void handleMovement(float dt, game::Game* game, sf::Vector2f mapLimits);
-		void update(float dt, game::Game* game, sf::Vector2f mapLimits);
+		// Settery u¿ywane przez Fabrykê
+		void setStats(int newHp, float newMaxSpeed);
+		void loadTexture(const std::string& filepath);
+		void setAbility(std::unique_ptr<game::components::Ability> newAbility);
+
+		// Dynamiczna modyfikacja fizyki (u¿ywana m.in. przez Dash)
+		void addVelocity(sf::Vector2f force);
+
+		// Delegacja ataku
+		void useAbility(sf::Vector2f targetWorldPos);
+
+		void update(float dt, game::Game* game, sf::Vector2f mapLimits, const sf::Image& collisionMask, float mapScale);
 		void render(sf::RenderWindow& window);
 
-		void setPosition(sf::Vector2f pos);
 		sf::Vector2f getPosition() const;
+		sf::Vector2f getVelocity() const;
+		void setPosition(sf::Vector2f pos);
 	};
 }

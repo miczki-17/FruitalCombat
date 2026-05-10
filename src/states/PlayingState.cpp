@@ -1,5 +1,7 @@
 #include "PlayingState.h"
-#include "../core/Game.h"
+#include "../factories/FruitFactory.h"
+#include "../core/ArenaContext.h"
+#include <algorithm>
 #include <iostream>
 
 namespace game::states
@@ -9,38 +11,52 @@ namespace game::states
 	{
 		std::cout << "[PLAYING STATE] Budowanie areny d¿ungli...\n";
 
-		// 1. £ADOWANIE MAPY PNG
+		// 1. £adowanie mapy wizualnej
 		if (mapTexture.loadFromFile("../../../assets/textures/maps/jungle_arena.png"))
 		{
 			mapSprite.emplace(mapTexture);
+			mapSprite->setScale({ mapScale, mapScale });
 
-
-			sf::Vector2u size = mapTexture.getSize();
-			mapLimits = sf::Vector2f(static_cast<float>(size.x), static_cast<float>(size.y));
-
-			std::cout << "[MAPA] Za³adowano pomyœlnie. Wymiary: " << mapLimits.x << "x" << mapLimits.y << "\n";
+			sf::Vector2u rawSize = mapTexture.getSize();
+			mapLimits = sf::Vector2f(rawSize.x * mapScale, rawSize.y * mapScale);
 		}
-		else
+
+		// 2. £adowanie maski kolizji do RAM
+		if (!collisionMask.loadFromFile("../../../assets/textures/maps/jungle_mask.png"))
 		{
-			std::cerr << "[B£¥D] Nie mo¿na za³adowaæ pliku jungle_arena.png!\n";
-			mapLimits = sf::Vector2f(4000.f, 4000.f); // Awaryjne granice
+			std::cerr << "[B£¥D] Nie mo¿na za³adowaæ pliku jungle_mask.png!\n";
 		}
 
-		// 2. ALOKACJA GRACZA
-		player = std::make_unique<game::entities::Player>();
+		// 3. £adowanie zasobów interfejsu (HUD)
+		if (!uiFont.openFromFile("../../../assets/fonts/Arial.TTF"))
+		{
+			std::cerr << "[OSTRZE¯ENIE] Brak czcionki interfejsu!\n";
+		}
+
+		/*if (coinIconTexture.loadFromFile("../../../assets/textures/ui/coin_icon.png"))
+		{
+			coinIconSprite.emplace(coinIconTexture);
+		}*/
+
+		// --- 4. WDRO¯ENIE FABRYKI Z U¯YCIEM WYBORU Z MENU ---
+
+		// A. Pakujemy referencjê do magazynka w kontekst areny
+		game::ArenaContext context{ bullets };
+
+		// B. Tworzymy Fabrykê i przekazujemy jej zasoby
+		game::factories::FruitFactory factory(context);
+
+		// C. Produkcja obiektu na podstawie wyboru zapisanego w Game
+		player = factory.createFruit(game->selectedFruitType);
 
 		if (player != nullptr)
 		{
-			// Odczyt domyœlnego wyboru postaci
-			player->initFruit(game::entities::FruitType::Apple);
-
-			// Ustawienie gracza idealnie w centrum wczytanej mapy
 			player->setPosition({ mapLimits.x / 2.0f, mapLimits.y / 2.0f });
 		}
 
-		sf::View view = game->getWindow().getView();
-		view.zoom(1.25f);
-		game->getWindow().setView(view);
+		// Inicjalizacja kamery
+		cameraView = game->getWindow().getDefaultView();
+		cameraView.zoom(1.4f); // Oddalenie o 40%
 	}
 
 	StateType PlayingState::getType() const
@@ -50,11 +66,19 @@ namespace game::states
 
 	void PlayingState::handleEvent(const sf::Event& event)
 	{
+		// Zoom rolk¹ myszy
+		if (const auto* scroll = event.getIf<sf::Event::MouseWheelScrolled>())
+		{
+			if (scroll->delta > 0)      cameraView.zoom(0.9f);
+			else if (scroll->delta < 0) cameraView.zoom(1.1f);
+		}
+
+		// Pauza
 		if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
 		{
 			if (keyPressed->code == sf::Keyboard::Key::Escape)
 			{
-				// game->getStateMachine().pushState(StateType::Settings);
+				game->getStateMachine().pushState(StateType::Settings);
 			}
 		}
 	}
@@ -63,59 +87,139 @@ namespace game::states
 	{
 		if (player != nullptr)
 		{
-			player->update(dt, game, mapLimits);
+			// 1. Aktualizacja ruchu i fizyki gracza
+			player->update(dt, game, mapLimits, collisionMask, mapScale);
 
-			// --- BEZPIECZNA KAMERA (KULOODPORNA NA ROZMIAR MAPY) ---
-			sf::View view = game->getWindow().getView();
-			sf::Vector2f viewSize = view.getSize();
+			// --- 2. OBS£UGA ATAKU ---
+			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+			{
+				sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
+				sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
 
+				// Czysta delegacja: przekazujemy tylko cel.
+				player->useAbility(mouseWorldPos);
+			}
+
+			// --- 3. AKTUALIZACJA I CZYSZCZENIE POCISKÓW ---
+			for (int i = static_cast<int>(bullets.size()) - 1; i >= 0; --i)
+			{
+				bullets[i].update(dt, collisionMask, mapScale);
+
+				if (!bullets[i].getIsActive())
+				{
+					bullets.erase(bullets.begin() + i);
+				}
+			}
+
+			// --- 4. BEZPIECZNA KAMERA (CLAMPING) ---
+			sf::Vector2f viewSize = cameraView.getSize();
 			float halfWidth = viewSize.x / 2.0f;
 			float halfHeight = viewSize.y / 2.0f;
 
 			sf::Vector2f targetCenter = player->getPosition();
 
-			// 1. Bezpieczny Clamping dla osi X
 			float minX = halfWidth;
 			float maxX = mapLimits.x - halfWidth;
-
-			if (minX > maxX)
-			{
-				// Ekran jest szerszy ni¿ mapa -> centrujemy na œrodku mapy
-				targetCenter.x = mapLimits.x / 2.0f;
-			}
-			else
-			{
-				targetCenter.x = std::clamp(targetCenter.x, minX, maxX);
-			}
-
-			// 2. Bezpieczny Clamping dla osi Y
 			float minY = halfHeight;
 			float maxY = mapLimits.y - halfHeight;
 
-			if (minY > maxY)
-			{
-				// Ekran jest wy¿szy ni¿ mapa -> centrujemy na œrodku mapy
-				targetCenter.y = mapLimits.y / 2.0f;
-			}
-			else
-			{
-				targetCenter.y = std::clamp(targetCenter.y, minY, maxY);
-			}
+			if (maxX < minX) targetCenter.x = mapLimits.x / 2.0f;
+			else             targetCenter.x = std::clamp(targetCenter.x, minX, maxX);
 
-			view.setCenter(targetCenter);
-			game->getWindow().setView(view);
+			if (maxY < minY) targetCenter.y = mapLimits.y / 2.0f;
+			else             targetCenter.y = std::clamp(targetCenter.y, minY, maxY);
+
+			cameraView.setCenter(targetCenter);
+			game->getWindow().setView(cameraView);
 		}
+	}
+
+	void PlayingState::renderHUD(sf::RenderWindow& window)
+	{
+		/*if (player == nullptr) return;
+
+		window.setView(window.getDefaultView());
+
+		float hpBgWidth = 200.0f;
+		float hpBgHeight = 28.0f;
+		sf::Vector2f startPos(20.0f, 20.0f);
+
+		sf::RectangleShape hpBgFrame({ hpBgWidth, hpBgHeight });
+		hpBgFrame.setPosition(startPos);
+		hpBgFrame.setFillColor(sf::Color(150, 0, 0));
+		hpBgFrame.setOutlineThickness(4.0f);
+		hpBgFrame.setOutlineColor(sf::Color::Black);
+		window.draw(hpBgFrame);
+
+		float hpRatio = static_cast<float>(player->getHp()) / player->getMaxHp();
+		sf::RectangleShape hpFill({ hpBgWidth * hpRatio, hpBgHeight });
+		hpFill.setPosition(startPos);
+		hpFill.setFillColor(sf::Color(220, 0, 0));
+		window.draw(hpFill);
+
+		sf::Text hpText(uiFont);
+		hpText.setString(std::to_string(player->getHp()) + " / " + std::to_string(player->getMaxHp()));
+		hpText.setCharacterSize(16);
+		hpText.setFillColor(sf::Color::White);
+		sf::FloatRect hpBounds = hpText.getLocalBounds();
+		hpText.setPosition({ startPos.x + (hpBgWidth - hpBounds.size.x) / 2.0f, startPos.y + 3.0f });
+		window.draw(hpText);
+
+		sf::Vector2f xpPos(startPos.x, startPos.y + hpBgHeight + 12.0f);
+		sf::RectangleShape xpBgFrame({ hpBgWidth, 22.0f });
+		xpBgFrame.setPosition(xpPos);
+		xpBgFrame.setFillColor(sf::Color(50, 50, 50));
+		xpBgFrame.setOutlineThickness(4.0f);
+		xpBgFrame.setOutlineColor(sf::Color::Black);
+		window.draw(xpBgFrame);
+
+		sf::RectangleShape xpFill({ hpBgWidth * 0.25f, 22.0f });
+		xpFill.setPosition(xpPos);
+		xpFill.setFillColor(sf::Color(50, 220, 50));
+		window.draw(xpFill);
+
+		sf::Text lvlText(uiFont);
+		lvlText.setString("LV " + std::to_string(player->getLevel()));
+		lvlText.setCharacterSize(14);
+		lvlText.setFillColor(sf::Color::White);
+		sf::FloatRect lvlBounds = lvlText.getLocalBounds();
+		lvlText.setPosition({ xpPos.x + hpBgWidth - lvlBounds.size.x - 8.0f, xpPos.y + 2.0f });
+		window.draw(lvlText);
+
+		sf::Vector2f coinPos(startPos.x, xpPos.y + 34.0f);
+		if (coinIconSprite.has_value())
+		{
+			coinIconSprite->setPosition(coinPos);
+			coinIconSprite->setScale({ 1.5f, 1.5f });
+			window.draw(*coinIconSprite);
+		}
+
+		sf::Text coinText(uiFont);
+		coinText.setString(std::to_string(player->getCoins()));
+		coinText.setCharacterSize(24);
+		coinText.setFillColor(sf::Color::White);
+		coinText.setOutlineThickness(2.0f);
+		coinText.setOutlineColor(sf::Color::Black);
+		coinText.setPosition({ coinPos.x + 36.0f, coinPos.y - 2.0f });
+		window.draw(coinText);*/
 	}
 
 	void PlayingState::render(sf::RenderWindow& window)
 	{
-		// Zawsze najpierw rysujemy t³o areny
-		window.draw(*mapSprite);
+		window.setView(cameraView);
 
-		// Nastêpnie rysujemy gracza na wierzchu
+		if (mapSprite.has_value()) window.draw(*mapSprite);
+
+		for (auto& bullet : bullets)
+		{
+			bullet.render(window);
+		}
+
 		if (player != nullptr)
 		{
 			player->render(window);
 		}
+
+		renderHUD(window);
 	}
 }

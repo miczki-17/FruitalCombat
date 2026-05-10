@@ -5,12 +5,12 @@
 
 #include <map>
 #include <string>
+#include <vector>
+#include <optional>
 #include "Config.h"
 #include "StateMachine.h"
 #include "State.h"
-
-
-
+#include "../entities/EntityTypes.h" 
 
 namespace game
 {
@@ -20,7 +20,6 @@ namespace game
 		sf::RenderWindow window;
 		StateMachine stateMachine;
 
-
 	public:
 		Game();
 
@@ -29,10 +28,8 @@ namespace game
 		// UI
 		void playUIClick();
 
-
 		StateMachine& getStateMachine();
 		sf::RenderWindow& getWindow();
-
 
 		// pre-loading data buffers
 		std::map<std::string, sf::Image> menuUiBuffer;
@@ -47,5 +44,9 @@ namespace game
 		// sounds
 		sf::SoundBuffer uiClickBuffer;
 		std::optional<sf::Sound> uiClickSound;
+
+		// --- ZMIENNA KOMUNIKACYJNA: WYBÓR BOHATERA ---
+		// Domyœlnie ustawiamy Jab³ko. Menu podmieni tê wartoœæ przed startem.
+		game::entities::FruitType selectedFruitType = game::entities::FruitType::Apple;
 	};
 }

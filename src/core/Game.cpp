@@ -5,7 +5,7 @@ namespace game
 	Game::Game()
 		: stateMachine(this)
 	{
-		window.create(sf::VideoMode({ config::WINDOW_WIDTH, config::WINDOW_LENGTH }), "Eco War");
+		window.create(sf::VideoMode({ config::WINDOW_WIDTH, config::WINDOW_LENGTH }), "FRUITAL COMBAT");
 		window.setFramerateLimit(config::FPS_LIMIT);
 
 		// load global sounds
@@ -56,7 +56,6 @@ namespace game
 	{
 		return window;
 	}
-
 
 	// UI helpers
 	void Game::playUIClick()
