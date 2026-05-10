@@ -1,85 +1,87 @@
 #include "StateMachine.h"
-
 #include "../states/IntroState.h"
 #include "../states/MenuState.h"
 #include "../states/PlayingState.h"
 #include "../states/SettingsState.h"
 
-
 namespace game
 {
-	StateMachine::StateMachine(Game* game)
-		: game(game)
-	{
-	}
+	StateMachine::StateMachine(game::Game* game) : game(game) {}
+
+	StateMachine::~StateMachine() = default;
 
 	std::unique_ptr<states::State> StateMachine::createState(states::StateType type)
 	{
 		switch (type)
 		{
-		case states::StateType::Intro:
-			return std::make_unique<states::IntroState>(game);
-
-		case states::StateType::Menu:
-			return std::make_unique<states::MenuState>(game);
-
-		case states::StateType::Playing:
-			return std::make_unique<states::PlayingState>(game);
-
-		case states::StateType::Settings:
-			return std::make_unique<states::SettingsState>(game);
-
-		default:
-			return nullptr;
+		case states::StateType::Intro:    return std::make_unique<states::IntroState>(game);
+		case states::StateType::Menu:     return std::make_unique<states::MenuState>(game);
+		case states::StateType::Playing:  return std::make_unique<states::PlayingState>(game);
+		case states::StateType::Settings: return std::make_unique<states::SettingsState>(game);
+		default: return nullptr;
 		}
 	}
 
-
-
+	// --- ZMIANY TYLKO ZAPISUJEMY W BUFORZE ---
 	void StateMachine::changeState(states::StateType type)
 	{
-		stateStack.clear();
-		stateStack.push_back(createState(type));
-	}
-
-	void StateMachine::handleEvent(const sf::Event& event)
-	{
-		if (!stateStack.empty())
-		{
-			stateStack.back()->handleEvent(event);
-		}
-	}
-
-	void StateMachine::update(float dt)
-	{
-		if (!stateStack.empty())
-		{
-			stateStack.back()->update(dt);
-		}
-	}
-
-	void StateMachine::render(sf::RenderWindow& window)
-	{
-		for (const auto& state : stateStack)
-		{
-			if (state)
-			{
-				state->render(window);
-			}
-		}
+		pendingAction = Action::Change;
+		pendingStateType = type;
 	}
 
 	void StateMachine::pushState(states::StateType type)
 	{
-		stateStack.push_back(createState(type));
+		pendingAction = Action::Push;
+		pendingStateType = type;
 	}
 
 	void StateMachine::popState()
 	{
-		if (!stateStack.empty())
-		{
-			stateStack.pop_back();
-		}
+		pendingAction = Action::Pop;
 	}
 
+	// --- FIZYCZNA ZMIANA PAMIÊCI (Wywo³ywana bezpiecznie poza pêtlami) ---
+	void StateMachine::processStateChanges()
+	{
+		if (pendingAction == Action::None) return;
+
+		switch (pendingAction)
+		{
+		case Action::Change:
+			stateStack.clear(); // Teraz to jest w 100% bezpieczne!
+			stateStack.push_back(createState(pendingStateType));
+			break;
+
+		case Action::Push:
+			stateStack.push_back(createState(pendingStateType));
+			break;
+
+		case Action::Pop:
+			if (!stateStack.empty()) stateStack.pop_back();
+			break;
+
+		default: break;
+		}
+
+		pendingAction = Action::None;
+	}
+
+	void StateMachine::handleEvent(const sf::Event& event)
+	{
+		if (!stateStack.empty()) stateStack.back()->handleEvent(event);
+	}
+
+	void StateMachine::update(float dt)
+	{
+		if (!stateStack.empty()) stateStack.back()->update(dt);
+	}
+
+	void StateMachine::render(sf::RenderWindow& window)
+	{
+		// U¿ywamy tradycyjnej pêtli zamiast range-based for, by zminimalizowaæ ryzyko
+		for (size_t i = 0; i < stateStack.size(); ++i)
+		{
+			if (stateStack[i]) stateStack[i]->render(window);
+		}
+	}
 }

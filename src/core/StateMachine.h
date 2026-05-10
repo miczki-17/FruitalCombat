@@ -1,34 +1,40 @@
 #pragma once
-
 #include <memory>
-#include "State.h"
+#include <vector>
+#include <SFML/Graphics.hpp>
+
+namespace game::states { class State; enum class StateType; }
 
 namespace game
 {
-    class Game; // forward
+	class Game;
 
-    class StateMachine
-    {
-    private:
-        Game* game;
+	class StateMachine
+	{
+	private:
+		Game* game;
+		std::vector<std::unique_ptr<states::State>> stateStack;
 
-        std::vector<std::unique_ptr<states::State>> stateStack;
-        std::unique_ptr<states::State> createState(states::StateType type);
+		// --- SYSTEM BEZPIECZNEGO PRZE£¥CZANIA STANÓW ---
+		enum class Action { None, Push, Pop, Change };
+		Action pendingAction = Action::None;
+		states::StateType pendingStateType;
 
-    public:
-        StateMachine(Game* game);
+		std::unique_ptr<states::State> createState(states::StateType type);
 
-        // kill all states, set one
-        void changeState(states::StateType type);
+	public:
+		StateMachine(Game* game);
+		~StateMachine();
 
-        // add new state
-        void pushState(states::StateType type);
+		void changeState(states::StateType type);
+		void pushState(states::StateType type);
+		void popState();
 
-        //kill last state
-        void popState();
+		void handleEvent(const sf::Event& event);
+		void update(float dt);
+		void render(sf::RenderWindow& window);
 
-        void handleEvent(const sf::Event& event);
-        void update(float dt);
-        void render(sf::RenderWindow& window);
-    };
+		// Nowa metoda wywo³ywana przed now¹ klatk¹
+		void processStateChanges();
+	};
 }

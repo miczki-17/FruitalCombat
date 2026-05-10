@@ -1,15 +1,22 @@
 #pragma once
-
-#include <memory>
-
-#include "../entities/Player.h"
 #include "../core/State.h"
-
+#include <memory>
+#include <SFML/Graphics.hpp>
+#include "../entities/player/Player.h"
 
 namespace game::states
 {
 	class PlayingState : public State
 	{
+	private:
+		// T≥o mapy (Døungla)
+		sf::Texture mapTexture;
+		std::optional<sf::Sprite> mapSprite;
+		sf::Vector2f mapLimits;
+
+		// Wskaünik na gracza
+		std::unique_ptr<game::entities::Player> player;
+
 	public:
 		PlayingState(game::Game* game);
 

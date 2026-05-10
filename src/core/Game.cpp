@@ -21,6 +21,9 @@ namespace game
 
 		while (window.isOpen())
 		{
+			// 1. FIZYCZNE PRZE£¥CZENIE STANÓW NA BEZPIECZNYM GRUNCIE
+			stateMachine.processStateChanges();
+
 			float dt = clock.restart().asSeconds();
 
 			// EVENTS
