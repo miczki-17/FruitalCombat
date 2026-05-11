@@ -1,4 +1,4 @@
-🍎 Fruit: Frutal Combat /r/n
+🍎 Fruit: Frutal Combat<br>
 Zabawna, dynamiczna gra akcji/survival napisana w C++ i SFML. Wybierz swojego owocowego bohatera i odeprzyj nieskończone fale inteligentnych, zmutowanych warzyw!
 
 📖 Krótki zarys fabularny (Hook)
