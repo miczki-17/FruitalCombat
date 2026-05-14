@@ -22,7 +22,7 @@ namespace game
 		}
 	}
 
-	// --- ZMIANY TYLKO ZAPISUJEMY W BUFORZE ---
+	// buff
 	void StateMachine::changeState(states::StateType type)
 	{
 		pendingAction = Action::Change;
@@ -40,7 +40,7 @@ namespace game
 		pendingAction = Action::Pop;
 	}
 
-	// --- FIZYCZNA ZMIANA PAMIÊCI (Wywo³ywana bezpiecznie poza pêtlami) ---
+	// MEMORY CHANGE
 	void StateMachine::processStateChanges()
 	{
 		if (pendingAction == Action::None) return;
@@ -48,7 +48,7 @@ namespace game
 		switch (pendingAction)
 		{
 		case Action::Change:
-			stateStack.clear(); // Teraz to jest w 100% bezpieczne!
+			stateStack.clear();
 			stateStack.push_back(createState(pendingStateType));
 			break;
 
@@ -66,19 +66,21 @@ namespace game
 		pendingAction = Action::None;
 	}
 
+	// EVENTS
 	void StateMachine::handleEvent(const sf::Event& event)
 	{
 		if (!stateStack.empty()) stateStack.back()->handleEvent(event);
 	}
 
+	// UPDATE
 	void StateMachine::update(float dt)
 	{
 		if (!stateStack.empty()) stateStack.back()->update(dt);
 	}
 
+	// RENDER
 	void StateMachine::render(sf::RenderWindow& window)
 	{
-		// U¿ywamy tradycyjnej pêtli zamiast range-based for, by zminimalizowaæ ryzyko
 		for (size_t i = 0; i < stateStack.size(); ++i)
 		{
 			if (stateStack[i]) stateStack[i]->render(window);

@@ -1,63 +1,44 @@
 #include "IntroState.h"
 #include "../core/Game.h"
 #include <format>
+#include "../vendor/nlohmann/json.hpp"
+#include <fstream>
+#include <iostream>
 
 namespace game::states
 {
 	IntroState::IntroState(game::Game* game)
-		: State(game), currentFrame(1), totalFrames(240), elapsedTime(0.f)
+		: State(game), elapsedTime(0.f)
 	{
-		//std::cout << SFML_VERSION_MAJOR << "."
-		//	<< SFML_VERSION_MINOR << "."
-		//	<< SFML_VERSION_PATCH << std::endl;
+		// Czas trwania jednej klatki dla wideo 30 FPS
 		frameDuration = 1.0f / 30.0f;
 
-		// intro textures pre-load
-		std::cout << "[INTRO] Loading intro frames...\n";
-		for (int i = 1; i <= totalFrames; ++i)
-		{
-			std::string filename = std::format("../../../assets/textures/intro/ezgif-frame-{:03}.jpg", i);
+		std::cout << "[INTRO] Initializing video intro...\n";
 
-			sf::Texture tex;
-			if (tex.loadFromFile(filename))
-			{
-				introTextures.push_back(std::move(tex));
-			}
-			else
-			{
-				std::cerr << "[INTRO ERROR] not found: " << filename << '\n';
-			}
+		// Wczytanie wideo (upewnij si?, ?e plik intro.mp4 znajduje si? w tym folderze)
+		std::string videoPath = "assets/textures/intro/intro.mp4";
+
+		if (!videoPlayer.load(videoPath))
+		{
+			std::cerr << "[INTRO ERROR] Failed to load intro video!\n";
 		}
 
-		// strech + scale
-		if (!introTextures.empty())
-		{
-			frameSprite = sf::Sprite(introTextures[0]);
+		// Dopasowanie rozmiaru wideo do okna
+		sf::Vector2f viewSize = game->getWindow().getView().getSize();
+		videoPlayer.fitToView(viewSize);
 
-			sf::Vector2f viewSize = game->getWindow().getView().getSize();
-			sf::Vector2f introSize(introTextures[0].getSize());
+		// Uruchomienie ?adowania menu w osobnym w?tku
+		workerThread = std::make_unique<std::thread>(&IntroState::loadAssetsInBg, this);
 
-			float scaleX = static_cast<float>(viewSize.x) / introSize.x;
-			float scaleY = static_cast<float>(viewSize.y) / introSize.y;
-
-			(*frameSprite).setScale({ scaleX, scaleY });
-
-			(*frameSprite).setPosition({ 0.f, 0.f });
-			(*frameSprite).setOrigin({ 0.f, 0.f });
-		}
-
-		// music start
-		if (introMusic.openFromFile("../../../assets/audio/intro/intro.mp3"))
+		// Odtwarzanie muzyki
+		if (introMusic.openFromFile("assets/audio/intro/intro.mp3"))
 		{
 			introMusic.play();
 		}
 		else
 		{
-			std::cerr << "[INTRO ERROR] can not load intro music.\n";
+			std::cerr << "[INTRO ERROR] Cannot load intro music.\n";
 		}
-
-		//async downloading
-		workerThread = std::make_unique<std::thread>(&IntroState::loadMenuAssetsInBg, this);
 	}
 
 	IntroState::~IntroState()
@@ -68,25 +49,21 @@ namespace game::states
 		}
 	}
 
-	void IntroState::loadMenuAssetsInBg()
+	void IntroState::loadAssetsInBg()
 	{
-		std::cout << "[ASYNC] menu loading...\n";
+		std::cout << "[ASYNC] Menu loading...\n";
 
 		game->menuImageBuffer.clear();
 		game->menuUiBuffer.clear();
 
 		std::vector<std::string> buttonsNames = {
-			"start",
-			"achievements",
-			"shop",
-			"settings",
-			"back"
+			"start", "achievements", "shop", "settings", "back"
 		};
 
-		// load bg
+		// ?adowanie te?
 		for (int i = 1; i <= 6; ++i)
 		{
-			std::string filename = std::format("../../../assets/textures/menu/bg_{:01}.png", i);
+			std::string filename = std::format("assets/textures/menu/bg_{:01}.png", i);
 			sf::Image img;
 			if (img.loadFromFile(filename))
 			{
@@ -94,13 +71,13 @@ namespace game::states
 			}
 			else
 			{
-				std::cerr << "[AYNC ERROR] can not find " << filename << '\n';
+				std::cerr << "[ASYNC ERROR] Cannot find " << filename << '\n';
 			}
 		}
-		
-		// load Btns
+
+		// ?adowanie przycisków
 		for (const auto& name : buttonsNames) {
-			std::string filename = "../../../assets/textures/menu/" + name + ".png";
+			std::string filename = "assets/textures/menu/" + name + ".png";
 			sf::Image img;
 			if (img.loadFromFile(filename))
 			{
@@ -108,14 +85,30 @@ namespace game::states
 			}
 			else
 			{
-				std::cerr << "[ASYNC ERROR] can not find " << filename << '\n';
+				std::cerr << "[ASYNC ERROR] Cannot find " << filename << '\n';
 			}
 		}
 
-		std::cout << "[ASYNC] menu loaded\n";
+		std::cout << "[ASYNC] Menu loaded.\n";
 		isMenuLoaded = true;
-	}
 
+		// ?adowanie konfiguracji JSON
+		std::cout << "[ASYNC] Characters config loading...\n";
+		std::ifstream configFile("assets/configs/fruits.json");
+		if (configFile.is_open())
+		{
+			try
+			{
+				configFile >> (game->fruitsConfig);
+				isConfigLoaded = true;
+				std::cout << "[ASYNC] fruits.json loaded.\n";
+			}
+			catch (const nlohmann::json::parse_error& e)
+			{
+				std::cerr << "[ASYNC ERROR] " << e.what() << "\n";
+			}
+		}
+	}
 
 	StateType IntroState::getType() const
 	{
@@ -129,7 +122,8 @@ namespace game::states
 			auto keyEvent = event.getIf<sf::Event::KeyPressed>();
 			if (keyEvent->code == sf::Keyboard::Key::Space || keyEvent->code == sf::Keyboard::Key::Enter)
 			{
-				if (isMenuLoaded)
+				// Pozwól pomin?? intro tylko wtedy, gdy zasoby w tle ju? si? za?adowa?y
+				if (isMenuLoaded && isConfigLoaded)
 				{
 					introMusic.stop();
 					game->getStateMachine().changeState(StateType::Menu);
@@ -137,8 +131,7 @@ namespace game::states
 				}
 				else
 				{
-					std::cout << "[ASYNC] menu still loading...\n";
-					// graphics ev
+					std::cout << "[ASYNC] Menu still loading, cannot skip intro yet...\n";
 				}
 			}
 		}
@@ -146,34 +139,26 @@ namespace game::states
 
 	void IntroState::update(float dt)
 	{
-		if (dt > 0.1f)
-		{
-			dt = 0.1f;
-		}
+		if (dt > 0.1f) dt = 0.1f;
 
 		elapsedTime += dt;
-		
-		// get window size
+
+		// Skalowanie na bie??co w razie zmiany rozmiaru okna
 		sf::Vector2f viewSize = game->getWindow().getView().getSize();
+		videoPlayer.fitToView(viewSize);
 
 		while (elapsedTime >= frameDuration)
 		{
 			elapsedTime -= frameDuration;
 
-			if (currentFrame < totalFrames)
+			if (!videoPlayer.isDone())
 			{
-				currentFrame++;
-				const sf::Texture& nextTex = introTextures[currentFrame - 1];
-				(*frameSprite).setTexture(nextTex, true);
-
-				sf::Vector2f introSize(nextTex.getSize());
-				float scaleX = static_cast<float>(viewSize.x) / introSize.x;
-				float scaleY = static_cast<float>(viewSize.y) / introSize.y;
-				(*frameSprite).setScale({ scaleX, scaleY });
+				videoPlayer.update();
 			}
 			else
 			{
-				if (isMenuLoaded)
+				// Wideo dobieg?o ko?ca, przechodzimy do menu (je?li za?adowane)
+				if (isMenuLoaded && isConfigLoaded)
 				{
 					introMusic.stop();
 					game->getStateMachine().changeState(StateType::Menu);
@@ -185,9 +170,6 @@ namespace game::states
 
 	void IntroState::render(sf::RenderWindow& window)
 	{
-		if (frameSprite.has_value())
-		{
-			window.draw(*frameSprite);
-		}
+		window.draw(videoPlayer.getSprite());
 	}
 }

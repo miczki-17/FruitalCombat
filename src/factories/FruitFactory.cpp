@@ -1,11 +1,13 @@
 #include "FruitFactory.h"
 #include "../components/ShootAbility.h"
+#include "../components/ShotgunAbility.h"
 #include "../components/DashAbility.h"
+#include <iostream>
 
 namespace game::factories
 {
-	FruitFactory::FruitFactory(game::ArenaContext arenaContext)
-		: context(arenaContext)
+	FruitFactory::FruitFactory(game::ArenaContext arenaContext, const nlohmann::json& jsonConfig)
+		: context(arenaContext), config(jsonConfig)
 	{
 	}
 
@@ -13,29 +15,51 @@ namespace game::factories
 	{
 		auto player = std::make_unique<game::entities::Player>();
 
+		std::string fruitKey;
+
 		switch (type)
 		{
 		case game::entities::FruitType::Apple:
-			player->setStats(10, 400.0f);
-			player->loadTexture("../../../assets/textures/entities/apple_player.png");
-			player->setAbility(std::make_unique<game::components::ShootAbility>(context.bullets));
+			fruitKey = "Apple";
 			break;
-
 		case game::entities::FruitType::Banana:
-			player->setStats(10, 550.0f);
-			player->loadTexture("../../../assets/textures/entities/banana_player.png");
-			player->setAbility(std::make_unique<game::components::DashAbility>(player.get()));
+			fruitKey = "Banana";
 			break;
-
 		case game::entities::FruitType::Orange:
-			player->setStats(15, 450.0f);
-			player->loadTexture("../../../assets/textures/entities/orange_player.png");
-			// Domyœlnie wpinamy strzelanie, mo¿esz podmieniæ na inn¹ zdolnoœæ
-			player->setAbility(std::make_unique<game::components::ShootAbility>(context.bullets));
+			fruitKey = "Orange";
 			break;
-
 		default:
+			std::cerr << "can not find fruit type\n";
+			return nullptr;
 			break;
+		}
+
+		if (config.contains(fruitKey))
+		{
+			const auto& data = config[fruitKey];
+
+			int hp = data["hp"].get<int>();
+			float speed = data["maxSpeed"].get<float>();
+			player->setStats(hp, speed);
+
+			// load texture path
+			std::string texPath = data["texturePath"].get<std::string>();
+			player->loadTexture("../../../" + texPath);
+			
+			if (data.contains("abilities"))
+			{
+				for (const auto& abName : data["abilities"])
+				{
+					std::string type = abName.get<std::string>();
+					if (type == "Shoot")        player->setWeapon(std::make_unique<game::components::ShootAbility>(context.bullets));
+					else if (type == "Shotgun") player->setWeapon(std::make_unique<game::components::ShotgunAbility>(context.bullets));
+					else if (type == "Dash")    player->setSkill(std::make_unique<game::components::DashAbility>(player.get())); // <--- POPRAWIONE NA setSkill
+				}
+			}
+		}
+		else
+		{
+			std::cerr << "[FABRYKA] Brak konfiguracji dla klucza: " << fruitKey << "\n";
 		}
 
 		return player;

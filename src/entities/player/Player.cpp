@@ -23,31 +23,51 @@ namespace game::entities
 		if (playerTexture.loadFromFile(filepath))
 		{
 			playerSprite.emplace(playerTexture);
-			sf::Vector2u texSize = playerTexture.getSize();
-			playerSprite->setOrigin({ texSize.x / 2.0f, texSize.y / 2.0f });
+
+			// Ustawiamy origin na ?rodek pojedynczej klatki (32x32), a nie ca?ej tekstury
+			playerSprite->setOrigin({ frameSize.x / 2.0f, frameSize.y / 2.0f });
+
+			// Domy?lny zwrot w prawo (klatka 0)
+			playerSprite->setTextureRect(sf::IntRect({ 0, 0 }, frameSize));
 		}
 		else
 		{
-			std::cerr << "[OSTRZE¯ENIE] Brak tekstury: " << filepath << "\n";
+			std::cerr << "[OSTRZE?ENIE] Brak tekstury: " << filepath << "\n";
 		}
 	}
 
-	void Player::setAbility(std::unique_ptr<game::components::Ability> newAbility)
+	void Player::setWeapon(std::unique_ptr<game::components::Ability> newWeapon)
 	{
-		primaryAbility = std::move(newAbility);
+		primaryWeapon = std::move(newWeapon);
 	}
 
-	void Player::addVelocity(sf::Vector2f force)
+	void Player::setSkill(std::unique_ptr<game::components::Ability> newSkill)
+	{
+		specialSkill = std::move(newSkill);
+	}
+
+	void Player::addVelocity(sf::Vector2f force, float uncapDuration)
 	{
 		velocity += force;
+		if (uncapDuration > 0.0f)
+		{
+			speedUncapTimer = uncapDuration; // Uruchamiamy stoper braku limitu
+		}
 	}
 
-	void Player::useAbility(sf::Vector2f targetWorldPos)
+	void Player::useWeapon(sf::Vector2f targetWorldPos)
 	{
-		if (primaryAbility != nullptr)
+		if (primaryWeapon != nullptr)
 		{
-			// Przekazujemy nasz¹ pozycjê, cel oraz aktualn¹ prêdkoœæ (Doppler)
-			primaryAbility->execute(position, targetWorldPos, velocity);
+			primaryWeapon->execute(position, targetWorldPos, velocity);
+		}
+	}
+
+	void Player::useSkill(sf::Vector2f targetWorldPos)
+	{
+		if (specialSkill != nullptr)
+		{
+			specialSkill->execute(position, targetWorldPos, velocity);
 		}
 	}
 
@@ -58,6 +78,21 @@ namespace game::entities
 		if (sf::Keyboard::isKeyPressed(game->keyDown))  targetDir.y += 1.f;
 		if (sf::Keyboard::isKeyPressed(game->keyLeft))  targetDir.x -= 1.f;
 		if (sf::Keyboard::isKeyPressed(game->keyRight)) targetDir.x += 1.f;
+
+		// --- ZWROT WIZUALNY W LEWO/PRAWO ---
+		if (playerSprite.has_value())
+		{
+			if (targetDir.x > 0.1f)
+			{
+				// Klatka w prawo (pocz?tek od x=0)
+				playerSprite->setTextureRect(sf::IntRect({ 0, 0 }, frameSize));
+			}
+			else if (targetDir.x < -0.1f)
+			{
+				// Klatka w lewo (pocz?tek od x=64)
+				playerSprite->setTextureRect(sf::IntRect({ 64, 0 }, frameSize));
+			}
+		}
 
 		if (targetDir.x != 0.f || targetDir.y != 0.f)
 		{
@@ -80,14 +115,24 @@ namespace game::entities
 			if (std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y) < 10.0f) velocity = { 0.f, 0.f };
 		}
 
-		float currentSpeed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-		if (currentSpeed > maxSpeed)
+		// --- KONTROLA LIMITU PR?DKO?CI ---
+		if (speedUncapTimer > 0.0f)
 		{
-			velocity.x = (velocity.x / currentSpeed) * maxSpeed;
-			velocity.y = (velocity.y / currentSpeed) * maxSpeed;
+			// Podczas dasha odliczamy czas i pozwalamy na przekroczenie maxSpeed
+			speedUncapTimer -= dt;
+		}
+		else
+		{
+			// Standardowy ruch – pilnujemy maksymalnej pr?dko?ci
+			float currentSpeed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+			if (currentSpeed > maxSpeed)
+			{
+				velocity.x = (velocity.x / currentSpeed) * maxSpeed;
+				velocity.y = (velocity.y / currentSpeed) * maxSpeed;
+			}
 		}
 
-		// --- MAŒLANY POŒLIZG (SONAR WEKTOROWY) ---
+		// --- MA?LANY PO?LIZG (SONAR WEKTOROWY) ---
 		sf::Vector2f nextPos = position + velocity * dt;
 		float fullRadius = shape.getRadius() + shape.getOutlineThickness();
 		sf::Vector2u maskSize = collisionMask.getSize();
@@ -185,25 +230,23 @@ namespace game::entities
 
 		if (playerSprite.has_value())
 		{
+			// Posta? nie wykonuje rotacji do osi kursora, pod??a jedynie pozycj?
 			playerSprite->setPosition(position);
-
-			sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
-			sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getView());
-			sf::Vector2f aimDir = mouseWorldPos - position;
-
-			float angleDegrees = std::atan2(aimDir.y, aimDir.x) * 180.0f / 3.14159265f;
-
-			// --- ZGODNOŒÆ Z SFML 3 (sf::degrees) ---
-			playerSprite->setRotation(sf::degrees(angleDegrees + 90.0f));
 		}
 		else
 		{
 			shape.setPosition(position);
 		}
 
-		if (primaryAbility != nullptr)
+		// --- Aktualizacja stanów umiej?tno?ci (Cooldowny) ---
+		if (primaryWeapon != nullptr)
 		{
-			primaryAbility->update(dt);
+			primaryWeapon->update(dt);
+		}
+
+		if (specialSkill != nullptr)
+		{
+			specialSkill->update(dt);
 		}
 	}
 

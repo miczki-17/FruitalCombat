@@ -1,0 +1,20 @@
+{
+  "Apple": {
+    "hp": 100,
+    "maxSpeed": 300.0,
+    "texturePath": "assets/textures/entities/Apple.png",
+    "abilities": [ "Shotgun", "Dash" ]
+  },
+  "Banana": {
+    "hp": 10,
+    "maxSpeed": 500.0,
+    "texturePath": "assets/textures/entities/Banana.png",
+    "abilities": [ "Shoot" ]
+  },
+  "Orange": {
+    "hp": 15,
+    "maxSpeed": 300.0,
+    "texturePath": "assets/textures/entities/Orange.png",
+    "abilities": [ "Shoot" ]
+  }
+}

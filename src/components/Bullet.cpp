@@ -2,11 +2,13 @@
 
 namespace game::components
 {
+	// constructor
 	Bullet::Bullet(sf::Vector2f startPos, sf::Vector2f direction)
 		: position(startPos)
 	{
-		shape.setRadius(4.0f);
-		shape.setFillColor(sf::Color(210, 180, 70));
+		// load default params
+		shape.setRadius(bulletRadius);
+		shape.setFillColor(bulletColor);
 		shape.setOrigin({ 4.0f, 4.0f });
 		shape.setPosition(position);
 
@@ -18,6 +20,7 @@ namespace game::components
 		velocity += additionalVelocity;
 	}
 
+	// UPDATE
 	void Bullet::update(float dt, const sf::Image& collisionMask, float mapScale)
 	{
 		if (!isActive) return;
@@ -36,6 +39,7 @@ namespace game::components
 		}
 	}
 
+	// RENDER
 	void Bullet::render(sf::RenderWindow& window)
 	{
 		if (isActive)
@@ -48,4 +52,12 @@ namespace game::components
 	bool Bullet::getIsActive() const { return isActive; }
 	sf::Vector2f Bullet::getPosition() const { return position; }
 	float Bullet::getRadius() const { return shape.getRadius(); }
+
+	void Bullet::setAppearance(float radius, sf::Color color)
+	{
+		bulletRadius = radius;
+		bulletColor = color;
+		shape.setRadius(bulletRadius);
+		shape.setFillColor(bulletColor);
+	}
 }

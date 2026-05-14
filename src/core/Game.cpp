@@ -24,7 +24,7 @@ namespace game
 
 		while (window.isOpen())
 		{
-			// 1. FIZYCZNE PRZE£¥CZENIE STANÓW NA BEZPIECZNYM GRUNCIE
+			// 1. FSM change states
 			stateMachine.processStateChanges();
 
 			float dt = clock.restart().asSeconds();

@@ -26,16 +26,19 @@ namespace game::states
 
 
 
-
+	// CLASS
 	class State
 	{
 	protected:
 		game::Game* game;
 
 	public:
+		// constructor
 		State(game::Game* game)
 			: game(game) {}
 
+
+		// abstract destructor
 		virtual ~State() = default;
 
 		virtual void handleEvent(const sf::Event& event) = 0;

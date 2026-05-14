@@ -10,7 +10,9 @@
 #include "Config.h"
 #include "StateMachine.h"
 #include "State.h"
-#include "../entities/EntityTypes.h" 
+#include "../entities/EntityTypes.h"
+#include "../vendor/nlohmann/json.hpp"
+
 
 namespace game
 {
@@ -45,8 +47,10 @@ namespace game
 		sf::SoundBuffer uiClickBuffer;
 		std::optional<sf::Sound> uiClickSound;
 
-		// --- ZMIENNA KOMUNIKACYJNA: WYBÓR BOHATERA ---
-		// Domyœlnie ustawiamy Jab³ko. Menu podmieni tê wartoœæ przed startem.
+		// default character
 		game::entities::FruitType selectedFruitType = game::entities::FruitType::Apple;
+
+		// characters configs
+		nlohmann::json fruitsConfig;
 	};
 }

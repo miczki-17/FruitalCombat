@@ -3,11 +3,13 @@
 
 namespace game::components
 {
+	// constructor
 	ShootAbility::ShootAbility(std::vector<game::components::Bullet>& bulletsRef)
 		: bullets(bulletsRef)
 	{
 	}
 
+	// UPDATE
 	void ShootAbility::update(float dt)
 	{
 		if (currentTimer > 0.0f)
@@ -16,10 +18,12 @@ namespace game::components
 		}
 	}
 
+	// EXECUTE
 	void ShootAbility::execute(sf::Vector2f startPos, sf::Vector2f targetWorldPos, sf::Vector2f shooterVelocity)
 	{
 		if (currentTimer <= 0.0f)
 		{
+			// aim direction calculation
 			sf::Vector2f aimDir = targetWorldPos - startPos;
 			float length = std::sqrt(aimDir.x * aimDir.x + aimDir.y * aimDir.y);
 
@@ -31,6 +35,7 @@ namespace game::components
 
 				bullets.back().addVelocity(shooterVelocity);
 
+				// reset cooldown
 				currentTimer = cooldown;
 			}
 		}

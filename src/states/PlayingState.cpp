@@ -38,15 +38,9 @@ namespace game::states
 			coinIconSprite.emplace(coinIconTexture);
 		}*/
 
-		// --- 4. WDRO¯ENIE FABRYKI Z U¯YCIEM WYBORU Z MENU ---
 
-		// A. Pakujemy referencjê do magazynka w kontekst areny
 		game::ArenaContext context{ bullets };
-
-		// B. Tworzymy Fabrykê i przekazujemy jej zasoby
-		game::factories::FruitFactory factory(context);
-
-		// C. Produkcja obiektu na podstawie wyboru zapisanego w Game
+		game::factories::FruitFactory factory(context, game->fruitsConfig);
 		player = factory.createFruit(game->selectedFruitType);
 
 		if (player != nullptr)
@@ -66,19 +60,32 @@ namespace game::states
 
 	void PlayingState::handleEvent(const sf::Event& event)
 	{
-		// Zoom rolk¹ myszy
+		// Zoom rolk? myszy
 		if (const auto* scroll = event.getIf<sf::Event::MouseWheelScrolled>())
 		{
 			if (scroll->delta > 0)      cameraView.zoom(0.9f);
 			else if (scroll->delta < 0) cameraView.zoom(1.1f);
 		}
 
-		// Pauza
+		// Obs?uga klawiszy (Pauza oraz DASH)
 		if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
 		{
+			// Pauza
 			if (keyPressed->code == sf::Keyboard::Key::Escape)
 			{
 				game->getStateMachine().pushState(StateType::Settings);
+			}
+
+			// --- JEDNORAZOWY DASH POD SPACJ? ---
+			if (keyPressed->code == sf::Keyboard::Key::LShift)
+			{
+				if (player != nullptr)
+				{
+					sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
+					sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
+
+					player->useSkill(mouseWorldPos);
+				}
 			}
 		}
 	}
@@ -90,14 +97,13 @@ namespace game::states
 			// 1. Aktualizacja ruchu i fizyki gracza
 			player->update(dt, game, mapLimits, collisionMask, mapScale);
 
-			// --- 2. OBS£UGA ATAKU ---
+			// --- 2. OBS?UGA ATAKU CI?G?EGO (Strzelba) ---
 			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 			{
 				sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
 				sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
 
-				// Czysta delegacja: przekazujemy tylko cel.
-				player->useAbility(mouseWorldPos);
+				player->useWeapon(mouseWorldPos);
 			}
 
 			// --- 3. AKTUALIZACJA I CZYSZCZENIE POCISKÓW ---

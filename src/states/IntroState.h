@@ -1,36 +1,29 @@
 #pragma once
 
 #include "../core/State.h"
+#include "../utils/VideoPlayer.h"
+#include <SFML/Audio.hpp>
 #include <thread>
 #include <atomic>
-
+#include <memory>
 
 namespace game::states
 {
 	class IntroState : public State
 	{
 	private:
-		// intro textures vector
-		std::vector<sf::Texture> introTextures;
-
-		std::optional<sf::Sprite> frameSprite;
+		game::utils::VideoPlayer videoPlayer;
 		sf::Music introMusic;
 
-		// intro logic
-		int currentFrame;
-		int totalFrames;
 		float frameDuration;
 		float elapsedTime;
 
-
-		// async menu loading
+		// W?tek i flagi ?adowania asynchronicznego
 		std::unique_ptr<std::thread> workerThread;
 		std::atomic<bool> isMenuLoaded{ false };
+		std::atomic<bool> isConfigLoaded{ false };
 
-		void loadMenuAssetsInBg();
-
-
-		//void loadNextFrame();
+		void loadAssetsInBg();
 
 	public:
 		IntroState(game::Game* game);

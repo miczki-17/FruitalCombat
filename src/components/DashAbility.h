@@ -1,20 +1,26 @@
 #pragma once
+
+// includes
 #include "Ability.h"
 
-// Deklaracja zapowiadaj¹ca, by unikn¹æ pêtli nag³ówków
 namespace game::entities { class Player; }
 
 namespace game::components
 {
+	// CLASS
 	class DashAbility : public Ability
 	{
 	private:
-		game::entities::Player* player; // WskaŸnik na cia³o, które pchniemy
-		float cooldown = 1.0f;
+		// player pointer
+		game::entities::Player* player;
+
+		// params
+		float cooldown = 2.0f;
 		float currentTimer = 0.0f;
 		float dashForce = 1200.0f;
 
 	public:
+		// constructor
 		DashAbility(game::entities::Player* targetPlayer);
 
 		void update(float dt) override;

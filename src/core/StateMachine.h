@@ -15,7 +15,7 @@ namespace game
 		Game* game;
 		std::vector<std::unique_ptr<states::State>> stateStack;
 
-		// --- SYSTEM BEZPIECZNEGO PRZE£¥CZANIA STANÓW ---
+		// safty fsm change
 		enum class Action { None, Push, Pop, Change };
 		Action pendingAction = Action::None;
 		states::StateType pendingStateType;
@@ -23,7 +23,10 @@ namespace game
 		std::unique_ptr<states::State> createState(states::StateType type);
 
 	public:
+		// constructor
 		StateMachine(Game* game);
+
+		// destructor
 		~StateMachine();
 
 		void changeState(states::StateType type);
@@ -34,7 +37,7 @@ namespace game
 		void update(float dt);
 		void render(sf::RenderWindow& window);
 
-		// Nowa metoda wywo³ywana przed now¹ klatk¹
+		
 		void processStateChanges();
 	};
 }

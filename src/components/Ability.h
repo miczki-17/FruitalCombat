@@ -3,9 +3,11 @@
 
 namespace game::components
 {
+	// CLASS
 	class Ability
 	{
 	public:
+		// abstract destructor
 		virtual ~Ability() = default;
 
 		virtual void update(float dt) = 0;

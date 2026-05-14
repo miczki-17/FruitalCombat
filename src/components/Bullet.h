@@ -3,6 +3,7 @@
 
 namespace game::components
 {
+	// CLASS
 	class Bullet
 	{
 	private:
@@ -13,7 +14,12 @@ namespace game::components
 
 		sf::CircleShape shape;
 
+		// bullet config
+		float bulletRadius = 4.0f;
+		sf::Color bulletColor = { 210, 180, 70 };
+
 	public:
+		// constructor
 		Bullet(sf::Vector2f startPos, sf::Vector2f direction);
 
 		void update(float dt, const sf::Image& collisionMask, float mapScale);
@@ -25,5 +31,6 @@ namespace game::components
 		bool getIsActive() const;
 		sf::Vector2f getPosition() const;
 		float getRadius() const;
+		void setAppearance(float radius, sf::Color color);
 	};
 }
