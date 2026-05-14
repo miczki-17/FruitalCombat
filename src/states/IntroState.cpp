@@ -16,7 +16,7 @@ namespace game::states
 		std::cout << "[INTRO] Initializing video intro...\n";
 
 		// Wczytanie wideo (upewnij si?, ?e plik intro.mp4 znajduje si? w tym folderze)
-		std::string videoPath = "assets/textures/intro/intro.mp4";
+		std::string videoPath = "assets/video/intro/intro.mp4";
 
 		if (!videoPlayer.load(videoPath))
 		{
