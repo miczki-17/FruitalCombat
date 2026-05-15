@@ -60,10 +60,10 @@ namespace game::states
 			"start", "achievements", "shop", "settings", "back"
 		};
 
-		// ?adowanie te?
+		
 		for (int i = 1; i <= 6; ++i)
 		{
-			std::string filename = std::format("assets/textures/menu/bg_{:01}.png", i);
+			std::string filename = std::format("assets/textures/ui/bg_{:01}.png", i);
 			sf::Image img;
 			if (img.loadFromFile(filename))
 			{
@@ -75,9 +75,9 @@ namespace game::states
 			}
 		}
 
-		// ?adowanie przycisków
+		// buttons load
 		for (const auto& name : buttonsNames) {
-			std::string filename = "assets/textures/menu/" + name + ".png";
+			std::string filename = "assets/textures/ui/" + name + ".png";
 			sf::Image img;
 			if (img.loadFromFile(filename))
 			{
@@ -92,7 +92,7 @@ namespace game::states
 		std::cout << "[ASYNC] Menu loaded.\n";
 		isMenuLoaded = true;
 
-		// ?adowanie konfiguracji JSON
+		// load JSON config
 		std::cout << "[ASYNC] Characters config loading...\n";
 		std::ifstream configFile("assets/configs/fruits.json");
 		if (configFile.is_open())
@@ -122,7 +122,7 @@ namespace game::states
 			auto keyEvent = event.getIf<sf::Event::KeyPressed>();
 			if (keyEvent->code == sf::Keyboard::Key::Space || keyEvent->code == sf::Keyboard::Key::Enter)
 			{
-				// Pozwól pomin?? intro tylko wtedy, gdy zasoby w tle ju? si? za?adowa?y
+				// let to skip intro
 				if (isMenuLoaded && isConfigLoaded)
 				{
 					introMusic.stop();
@@ -143,7 +143,7 @@ namespace game::states
 
 		elapsedTime += dt;
 
-		// Skalowanie na bie??co w razie zmiany rozmiaru okna
+		// window scaling by window scale
 		sf::Vector2f viewSize = game->getWindow().getView().getSize();
 		videoPlayer.fitToView(viewSize);
 
@@ -157,7 +157,7 @@ namespace game::states
 			}
 			else
 			{
-				// Wideo dobieg?o ko?ca, przechodzimy do menu (je?li za?adowane)
+				// --> MenuState
 				if (isMenuLoaded && isConfigLoaded)
 				{
 					introMusic.stop();

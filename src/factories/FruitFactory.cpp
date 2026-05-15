@@ -28,6 +28,12 @@ namespace game::factories
 		case game::entities::FruitType::Orange:
 			fruitKey = "Orange";
 			break;
+		case game::entities::FruitType::Cherry:
+			fruitKey = "Cherry";
+		case game::entities::FruitType::Strawberry:
+			fruitKey = "Strawberry";
+		case game::entities::FruitType::Blackberry:
+			fruitKey = "Blackberry";
 		default:
 			std::cerr << "can not find fruit type\n";
 			return nullptr;

@@ -8,7 +8,10 @@ namespace game::entities
 	{
 		Apple,
 		Banana,
-		Orange
+		Orange,
+		Cherry,
+		Strawberry,
+		Blackberry
 	};
 
 	enum class VeggieType

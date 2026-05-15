@@ -20,7 +20,7 @@ namespace game::states
 		}
 
 		// clear buffer
-		game->menuImageBuffer.clear();
+		//game->menuImageBuffer.clear();
 
 
 		auto setupButton = [&](const std::string& key, sf::Texture& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
@@ -95,7 +95,7 @@ namespace game::states
 		}
 
 		// clear buffer
-		game->menuUiBuffer.clear();
+		//game->menuUiBuffer.clear();
 
 
 		// strech + scale
@@ -149,8 +149,8 @@ namespace game::states
 					{
 						game->playUIClick();
 
-						bgMusic.stop();
-						game->getStateMachine().changeState(StateType::Playing);
+						//bgMusic.stop();
+						game->getStateMachine().pushState(StateType::CharacterSelect);
 						return;
 					}
 				}

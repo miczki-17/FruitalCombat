@@ -3,6 +3,7 @@
 #include "../states/MenuState.h"
 #include "../states/PlayingState.h"
 #include "../states/SettingsState.h"
+#include "../states/CharacterSelectState.h"
 
 namespace game
 {
@@ -14,10 +15,11 @@ namespace game
 	{
 		switch (type)
 		{
-		case states::StateType::Intro:    return std::make_unique<states::IntroState>(game);
-		case states::StateType::Menu:     return std::make_unique<states::MenuState>(game);
-		case states::StateType::Playing:  return std::make_unique<states::PlayingState>(game);
-		case states::StateType::Settings: return std::make_unique<states::SettingsState>(game);
+		case states::StateType::Intro:				return std::make_unique<states::IntroState>(game);
+		case states::StateType::Menu:				return std::make_unique<states::MenuState>(game);
+		case states::StateType::CharacterSelect:	return std::make_unique<states::CharacterSelectState>(game);
+		case states::StateType::Playing:			return std::make_unique<states::PlayingState>(game);
+		case states::StateType::Settings:			return std::make_unique<states::SettingsState>(game);
 		default: return nullptr;
 		}
 	}

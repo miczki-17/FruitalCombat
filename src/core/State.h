@@ -21,7 +21,8 @@ namespace game::states
 		Intro,
 		Menu,
 		Playing,
-		Settings
+		Settings,
+		CharacterSelect
 	};
 
 
