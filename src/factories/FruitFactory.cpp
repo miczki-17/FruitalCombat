@@ -49,8 +49,9 @@ namespace game::factories
 			player->setStats(hp, speed);
 
 			// load texture path
-			std::string texPath = data["texturePath"].get<std::string>();
-			player->loadTexture("../../../" + texPath);
+			std::string idleTexPath = data["texturePath"].get<std::string>();
+			std::string walkTexPath = data["walkTexturePath"].get<std::string>();
+			player->loadTextures(idleTexPath, walkTexPath);
 			
 			if (data.contains("abilities"))
 			{
