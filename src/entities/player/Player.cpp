@@ -28,7 +28,7 @@ namespace game::entities
 			playerSprite->setOrigin({ frameSize.x / 2.0f, frameSize.y / 2.0f });
 
 			// Domy?lny zwrot w prawo (klatka 0)
-			playerSprite->setTextureRect(sf::IntRect({ 0, 0 }, frameSize));
+			playerSprite->setTextureRect(sf::IntRect({ 64, 0 }, frameSize));
 		}
 		else
 		{
@@ -85,12 +85,12 @@ namespace game::entities
 			if (targetDir.x > 0.1f)
 			{
 				// Klatka w prawo (pocz?tek od x=0)
-				playerSprite->setTextureRect(sf::IntRect({ 0, 0 }, frameSize));
+				playerSprite->setTextureRect(sf::IntRect({ 64, 0 }, frameSize));
 			}
 			else if (targetDir.x < -0.1f)
 			{
 				// Klatka w lewo (pocz?tek od x=64)
-				playerSprite->setTextureRect(sf::IntRect({ 64, 0 }, frameSize));
+				playerSprite->setTextureRect(sf::IntRect({ 0, 0 }, frameSize));
 			}
 		}
 
