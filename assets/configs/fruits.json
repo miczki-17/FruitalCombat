@@ -2,7 +2,8 @@
   "Apple": {
     "hp": 100,
     "maxSpeed": 300.0,
-    "texturePath": "assets/textures/entities/Apple.png",
+    "texturePath": "assets/textures/entities/appleStand.png",
+    "walkTexturePath": "assets/textures/entities/appleWalk.png",
     "abilities": [ "Shotgun", "Dash" ]
   },
   "Banana": {
