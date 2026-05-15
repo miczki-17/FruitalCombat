@@ -4,6 +4,7 @@
 #include <optional>
 #include "../../components/Ability.h"
 #include "../../core/Game.h"
+#include "../../core/AnimationController.h"
 
 namespace game::entities
 {
@@ -26,14 +27,12 @@ namespace game::entities
 		int hp = 100;
 		int maxHp = 100;
 
-		sf::Texture playerTexture;
+		// --- KOMPONENTY WIZUALNE ---
+		game::components::AnimationController animator;
 		std::optional<sf::Sprite> playerSprite;
 		sf::CircleShape shape;
 
-		// --- NOWE: Wymiary pojedynczej klatki z arkusza (64x64) ---
-		const sf::Vector2i frameSize = { 64, 64 };
-
-		// --- Sloty umiej?tno?ci ---
+		// --- Sloty umiejętności ---
 		std::unique_ptr<game::components::Ability> primaryWeapon;
 		std::unique_ptr<game::components::Ability> specialSkill;
 
@@ -42,16 +41,17 @@ namespace game::entities
 	public:
 		Player();
 
-		// Settery u?ywane przez Fabryk?
+		// Settery używane przez Fabrykę
 		void setStats(int newHp, float newMaxSpeed);
-		void loadTexture(const std::string& filepath);
+
+		// --- POPRAWIONA DEKLARACJA (Dwie ścieżki) ---
+		void loadTextures(const std::string& idlePath, const std::string& walkPath);
+
 		void setWeapon(std::unique_ptr<game::components::Ability> weapon);
 		void setSkill(std::unique_ptr<game::components::Ability> skill);
 
-		// Dynamiczna modyfikacja fizyki (u?ywana m.in. przez Dash)
 		void addVelocity(sf::Vector2f force, float uncapDuration = 0.0f);
 
-		// Delegacja akcji
 		void useWeapon(sf::Vector2f targetWorldPos);
 		void useSkill(sf::Vector2f targetWorldPos);
 

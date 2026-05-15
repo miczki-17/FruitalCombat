@@ -18,21 +18,19 @@ namespace game::entities
 		maxSpeed = newMaxSpeed;
 	}
 
-	void Player::loadTexture(const std::string& filepath)
+	void Player::loadTextures(const std::string& idlePath, const std::string& walkPath)
 	{
-		if (playerTexture.loadFromFile(filepath))
+		// Przekazujemy wczytywanie obu tekstur do naszego animatora
+		if (animator.loadTextures(idlePath, walkPath))
 		{
-			playerSprite.emplace(playerTexture);
+			playerSprite.emplace(animator.getDefaultTexture());
 
-			// Ustawiamy origin na ?rodek pojedynczej klatki (32x32), a nie ca?ej tekstury
-			playerSprite->setOrigin({ frameSize.x / 2.0f, frameSize.y / 2.0f });
-
-			// Domy?lny zwrot w prawo (klatka 0)
-			playerSprite->setTextureRect(sf::IntRect({ 64, 0 }, frameSize));
+			playerSprite->setOrigin({ 32.0f, 32.0f });
+			playerSprite->setScale({ 2.0f, 2.0f });
 		}
 		else
 		{
-			std::cerr << "[OSTRZE?ENIE] Brak tekstury: " << filepath << "\n";
+			std::cerr << "[OSTRZE¯ENIE] Brak tekstur postaci!\n";
 		}
 	}
 
@@ -79,22 +77,15 @@ namespace game::entities
 		if (sf::Keyboard::isKeyPressed(game->keyLeft))  targetDir.x -= 1.f;
 		if (sf::Keyboard::isKeyPressed(game->keyRight)) targetDir.x += 1.f;
 
-		// --- ZWROT WIZUALNY W LEWO/PRAWO ---
-		if (playerSprite.has_value())
-		{
-			if (targetDir.x > 0.1f)
-			{
-				// Klatka w prawo (pocz?tek od x=0)
-				playerSprite->setTextureRect(sf::IntRect({ 64, 0 }, frameSize));
-			}
-			else if (targetDir.x < -0.1f)
-			{
-				// Klatka w lewo (pocz?tek od x=64)
-				playerSprite->setTextureRect(sf::IntRect({ 0, 0 }, frameSize));
-			}
-		}
+		// --- ODCZYT STANU DO ANIMATORA ---
+		static bool facingRight = true; // Pamiêta kierunek po puszczeniu klawisza
+		if (targetDir.x > 0.1f)       facingRight = true;
+		else if (targetDir.x < -0.1f) facingRight = false;
 
-		if (targetDir.x != 0.f || targetDir.y != 0.f)
+		bool isMoving = (targetDir.x != 0.f || targetDir.y != 0.f);
+		animator.setMovementState(isMoving, facingRight); // Wysy³amy stan do kontrolera
+
+		if (isMoving)
 		{
 			float length = std::sqrt(targetDir.x * targetDir.x + targetDir.y * targetDir.y);
 			targetDir.x /= length;
@@ -115,15 +106,13 @@ namespace game::entities
 			if (std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y) < 10.0f) velocity = { 0.f, 0.f };
 		}
 
-		// --- KONTROLA LIMITU PR?DKO?CI ---
+		// --- KONTROLA LIMITU PRÊDKOŒCI ---
 		if (speedUncapTimer > 0.0f)
 		{
-			// Podczas dasha odliczamy czas i pozwalamy na przekroczenie maxSpeed
 			speedUncapTimer -= dt;
 		}
 		else
 		{
-			// Standardowy ruch – pilnujemy maksymalnej pr?dko?ci
 			float currentSpeed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
 			if (currentSpeed > maxSpeed)
 			{
@@ -132,7 +121,7 @@ namespace game::entities
 			}
 		}
 
-		// --- MA?LANY PO?LIZG (SONAR WEKTOROWY) ---
+		// --- MAŒLANY POŒLIZG (SONAR WEKTOROWY) ---
 		sf::Vector2f nextPos = position + velocity * dt;
 		float fullRadius = shape.getRadius() + shape.getOutlineThickness();
 		sf::Vector2u maskSize = collisionMask.getSize();
@@ -230,15 +219,17 @@ namespace game::entities
 
 		if (playerSprite.has_value())
 		{
-			// Posta? nie wykonuje rotacji do osi kursora, pod??a jedynie pozycj?
 			playerSprite->setPosition(position);
+
+			// --- DELEGACJA ANIMACJI DO KONTROLERA ---
+			animator.updateAndApply(*playerSprite, dt);
 		}
 		else
 		{
 			shape.setPosition(position);
 		}
 
-		// --- Aktualizacja stanów umiej?tno?ci (Cooldowny) ---
+		// --- Aktualizacja stanów umiejêtnoœci (Cooldowny) ---
 		if (primaryWeapon != nullptr)
 		{
 			primaryWeapon->update(dt);
