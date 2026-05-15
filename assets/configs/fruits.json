@@ -1,21 +1,50 @@
 {
   "Apple": {
-    "hp": 100,
-    "maxSpeed": 300.0,
-    "texturePath": "assets/textures/entities/appleStand.png",
-    "walkTexturePath": "assets/textures/entities/appleWalk.png",
+    "hp": 12,
+    "maxSpeed": 350.0,
+    "name":  "Gala The Gladiator",
+    "texturePath": "assets/textures/entities/characters/appleStand.png",
+    "walkTexturePath": "assets/textures/entities/characters/appleWalk.png",
     "abilities": [ "Shotgun", "Dash" ]
   },
   "Banana": {
     "hp": 10,
-    "maxSpeed": 500.0,
+    "maxSpeed": 450.0,
+    "name": "Bananarang",
     "texturePath": "assets/textures/entities/Banana.png",
+    "walkTexturePath": "",
     "abilities": [ "Shoot" ]
   },
+  "Cherry": {
+    "hp": 9,
+    "maxSpeed": 400.0,
+    "name": "Pit & Spit",
+    "texturePath": "",
+    "walkTexturePath": "",
+    "abilities": []
+  },
+  "Strawberry": {
+    "hp": 10,
+    "maxSpeed": 400.0,
+    "name": "juice Lee",
+    "texturePath": "",
+    "walkTexturePath": "",
+    "abilities": []
+  },
+  "Blackberry": {
+    "hp": 10,
+    "maxSpeed": 400.0,
+    "name": "Black-Brusier",
+    "texturePath": "",
+    "walkTexturePath": "",
+    "abilities": []
+  },
   "Orange": {
-    "hp": 15,
+    "hp": 20,
     "maxSpeed": 300.0,
+    "name": "Citrus Maximus",
     "texturePath": "assets/textures/entities/Orange.png",
+    "walkTexturePath": "",
     "abilities": [ "Shoot" ]
   }
 }

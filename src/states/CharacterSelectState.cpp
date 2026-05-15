@@ -14,7 +14,7 @@ namespace game::states
 		float centerY = viewSize.y / 2.0f;
 
 		// 1. T³o (przyciemnione dla lepszej widocznoœci)
-		if (bgTex.loadFromFile("assets/textures/menu/bg_1.png")) // Mo¿esz u¿yæ t³a z menu
+		if (bgTex.loadFromFile("assets/textures/ui/bg_1.png")) // Mo¿esz u¿yæ t³a z menu
 		{
 			bgSprite = sf::Sprite(bgTex);
 			sf::Vector2f bgSize(bgTex.getSize());

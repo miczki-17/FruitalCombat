@@ -50,7 +50,11 @@ add_executable(FruitalCombat
     src/components/Bullet.cpp
     src/components/ShotgunAbility.cpp
     src/utils/VideoPlayer.h
- "src/states/CharacterSelectState.h" "src/states/CharacterSelectState.cpp")
+    src/core/AnimationController.h
+    src/core/AnimationController.cpp
+    src/states/CharacterSelectState.h
+    src/states/CharacterSelectState.cpp
+)
 
 
 # --- 3. NAG?ÓWKI I LINKOWANIE ---
