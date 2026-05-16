@@ -20,7 +20,6 @@ namespace game::entities
 
 	void Player::loadTextures(const std::string& idlePath, const std::string& walkPath)
 	{
-		// Przekazujemy wczytywanie obu tekstur do naszego animatora
 		if (animator.loadTextures(idlePath, walkPath))
 		{
 			playerSprite.emplace(animator.getDefaultTexture());

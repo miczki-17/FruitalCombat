@@ -115,14 +115,15 @@ namespace game::states
 		// 4. £ADOWANIE ELEMENTÓW INTERFEJSU UI (beze zmian)
 		std::map<std::string, std::string> uiPaths = {
 			{"start", "assets/textures/ui/start.png"},
-			{"settings", "assets/textures/ui/settings.png"},
+			{"settings", "assets/textures/ui/settings_button.png"},
 			{"shop", "assets/textures/ui/shop.png"},
 			{"achievements", "assets/textures/ui/achievements.png"},
 			{"left_arrow", "assets/textures/ui/left_arrow.png"},
 			{"right_arrow", "assets/textures/ui/right_arrow.png"},
 			{"choose", "assets/textures/ui/choose.png"},
-			{"back", "assets/textures/ui/back.png"},
-			{"log_platform", "assets/textures/ui/log_platform.png"}
+			{"back", "assets/textures/ui/back_button.png"},
+			{"log_platform", "assets/textures/ui/log_platform.png"},
+			{"settings_bg", "assets/textures/ui/settings_background.png" }
 		};
 
 		for (const auto& [key, path] : uiPaths) {

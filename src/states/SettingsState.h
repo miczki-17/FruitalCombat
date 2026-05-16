@@ -15,6 +15,8 @@ namespace game::states
 	private:
 		// --- OVERLAY ---
 		sf::RectangleShape darkOverlay;
+		sf::Texture bgTexture;
+		std::optional<sf::Sprite> bgSprite;
 
 		// --- FONT ---
 		sf::Font font;
@@ -40,7 +42,11 @@ namespace game::states
 		RebindTarget currentRebind = RebindTarget::None;
 
 		// --- NAVIGATE ---
-		std::optional<sf::Text> backBtnText;
+		//std::optional<sf::Text> backBtnText;
+
+		//backbutton
+		sf::Texture backBtnTex;
+		std::optional<sf::Sprite> backBtnSprite;
 
 		// helpers
 		std::string keyToString(sf::Keyboard::Key key);

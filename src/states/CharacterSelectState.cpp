@@ -267,6 +267,7 @@ namespace game::states
 				game->playUIClick();
 				int N = roster.size();
 				game->selectedFruitType = roster[(targetIndex % N + N) % N].type;
+				game->menuMusic.stop();
 				game->getStateMachine().changeState(StateType::Playing);
 			}
 			else if (keyPressed->code == sf::Keyboard::Key::Escape) {

@@ -12,9 +12,16 @@ namespace game::states
 	{
 		sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
 
-		// blacked bg
-		darkOverlay.setSize(viewSize);
-		darkOverlay.setFillColor(sf::Color(0, 0, 0, 210));
+		//£adowanie t³a ustawieñ 
+		if (game->menuUiBuffer.contains("settings_bg"))
+		{
+			if (bgTexture.loadFromImage(game->menuUiBuffer["settings_bg"]))
+			{
+				bgSprite = sf::Sprite(bgTexture);
+				sf::Vector2f texSize(bgTexture.getSize());
+				bgSprite->setScale({ viewSize.x / texSize.x, viewSize.y / texSize.y });
+			}
+		}
 
 		// Font load
 		if (!font.openFromFile("../../../assets/fonts/ARIAL.TTF"))
@@ -26,29 +33,20 @@ namespace game::states
 		// --- LEFT SECTION: AUDIO ---
 		float leftColX = viewSize.x * 0.25f;
 
-		audioTitle = sf::Text(font, "Audio Settings", 32);
-		(*audioTitle).setPosition({ leftColX - 100.f, 150.f });
-
-		volumeLabel = sf::Text(font, "Master Volume", 20);
-		(*volumeLabel).setPosition({ leftColX - 150.f, 250.f });
-
 		sliderTrack.setSize({ 200.f, 10.f });
 		sliderTrack.setFillColor(sf::Color(100, 100, 100));
-		sliderTrack.setPosition({ leftColX + 20.f, 258.f });
+		sliderTrack.setPosition({ leftColX + 40.f, 380.f });
 
 		sliderHandle.setSize({ 15.f, 26.f });
 		sliderHandle.setFillColor(sf::Color::White);
 		sliderHandle.setOrigin({ 7.5f, 8.f });
-		sliderHandle.setPosition({ leftColX + 20.f + 200.f, 258.f });
+		sliderHandle.setPosition({ leftColX + 170.f, 380.f });
 
 		volumeValueText = sf::Text(font, "100%", 20);
-		(*volumeValueText).setPosition({ leftColX + 240.f, 250.f });
+		(*volumeValueText).setPosition({ leftColX + 50.f, 410.f });
 
-		// --- RIGHT SECTION ---
+		// --- RIGHT SECTION BINDS ---
 		float rightColX = viewSize.x * 0.7f;
-
-		controlsTitle = sf::Text(font, "Movement Binds", 32);
-		(*controlsTitle).setPosition({ rightColX - 100.f, 150.f });
 
 		auto setupBindRow = [&](std::optional<sf::Text>& label, std::optional<sf::Text>& btn, const std::string& labelStr, float yPos)
 		{
@@ -65,10 +63,21 @@ namespace game::states
 		setupBindRow(rightLabel, rightBtnText, "Move Right", 430.f);
 
 		// --- BACK BUTTON ---
-		backBtnText = sf::Text(font, "[ BACK ]", 28);
-		sf::FloatRect bounds = (*backBtnText).getLocalBounds();
-		(*backBtnText).setOrigin({ bounds.size.x / 2.f, bounds.size.y / 2.f });
-		(*backBtnText).setPosition({ viewSize.x / 2.f, viewSize.y - 100.f });
+		if (game->menuUiBuffer.contains("back"))
+		{
+			if (backBtnTex.loadFromImage(game->menuUiBuffer["back"]))
+			{
+				backBtnSprite = sf::Sprite(backBtnTex);
+				sf::Vector2f originalSize(backBtnTex.getSize());
+
+				sf::Vector2f targetSize(120.f, 60.f);
+				backBtnSprite->setScale({ targetSize.x / originalSize.x, targetSize.y / originalSize.y });
+
+				backBtnSprite->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
+
+				backBtnSprite->setPosition({ 80.f, 50.f });
+			}
+		}
 
 		currentVolume = sf::Listener::getGlobalVolume();
 
@@ -113,8 +122,9 @@ namespace game::states
 			auto mouseEvent = event.getIf<sf::Event::MouseButtonPressed>();
 			if (mouseEvent->button == sf::Mouse::Button::Left)
 			{
-				if ((*backBtnText).getGlobalBounds().contains(mousePos))
+				if (backBtnSprite && backBtnSprite->getGlobalBounds().contains(mousePos))
 				{
+					game->playUIClick();
 					game->getStateMachine().popState();
 					return;
 				}
@@ -169,10 +179,24 @@ namespace game::states
 		(*downBtnText).setString(currentRebind == RebindTarget::Down ? "[ ... ]" : "[ " + keyToString(game->keyDown) + " ]");
 		(*rightBtnText).setString(currentRebind == RebindTarget::Right ? "[ ... ]" : "[ " + keyToString(game->keyRight) + " ]");
 
-		if ((*backBtnText).getGlobalBounds().contains(uiMousePos))
-			(*backBtnText).setFillColor(sf::Color::Yellow);
-		else
-			(*backBtnText).setFillColor(sf::Color::White);
+		if (backBtnSprite)
+		{
+			sf::Vector2f texSize(backBtnSprite->getTexture().getSize());
+			// Musimy znaæ bazow¹ skalê dla rozmiaru 120x60
+			float baseScaleX = 120.f / texSize.x;
+			float baseScaleY = 60.f / texSize.y;
+
+			if (backBtnSprite->getGlobalBounds().contains(uiMousePos))
+			{
+				backBtnSprite->setColor(sf::Color(255, 255, 255)); // Pe³na jasnoœæ
+				backBtnSprite->setScale({ baseScaleX * 1.1f, baseScaleY * 1.1f }); // Powiêkszenie o 10%
+			}
+			else
+			{
+				backBtnSprite->setColor(sf::Color(210, 210, 210)); // Lekkie przyciemnienie, gdy mysz jest poza
+				backBtnSprite->setScale({ baseScaleX, baseScaleY }); // Powrót do normalnego rozmiaru
+			}
+		}
 	}
 
 	void SettingsState::render(sf::RenderWindow& window)
@@ -180,7 +204,7 @@ namespace game::states
 		sf::View uiView = window.getDefaultView();
 		window.setView(uiView);
 
-		window.draw(darkOverlay);
+		if (bgSprite.has_value())	window.draw(*bgSprite);
 
 		if (audioTitle.has_value())       window.draw(*audioTitle);
 		if (volumeLabel.has_value())      window.draw(*volumeLabel);
@@ -204,7 +228,8 @@ namespace game::states
 		if (rightLabel.has_value())       window.draw(*rightLabel);
 		if (rightBtnText.has_value())     window.draw(*rightBtnText);
 
-		if (backBtnText.has_value())      window.draw(*backBtnText);
+		if (backBtnSprite)	window.draw(*backBtnSprite);
+		
 	}
 
 	std::string SettingsState::keyToString(sf::Keyboard::Key key)
