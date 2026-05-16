@@ -10,110 +10,136 @@ namespace game::states
 	IntroState::IntroState(game::Game* game)
 		: State(game), elapsedTime(0.f)
 	{
-		// Czas trwania jednej klatki dla wideo 30 FPS
 		frameDuration = 1.0f / 30.0f;
-
 		std::cout << "[INTRO] Initializing video intro...\n";
 
-		// Wczytanie wideo (upewnij si?, ?e plik intro.mp4 znajduje si? w tym folderze)
 		std::string videoPath = "assets/video/intro/intro.mp4";
-
-		if (!videoPlayer.load(videoPath))
-		{
+		if (!videoPlayer.load(videoPath)) {
 			std::cerr << "[INTRO ERROR] Failed to load intro video!\n";
 		}
 
-		// Dopasowanie rozmiaru wideo do okna
 		sf::Vector2f viewSize = game->getWindow().getView().getSize();
 		videoPlayer.fitToView(viewSize);
 
-		// Uruchomienie ?adowania menu w osobnym w?tku
+		// Uruchomienie ³adowania asynchronicznego
 		workerThread = std::make_unique<std::thread>(&IntroState::loadAssetsInBg, this);
 
-		// Odtwarzanie muzyki
-		if (introMusic.openFromFile("assets/audio/intro/intro.mp3"))
-		{
+		if (introMusic.openFromFile("assets/audio/intro/intro.mp3")) {
 			introMusic.play();
 		}
-		else
-		{
+		else {
 			std::cerr << "[INTRO ERROR] Cannot load intro music.\n";
 		}
 	}
 
 	IntroState::~IntroState()
 	{
-		if (workerThread && workerThread->joinable())
-		{
+		if (workerThread && workerThread->joinable()) {
 			workerThread->join();
 		}
 	}
 
 	void IntroState::loadAssetsInBg()
 	{
-		std::cout << "[ASYNC] Menu loading...\n";
+		std::cout << "[ASYNC] Assets loading started...\n";
 
 		game->menuImageBuffer.clear();
 		game->menuUiBuffer.clear();
+		game->characterImageBuffer.clear();
 
-		std::vector<std::string> buttonsNames = {
-			"start", "achievements", "shop", "settings", "back"
-		};
-
-		
-		for (int i = 1; i <= 6; ++i)
-		{
-			std::string filename = std::format("assets/textures/ui/bg_{:01}.png", i);
-			sf::Image img;
-			if (img.loadFromFile(filename))
-			{
-				game->menuImageBuffer.push_back(std::move(img));
-			}
-			else
-			{
-				std::cerr << "[ASYNC ERROR] Cannot find " << filename << '\n';
-			}
-		}
-
-		// buttons load
-		for (const auto& name : buttonsNames) {
-			std::string filename = "assets/textures/ui/" + name + ".png";
-			sf::Image img;
-			if (img.loadFromFile(filename))
-			{
-				game->menuUiBuffer[name] = std::move(img);
-			}
-			else
-			{
-				std::cerr << "[ASYNC ERROR] Cannot find " << filename << '\n';
-			}
-		}
-
-		std::cout << "[ASYNC] Menu loaded.\n";
-		isMenuLoaded = true;
-
-		// load JSON config
+		// 1. NAJPIERW £ADUJEMY CONFIG JSON (bo potrzebujemy œcie¿ek z niego!)
 		std::cout << "[ASYNC] Characters config loading...\n";
 		std::ifstream configFile("assets/configs/fruits.json");
 		if (configFile.is_open())
 		{
-			try
-			{
+			try {
 				configFile >> (game->fruitsConfig);
 				isConfigLoaded = true;
-				std::cout << "[ASYNC] fruits.json loaded.\n";
+				std::cout << "[ASYNC] fruits.json loaded successfully.\n";
 			}
-			catch (const nlohmann::json::parse_error& e)
-			{
-				std::cerr << "[ASYNC ERROR] " << e.what() << "\n";
+			catch (const nlohmann::json::parse_error& e) {
+				std::cerr << "[ASYNC ERROR] JSON Parse error: " << e.what() << "\n";
+				isConfigLoaded = false;
 			}
 		}
+		else {
+			std::cerr << "[ASYNC ERROR] Cannot open fruits.json!\n";
+			isConfigLoaded = false;
+		}
+
+		// 2. AUTOMATYCZNE £ADOWANIE TEKSTUR POSTACI Z JSON-a
+		if (isConfigLoaded)
+		{
+			std::cout << "[ASYNC] Reading character paths from JSON...\n";
+
+			// Przechodzimy pêtl¹ przez ka¿dy obiekt w pliku JSON (np. "Apple", "Banana", "Cherry"...)
+			for (auto& [characterKey, characterData] : game->fruitsConfig.items())
+			{
+				// Sprawdzamy, czy dana postaæ ma zdefiniowane pole "texturePath"
+				if (characterData.contains("texturePath"))
+				{
+					std::string path = characterData.value("texturePath", "");
+
+					// Jeœli œcie¿ka nie jest pusta, ³adujemy plik do RAM-u
+					if (!path.empty())
+					{
+						sf::Image img;
+						if (img.loadFromFile(path))
+						{
+							// Zapisujemy w buforze pod kluczem z JSON-a (np. game->characterImageBuffer["Apple"])
+							game->characterImageBuffer[characterKey] = std::move(img);
+							std::cout << "[ASYNC] Loaded character image for: " << characterKey << " from path: " << path << "\n";
+						}
+						else
+						{
+							std::cerr << "[ASYNC ERROR] Failed to load file from texturePath: " << path << "\n";
+						}
+					}
+				}
+			}
+		}
+
+		// 3. £ADOWANIE T£A MENU (beze zmian)
+		for (int i = 1; i <= 6; ++i)
+		{
+			std::string filename = std::format("assets/textures/ui/bg_{:01}.png", i);
+			sf::Image img;
+			if (img.loadFromFile(filename)) {
+				game->menuImageBuffer.push_back(std::move(img));
+			}
+			else {
+				std::cerr << "[ASYNC ERROR] Cannot find " << filename << '\n';
+			}
+		}
+
+		// 4. £ADOWANIE ELEMENTÓW INTERFEJSU UI (beze zmian)
+		std::map<std::string, std::string> uiPaths = {
+			{"start", "assets/textures/ui/start.png"},
+			{"settings", "assets/textures/ui/settings.png"},
+			{"shop", "assets/textures/ui/shop.png"},
+			{"achievements", "assets/textures/ui/achievements.png"},
+			{"left_arrow", "assets/textures/ui/left_arrow.png"},
+			{"right_arrow", "assets/textures/ui/right_arrow.png"},
+			{"choose", "assets/textures/ui/choose.png"},
+			{"back", "assets/textures/ui/back.png"},
+			{"log_platform", "assets/textures/ui/log_platform.png"}
+		};
+
+		for (const auto& [key, path] : uiPaths) {
+			sf::Image img;
+			if (img.loadFromFile(path)) {
+				game->menuUiBuffer[key] = std::move(img);
+			}
+			else {
+				std::cerr << "[ASYNC ERROR] Cannot find UI: " << path << '\n';
+			}
+		}
+
+		isMenuLoaded = true;
+		std::cout << "[ASYNC] All assets loaded to RAM safely.\n";
 	}
 
-	StateType IntroState::getType() const
-	{
-		return StateType::Intro;
-	}
+	StateType IntroState::getType() const { return StateType::Intro; }
 
 	void IntroState::handleEvent(const sf::Event& event)
 	{
@@ -122,16 +148,10 @@ namespace game::states
 			auto keyEvent = event.getIf<sf::Event::KeyPressed>();
 			if (keyEvent->code == sf::Keyboard::Key::Space || keyEvent->code == sf::Keyboard::Key::Enter)
 			{
-				// let to skip intro
-				if (isMenuLoaded && isConfigLoaded)
-				{
+				if (isMenuLoaded && isConfigLoaded) {
 					introMusic.stop();
 					game->getStateMachine().changeState(StateType::Menu);
 					return;
-				}
-				else
-				{
-					std::cout << "[ASYNC] Menu still loading, cannot skip intro yet...\n";
 				}
 			}
 		}
@@ -140,26 +160,19 @@ namespace game::states
 	void IntroState::update(float dt)
 	{
 		if (dt > 0.1f) dt = 0.1f;
-
 		elapsedTime += dt;
 
-		// window scaling by window scale
 		sf::Vector2f viewSize = game->getWindow().getView().getSize();
 		videoPlayer.fitToView(viewSize);
 
 		while (elapsedTime >= frameDuration)
 		{
 			elapsedTime -= frameDuration;
-
-			if (!videoPlayer.isDone())
-			{
+			if (!videoPlayer.isDone()) {
 				videoPlayer.update();
 			}
-			else
-			{
-				// --> MenuState
-				if (isMenuLoaded && isConfigLoaded)
-				{
+			else {
+				if (isMenuLoaded && isConfigLoaded) {
 					introMusic.stop();
 					game->getStateMachine().changeState(StateType::Menu);
 					return;
@@ -168,8 +181,5 @@ namespace game::states
 		}
 	}
 
-	void IntroState::render(sf::RenderWindow& window)
-	{
-		window.draw(videoPlayer.getSprite());
-	}
+	void IntroState::render(sf::RenderWindow& window) { window.draw(videoPlayer.getSprite()); }
 }

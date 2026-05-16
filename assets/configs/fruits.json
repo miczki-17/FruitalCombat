@@ -1,50 +1,62 @@
 {
   "Apple": {
+    "name": "Mac-Smash",
+    "title": "The Apple Fighter",
     "hp": 12,
+    "damage": 12,
     "maxSpeed": 350.0,
-    "name":  "Gala The Gladiator",
     "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "assets/textures/entities/characters/appleWalk.png",
-    "abilities": [ "Shotgun", "Dash" ]
+    "abilities": [ "Seed Buckshot", "Cider Dash" ]
   },
   "Banana": {
+    "name": "Peel-Zero",
+    "title": "Bananarang Ninja",
     "hp": 10,
+    "damage": 15,
     "maxSpeed": 450.0,
-    "name": "Bananarang",
-    "texturePath": "assets/textures/entities/Banana.png",
+    "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "",
-    "abilities": [ "Shoot" ]
+    "abilities": [ "Bananarang", "Phantom Peel" ]
   },
   "Cherry": {
+    "name": "Twin-Kaze",
+    "title": "Pit & Spit",
     "hp": 9,
+    "damage": 18,
     "maxSpeed": 400.0,
-    "name": "Pit & Spit",
-    "texturePath": "",
+    "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "",
-    "abilities": []
+    "abilities": [ "Gatling Pits", "Cherry Bomb" ]
   },
   "Strawberry": {
+    "name": "Juice Lee",
+    "title": "The Red Menace",
     "hp": 10,
+    "damage": 15,
     "maxSpeed": 400.0,
-    "name": "juice Lee",
-    "texturePath": "",
+    "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "",
-    "abilities": []
+    "abilities": [ "Seed Burst", "Jam Flurry" ]
   },
   "Blackberry": {
-    "hp": 10,
-    "maxSpeed": 400.0,
-    "name": "Black-Brusier",
+    "name": "Black-Bruiser",
+    "title": "The Wild Bramble",
+    "hp": 15,
+    "damage": 16,
+    "maxSpeed": 320.0,
     "texturePath": "",
     "walkTexturePath": "",
-    "abilities": []
+    "abilities": [ "Cluster Smash", "Thorn Armor" ]
   },
   "Orange": {
-    "hp": 20,
-    "maxSpeed": 300.0,
     "name": "Citrus Maximus",
-    "texturePath": "assets/textures/entities/Orange.png",
+    "title": "The Iron Rind",
+    "hp": 20,
+    "damage": 20,
+    "maxSpeed": 300.0,
+    "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "",
-    "abilities": [ "Shoot" ]
+    "abilities": [ "Acid Squirt", "Rind Roll" ]
   }
 }

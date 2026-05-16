@@ -13,7 +13,6 @@
 #include "../entities/EntityTypes.h"
 #include "../vendor/nlohmann/json.hpp"
 
-
 namespace game
 {
 	class Game
@@ -33,9 +32,10 @@ namespace game
 		StateMachine& getStateMachine();
 		sf::RenderWindow& getWindow();
 
-		// pre-loading data buffers
+		// ----- BUFORY DANYCH (RAM) -----
 		std::map<std::string, sf::Image> menuUiBuffer;
 		std::vector<sf::Image> menuImageBuffer;
+		std::map<std::string, sf::Image> characterImageBuffer; // NOWY BUFOR NA POSTACIE
 
 		// --- WSAD ---
 		sf::Keyboard::Key keyUp = sf::Keyboard::Key::W;
@@ -46,6 +46,9 @@ namespace game
 		// sounds
 		sf::SoundBuffer uiClickBuffer;
 		std::optional<sf::Sound> uiClickSound;
+
+		// music
+		sf::Music menuMusic;
 
 		// default character
 		game::entities::FruitType selectedFruitType = game::entities::FruitType::Apple;
