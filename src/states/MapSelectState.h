@@ -2,7 +2,7 @@
 
 #include "../core/State.h"
 #include <SFML/Graphics.hpp>
-#include <deque> // <-- U¿ywamy bezpiecznej kolejki!
+#include <deque>
 #include <vector>
 #include <optional>
 #include <string>

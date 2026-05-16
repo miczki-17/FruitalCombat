@@ -117,17 +117,14 @@ namespace game::states
 			opt.difficultyStars = mapData.value("difficultyStars", 1);
 			opt.damageMultiplier = mapData.value("damageMultiplier", 1.0f);
 
-			// --- NAPRAWA BŁĘDU: NAJPIERW WRZUCAMY DO KOLEJKI ---
-			// Dzięki temu obiekt ma już stały adres w pamięci i Sprite nie zgłupieje.
 			roster.push_back(std::move(opt));
-			auto& savedMap = roster.back(); // Bierzemy referencję do obiektu, który już jest na liście
+			auto& savedMap = roster.back();
 
-			// --- DOPIERO TERAZ ŁADUJEMY TEKSTURĘ ---
+			
 			if (game->mapImageBuffer.contains(jsonKey))
 			{
 				if (savedMap.thumbnailTexture.loadFromImage(game->mapImageBuffer[jsonKey]))
 				{
-					// Sprite przypina się do bezpiecznej tekstury wewnątrz std::deque
 					savedMap.thumbnailSprite.emplace(savedMap.thumbnailTexture);
 					sf::Vector2u size = savedMap.thumbnailTexture.getSize();
 					savedMap.thumbnailSprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });

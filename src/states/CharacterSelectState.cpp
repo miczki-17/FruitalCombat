@@ -54,7 +54,7 @@ namespace game::states
 		}
 
 		darkOverlay.setSize(viewSize);
-		darkOverlay.setFillColor(sf::Color(0, 0, 0, 0));
+		darkOverlay.setFillColor(sf::Color(0, 0, 0, 80));
 
 		if (!font.openFromFile("assets/fonts/ARIAL.TTF")) {
 			std::cerr << "[SELECT ERROR] Cannot load font.\n";
@@ -127,7 +127,7 @@ namespace game::states
 	void CharacterSelectState::loadRoster()
 	{
 		roster.clear();
-		// std::deque nie wymaga reserve() !
+		
 
 		for (auto& el : game->fruitsConfig.items())
 		{
@@ -239,7 +239,7 @@ namespace game::states
 				int N = roster.size();
 				if (N > 0) {
 					game->selectedFruitType = roster[(targetIndex % N + N) % N].type;
-					game->getStateMachine().changeState(StateType::MapSelect); // <-- Zmieniono na MapSelect
+					game->getStateMachine().changeState(StateType::MapSelect);
 				}
 			}
 			else if (keyPressed->code == sf::Keyboard::Key::Escape) {
@@ -266,7 +266,7 @@ namespace game::states
 					int N = roster.size();
 					if (N > 0) {
 						game->selectedFruitType = roster[(targetIndex % N + N) % N].type;
-						game->getStateMachine().changeState(StateType::MapSelect); // <-- Zmieniono na MapSelect
+						game->getStateMachine().changeState(StateType::MapSelect);
 					}
 				}
 				if (backBtnSprite && backBtnSprite->getGlobalBounds().contains(worldPos)) {

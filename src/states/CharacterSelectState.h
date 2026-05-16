@@ -76,7 +76,7 @@ namespace game::states
 			std::string abilitiesText;
 		};
 
-		// --- KLUCZOWA ZMIANA: std::deque GWARANTUJE BRAK CRASHÓW ---
+		// --- std::deque ---
 		std::deque<FruitOption> roster;
 
 		int targetIndex;
