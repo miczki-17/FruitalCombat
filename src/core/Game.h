@@ -36,6 +36,8 @@ namespace game
 		std::map<std::string, sf::Image> menuUiBuffer;
 		std::vector<sf::Image> menuImageBuffer;
 		std::map<std::string, sf::Image> characterImageBuffer; // NOWY BUFOR NA POSTACIE
+		std::map<std::string, sf::Image> mapImageBuffer;
+
 
 		// --- WSAD ---
 		sf::Keyboard::Key keyUp = sf::Keyboard::Key::W;
@@ -52,8 +54,12 @@ namespace game
 
 		// default character
 		game::entities::FruitType selectedFruitType = game::entities::FruitType::Apple;
+		//default map & map key <-----V
+		std::string selectedMapKey = "WildOrchard";
 
 		// characters configs
 		nlohmann::json fruitsConfig;
+		// maps config
+		nlohmann::json mapsConfig;
 	};
 }

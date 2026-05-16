@@ -3,6 +3,7 @@
 #include "../core/State.h"
 #include "../entities/EntityTypes.h"
 #include <SFML/Graphics.hpp>
+#include <deque>
 #include <vector>
 #include <optional>
 #include <string>
@@ -48,7 +49,6 @@ namespace game::states
 
 		// --- CHARACTER/FRUIT DATA STRUCTURE ---
 		struct FruitOption {
-			// Assign a default enum value (resolves previous compilation warnings/errors)
 			game::entities::FruitType type = game::entities::FruitType::Apple;
 
 			std::string jsonKey;
@@ -76,8 +76,9 @@ namespace game::states
 			std::string abilitiesText;
 		};
 
-		// Carousel properties
-		std::vector<FruitOption> roster;
+		// --- KLUCZOWA ZMIANA: std::deque GWARANTUJE BRAK CRASHÓW ---
+		std::deque<FruitOption> roster;
+
 		int targetIndex;
 		float currentScroll;
 

@@ -21,7 +21,7 @@ namespace game::states
 		sf::Vector2f viewSize = game->getWindow().getView().getSize();
 		videoPlayer.fitToView(viewSize);
 
-		// Uruchomienie ³adowania asynchronicznego
+		// Odpalamy w¹tek pobierania danych w tle
 		workerThread = std::make_unique<std::thread>(&IntroState::loadAssetsInBg, this);
 
 		if (introMusic.openFromFile("assets/audio/intro/intro.mp3")) {
@@ -43,11 +43,15 @@ namespace game::states
 	{
 		std::cout << "[ASYNC] Assets loading started...\n";
 
+		// Czyszczenie buforów
 		game->menuImageBuffer.clear();
 		game->menuUiBuffer.clear();
 		game->characterImageBuffer.clear();
+		game->mapImageBuffer.clear();
 
-		// 1. NAJPIERW £ADUJEMY CONFIG JSON (bo potrzebujemy œcie¿ek z niego!)
+		// ==========================================
+		// 1. £ADOWANIE CONFIGU POSTACI I TEKSTUR
+		// ==========================================
 		std::cout << "[ASYNC] Characters config loading...\n";
 		std::ifstream configFile("assets/configs/fruits.json");
 		if (configFile.is_open())
@@ -56,9 +60,21 @@ namespace game::states
 				configFile >> (game->fruitsConfig);
 				isConfigLoaded = true;
 				std::cout << "[ASYNC] fruits.json loaded successfully.\n";
+
+				for (auto& [characterKey, characterData] : game->fruitsConfig.items()) {
+					if (characterData.contains("texturePath")) {
+						std::string path = characterData.value("texturePath", "");
+						if (!path.empty()) {
+							sf::Image img;
+							if (img.loadFromFile(path)) {
+								game->characterImageBuffer[characterKey] = std::move(img);
+							}
+						}
+					}
+				}
 			}
 			catch (const nlohmann::json::parse_error& e) {
-				std::cerr << "[ASYNC ERROR] JSON Parse error: " << e.what() << "\n";
+				std::cerr << "[ASYNC ERROR] fruits.json Parse error: " << e.what() << "\n";
 				isConfigLoaded = false;
 			}
 		}
@@ -67,52 +83,51 @@ namespace game::states
 			isConfigLoaded = false;
 		}
 
-		// 2. AUTOMATYCZNE £ADOWANIE TEKSTUR POSTACI Z JSON-a
-		if (isConfigLoaded)
+		// ==========================================
+		// 2. £ADOWANIE CONFIGU MAP I TEKSTUR
+		// ==========================================
+		std::cout << "[ASYNC] Maps config loading...\n";
+		std::ifstream mapsFile("assets/configs/maps.json");
+		if (mapsFile.is_open())
 		{
-			std::cout << "[ASYNC] Reading character paths from JSON...\n";
+			try {
+				mapsFile >> (game->mapsConfig);
+				isMapConfigLoaded = true;
+				std::cout << "[ASYNC] maps.json loaded successfully.\n";
 
-			// Przechodzimy pêtl¹ przez ka¿dy obiekt w pliku JSON (np. "Apple", "Banana", "Cherry"...)
-			for (auto& [characterKey, characterData] : game->fruitsConfig.items())
-			{
-				// Sprawdzamy, czy dana postaæ ma zdefiniowane pole "texturePath"
-				if (characterData.contains("texturePath"))
-				{
-					std::string path = characterData.value("texturePath", "");
-
-					// Jeœli œcie¿ka nie jest pusta, ³adujemy plik do RAM-u
-					if (!path.empty())
-					{
-						sf::Image img;
-						if (img.loadFromFile(path))
-						{
-							// Zapisujemy w buforze pod kluczem z JSON-a (np. game->characterImageBuffer["Apple"])
-							game->characterImageBuffer[characterKey] = std::move(img);
-							std::cout << "[ASYNC] Loaded character image for: " << characterKey << " from path: " << path << "\n";
-						}
-						else
-						{
-							std::cerr << "[ASYNC ERROR] Failed to load file from texturePath: " << path << "\n";
+				for (auto& [mapKey, mapData] : game->mapsConfig.items()) {
+					if (mapData.contains("thumbnailPath")) {
+						std::string path = mapData.value("thumbnailPath", "");
+						if (!path.empty()) {
+							sf::Image img;
+							if (img.loadFromFile(path)) {
+								game->mapImageBuffer[mapKey] = std::move(img);
+								std::cout << "[ASYNC] Loaded map thumbnail for: " << mapKey << "\n";
+							}
 						}
 					}
 				}
 			}
+			catch (const nlohmann::json::parse_error& e) {
+				std::cerr << "[ASYNC ERROR] maps.json Parse error: " << e.what() << "\n";
+				isMapConfigLoaded = false;
+			}
+		}
+		else {
+			std::cerr << "[ASYNC ERROR] Cannot open maps.json!\n";
+			isMapConfigLoaded = false;
 		}
 
-		// 3. £ADOWANIE T£A MENU (beze zmian)
+		// ==========================================
+		// 3. £ADOWANIE UI I T£A
+		// ==========================================
 		for (int i = 1; i <= 6; ++i)
 		{
 			std::string filename = std::format("assets/textures/ui/bg_{:01}.png", i);
 			sf::Image img;
-			if (img.loadFromFile(filename)) {
-				game->menuImageBuffer.push_back(std::move(img));
-			}
-			else {
-				std::cerr << "[ASYNC ERROR] Cannot find " << filename << '\n';
-			}
+			if (img.loadFromFile(filename)) game->menuImageBuffer.push_back(std::move(img));
 		}
 
-		// 4. £ADOWANIE ELEMENTÓW INTERFEJSU UI (beze zmian)
 		std::map<std::string, std::string> uiPaths = {
 			{"start", "assets/textures/ui/start.png"},
 			{"settings", "assets/textures/ui/settings_button.png"},
@@ -123,17 +138,13 @@ namespace game::states
 			{"choose", "assets/textures/ui/choose.png"},
 			{"back", "assets/textures/ui/back_button.png"},
 			{"log_platform", "assets/textures/ui/log_platform.png"},
-			{"settings_bg", "assets/textures/ui/settings_background.png" }
+			{"settings_bg", "assets/textures/ui/settings_bg.png" },
+			{"character_select_bg", "assets/textures/ui/character_select_bg.png"}
 		};
 
 		for (const auto& [key, path] : uiPaths) {
 			sf::Image img;
-			if (img.loadFromFile(path)) {
-				game->menuUiBuffer[key] = std::move(img);
-			}
-			else {
-				std::cerr << "[ASYNC ERROR] Cannot find UI: " << path << '\n';
-			}
+			if (img.loadFromFile(path)) game->menuUiBuffer[key] = std::move(img);
 		}
 
 		isMenuLoaded = true;
@@ -149,10 +160,10 @@ namespace game::states
 			auto keyEvent = event.getIf<sf::Event::KeyPressed>();
 			if (keyEvent->code == sf::Keyboard::Key::Space || keyEvent->code == sf::Keyboard::Key::Enter)
 			{
-				if (isMenuLoaded && isConfigLoaded) {
+				// Ochrona: przepuszcza tylko jeœli owoce, mapy i UI s¹ gotowe
+				if (isMenuLoaded && isConfigLoaded && isMapConfigLoaded) {
 					introMusic.stop();
 					game->getStateMachine().changeState(StateType::Menu);
-					return;
 				}
 			}
 		}
@@ -173,10 +184,9 @@ namespace game::states
 				videoPlayer.update();
 			}
 			else {
-				if (isMenuLoaded && isConfigLoaded) {
+				if (isMenuLoaded && isConfigLoaded && isMapConfigLoaded) {
 					introMusic.stop();
 					game->getStateMachine().changeState(StateType::Menu);
-					return;
 				}
 			}
 		}

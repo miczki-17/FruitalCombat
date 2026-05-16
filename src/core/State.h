@@ -22,7 +22,8 @@ namespace game::states
 		Menu,
 		Playing,
 		Settings,
-		CharacterSelect
+		CharacterSelect,
+		MapSelect
 	};
 
 

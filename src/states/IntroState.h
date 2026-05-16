@@ -22,6 +22,7 @@ namespace game::states
 		std::unique_ptr<std::thread> workerThread;
 		std::atomic<bool> isMenuLoaded{ false };
 		std::atomic<bool> isConfigLoaded{ false };
+		std::atomic<bool> isMapConfigLoaded{ false };
 
 		void loadAssetsInBg();
 

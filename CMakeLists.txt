@@ -54,7 +54,7 @@ add_executable(FruitalCombat
     src/core/AnimationController.cpp
     src/states/CharacterSelectState.h
     src/states/CharacterSelectState.cpp
-)
+ "src/states/MapSelectState.h" "src/states/MapSelectState.cpp")
 
 
 # --- 3. NAG?ÓWKI I LINKOWANIE ---

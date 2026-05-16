@@ -1,0 +1,91 @@
+{
+  "WildOrchard": {
+    "name": "The Wild Orchard",
+    "description": "A natural arena surrounded by dense jungle.",
+    "difficultyStars": 1,
+    "damageMultiplier": 1.0,
+    "texturePath": "assets/textures/maps/jungle_arena.jpg",
+    "thumbnailPath": "assets/textures/ui/maps/thumb_ochard.png",
+    "musicPath": "assets/audio/music/jungle_brawl.ogg",
+    "physics": {
+      "friction": 1.0,
+      "speedMultiplier": 1.0
+    },
+    "playableBounds": {
+      "left": 120,
+      "top": 100,
+      "right": 1800,
+      "bottom": 980
+    },
+    "spawnPoints": [
+      {
+        "x": 300,
+        "y": 540
+      },
+      {
+        "x": 1620,
+        "y": 540
+      }
+    ]
+  },
+
+  "ChoppingBlock": {
+    "name": "The Chopping Block",
+    "description": "Watch your step! This kitchen counter is a warzone.",
+    "difficultyStars": 4,
+    "damageMultiplier": 1.2,
+    "texturePath": "assets/textures/maps/chopping_block.jpg",
+    "thumbnailPath": "assets/textures/ui/maps/thumb_kitchen.png",
+    "musicPath": "assets/audio/music/kitchen_chaos.ogg",
+    "physics": {
+      "friction": 0.8,
+      "speedMultiplier": 1.0
+    },
+    "playableBounds": {
+      "left": 50,
+      "top": 50,
+      "right": 1870,
+      "bottom": 1030
+    },
+    "spawnPoints": [
+      {
+        "x": 200,
+        "y": 540
+      },
+      {
+        "x": 1720,
+        "y": 540
+      }
+    ]
+  },
+
+  "CrisperDrawer": {
+    "name": "The Crisper Drawer",
+    "description": "Sub-zero temperatures make for slippery battles!",
+    "difficultyStars": 3,
+    "damageMultiplier": 1.0,
+    "texturePath": "assets/textures/maps/crisper_drawer.jpg",
+    "thumbnailPath": "assets/textures/ui/maps/thumb_ice.png",
+    "musicPath": "assets/audio/music/chill_vibes.ogg",
+    "physics": {
+      "friction": 0.2,
+      "speedMultiplier": 1.3
+    },
+    "playableBounds": {
+      "left": 100,
+      "top": 150,
+      "right": 1820,
+      "bottom": 930
+    },
+    "spawnPoints": [
+      {
+        "x": 250,
+        "y": 540
+      },
+      {
+        "x": 1670,
+        "y": 540
+      }
+    ]
+  }
+}

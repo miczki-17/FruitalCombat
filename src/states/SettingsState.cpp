@@ -35,15 +35,15 @@ namespace game::states
 
 		sliderTrack.setSize({ 200.f, 10.f });
 		sliderTrack.setFillColor(sf::Color(100, 100, 100));
-		sliderTrack.setPosition({ leftColX + 40.f, 380.f });
+		sliderTrack.setPosition({ leftColX - 35.f, 360.f });
 
 		sliderHandle.setSize({ 15.f, 26.f });
 		sliderHandle.setFillColor(sf::Color::White);
 		sliderHandle.setOrigin({ 7.5f, 8.f });
-		sliderHandle.setPosition({ leftColX + 170.f, 380.f });
+		sliderHandle.setPosition({ leftColX + 95.f, 360.f });
 
 		volumeValueText = sf::Text(font, "100%", 20);
-		(*volumeValueText).setPosition({ leftColX + 50.f, 410.f });
+		(*volumeValueText).setPosition({ leftColX + 45.f, 380.f });
 
 		// --- RIGHT SECTION BINDS ---
 		float rightColX = viewSize.x * 0.7f;

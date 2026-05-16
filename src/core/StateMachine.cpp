@@ -4,6 +4,7 @@
 #include "../states/PlayingState.h"
 #include "../states/SettingsState.h"
 #include "../states/CharacterSelectState.h"
+#include "../states/MapSelectState.h"
 
 namespace game
 {
@@ -20,6 +21,7 @@ namespace game
 		case states::StateType::CharacterSelect:	return std::make_unique<states::CharacterSelectState>(game);
 		case states::StateType::Playing:			return std::make_unique<states::PlayingState>(game);
 		case states::StateType::Settings:			return std::make_unique<states::SettingsState>(game);
+		case states::StateType::MapSelect:			return std::make_unique<states::MapSelectState>(game);
 		default: return nullptr;
 		}
 	}

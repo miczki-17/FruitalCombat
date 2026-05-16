@@ -7,14 +7,11 @@
 
 namespace
 {
-	// --- FUNCTION FIXING ALPHA OVERLAP IN UI BARS ---
-	// Draws a perfectly smooth, rounded bar as a single continuous shape!
 	sf::ConvexShape createRoundedRect(float width, float height, float radius) {
 		sf::ConvexShape shape;
 		const int pointsPerCorner = 8;
 		shape.setPointCount(pointsPerCorner * 4);
 
-		// Cap the radius if the bar is very short or narrow
 		radius = std::min(radius, std::min(width / 2.0f, height / 2.0f));
 
 		sf::Vector2f tr(width - radius, radius);
@@ -22,7 +19,6 @@ namespace
 		sf::Vector2f bl(radius, height - radius);
 		sf::Vector2f tl(radius, radius);
 
-		// Helper lambda to generate corner points
 		auto addCorner = [&](int startIdx, sf::Vector2f center, float startAngle) {
 			for (int i = 0; i < pointsPerCorner; ++i) {
 				float angle = startAngle + (3.141592654f / 2.0f) * i / (pointsPerCorner - 1);
@@ -48,32 +44,28 @@ namespace game::states
 		float centerX = viewSize.x / 2.0f;
 		float centerY = viewSize.y / 2.0f;
 
-		// Load background
-		if (!game->menuImageBuffer.empty())
+		if (game->menuUiBuffer.contains("character_select_bg"))
 		{
-			if (bgTex.loadFromImage(game->menuImageBuffer[0])) {
+			if (bgTex.loadFromImage(game->menuUiBuffer["character_select_bg"])) {
 				bgSprite = sf::Sprite(bgTex);
 				sf::Vector2f bgSize(bgTex.getSize());
 				bgSprite->setScale({ viewSize.x / bgSize.x, viewSize.y / bgSize.y });
 			}
 		}
 
-		// Setup overlay for contrast
 		darkOverlay.setSize(viewSize);
-		darkOverlay.setFillColor(sf::Color(0, 0, 0, 240));
+		darkOverlay.setFillColor(sf::Color(0, 0, 0, 0));
 
 		if (!font.openFromFile("assets/fonts/ARIAL.TTF")) {
 			std::cerr << "[SELECT ERROR] Cannot load font.\n";
 		}
 
-		// Main character name text setup
-		characterNameText.emplace(font, "", 60);
+		characterNameText.emplace(font, "", 55);
 		characterNameText->setFillColor(sf::Color(255, 255, 255));
 		characterNameText->setOutlineColor(sf::Color::Black);
 		characterNameText->setOutlineThickness(4.5f);
 
-		// Character subtitle text setup
-		characterTitleText.emplace(font, "", 28);
+		characterTitleText.emplace(font, "", 25);
 		characterTitleText->setFillColor(sf::Color(255, 210, 120));
 		characterTitleText->setOutlineColor(sf::Color::Black);
 		characterTitleText->setOutlineThickness(3.0f);
@@ -81,7 +73,6 @@ namespace game::states
 		initFireflies();
 		loadRoster();
 
-		// Initialize all UI buttons
 		setupButton("left_arrow", leftArrowTex, leftArrowSprite, { centerX - 450.f, centerY - 50.f }, { 80.f, 80.f });
 		setupButton("right_arrow", rightArrowTex, rightArrowSprite, { centerX + 450.f, centerY - 50.f }, { 80.f, 80.f });
 		setupButton("choose", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
@@ -90,15 +81,13 @@ namespace game::states
 
 	void CharacterSelectState::initFireflies()
 	{
-		// CHANGE: Fewer fireflies (only 5) for a more "magical" and exclusive effect
 		fireflies.resize(5);
-
 		std::random_device rd;
 		std::mt19937 generator(rd());
 
 		for (auto& f : fireflies) {
 			f.lifetime = std::uniform_real_distribution<float>(0.0f, 3.0f)(generator);
-			f.maxLifetime = 0.0f; // They will properly initialize in the first update frame
+			f.maxLifetime = 0.0f;
 		}
 	}
 
@@ -107,7 +96,6 @@ namespace game::states
 		sf::Vector2f viewSize = game->getWindow().getView().getSize();
 		float animTime = animationClock.getElapsedTime().asSeconds();
 
-		// Calculate the exact position of the central log platform
 		float platformY = (viewSize.y / 2.0f - 50.f) + (20.0f * 3.5f);
 		float platformX = viewSize.x / 2.0f;
 
@@ -117,25 +105,20 @@ namespace game::states
 		for (auto& f : fireflies) {
 			f.lifetime += dt;
 
-			// Restart the firefly ON THE LOG once its lifetime ends
 			if (f.lifetime >= f.maxLifetime) {
 				f.lifetime = 0.f;
-				// Spawns within a random X radius from the log
 				f.position.x = platformX + std::uniform_real_distribution<float>(-90.f, 90.f)(generator);
-				// Spawns slightly inside the log so it appears to fly out from the center
 				f.position.y = platformY + std::uniform_real_distribution<float>(-10.f, 30.f)(generator);
 
-				f.speed = std::uniform_real_distribution<float>(20.f, 40.f)(generator); // Slower and smoother flight
+				f.speed = std::uniform_real_distribution<float>(20.f, 40.f)(generator);
 				f.maxLifetime = std::uniform_real_distribution<float>(2.0f, 5.0f)(generator);
 				f.size = std::uniform_real_distribution<float>(1.7f, 3.0f)(generator);
 				f.swayOffset = std::uniform_real_distribution<float>(0.0f, 6.28f)(generator);
 			}
 
-			// Upward movement and horizontal swaying logic
 			f.position.y -= f.speed * dt;
 			f.position.x += std::sin(animTime * 2.0f + f.swayOffset) * 15.0f * dt;
 
-			// Fade in and fade out visual effect based on lifetime ratio
 			float lifeRatio = f.lifetime / f.maxLifetime;
 			f.alpha = std::sin(lifeRatio * 3.14159f) * 200.f;
 		}
@@ -143,20 +126,16 @@ namespace game::states
 
 	void CharacterSelectState::loadRoster()
 	{
-		// 1. Clear the roster list to accept fresh data from the JSON config
 		roster.clear();
-		roster.reserve(game->fruitsConfig.size());
+		// std::deque nie wymaga reserve() !
 
-		// 2. Iterate directly over all elements in the JSON file
 		for (auto& el : game->fruitsConfig.items())
 		{
-			std::string jsonKey = el.key();       // E.g., "Apple", "Banana"
-			const auto& fruitData = el.value();   // Content inside the braces {}
+			std::string jsonKey = el.key();
+			const auto& fruitData = el.value();
 
 			FruitOption opt;
 			opt.jsonKey = jsonKey;
-
-			// --- READING TEXTS AND STATISTICS ---
 			opt.displayName = fruitData.value("name", "Unknown Fighter");
 			opt.title = fruitData.value("title", "");
 			opt.hp = fruitData.value("hp", 10);
@@ -169,14 +148,13 @@ namespace game::states
 					opt.abilitiesText += skill.get<std::string>() + ", ";
 				}
 				opt.abilitiesText.pop_back();
-				opt.abilitiesText.pop_back(); // Remove trailing comma and space
+				opt.abilitiesText.pop_back();
 			}
 			else {
 				opt.abilitiesText = "Skills: None";
 			}
 
-			// --- ENUM MAPPING (Required by C++) ---
-			opt.type = game::entities::FruitType::Apple; // Default value fallback
+			opt.type = game::entities::FruitType::Apple;
 			if (jsonKey == "Banana") opt.type = game::entities::FruitType::Banana;
 			else if (jsonKey == "Cherry") opt.type = game::entities::FruitType::Cherry;
 			else if (jsonKey == "Strawberry") opt.type = game::entities::FruitType::Strawberry;
@@ -186,7 +164,6 @@ namespace game::states
 			roster.push_back(std::move(opt));
 			auto& savedFruit = roster.back();
 
-			// --- LOADING PLATFORM FROM RAM (It remains shared across all characters) ---
 			if (game->menuUiBuffer.contains("log_platform"))
 			{
 				if (savedFruit.platformTexture.loadFromImage(game->menuUiBuffer["log_platform"]))
@@ -197,38 +174,35 @@ namespace game::states
 				}
 			}
 
-			// --- NEW: LOADING TEXTURE DIRECTLY FROM JSON PATH ---
-			std::string texPath = fruitData.value("texturePath", "");
-
-			// Instead of loadFromImage(buffer), we use loadFromFile(json_path)
-			if (!texPath.empty() && savedFruit.texture.loadFromFile(texPath))
+			if (game->characterImageBuffer.contains(jsonKey))
 			{
-				savedFruit.sprite.emplace(savedFruit.texture);
-				sf::Vector2i size(savedFruit.texture.getSize());
-
-				// Smart slicing into animation frames based on aspect ratio
-				if (size.x > size.y * 2)
+				if (savedFruit.texture.loadFromImage(game->characterImageBuffer[jsonKey]))
 				{
-					savedFruit.isAnimated = true;
-					int frameWidth = size.x / 4;
-					int frameHeight = size.y;
+					savedFruit.sprite.emplace(savedFruit.texture);
+					sf::Vector2i size(savedFruit.texture.getSize());
 
-					for (int i = 0; i < 4; ++i) {
-						savedFruit.animationFrames.push_back(sf::IntRect({ i * frameWidth, 0 }, { frameWidth, frameHeight }));
+					if (size.x > size.y * 2)
+					{
+						savedFruit.isAnimated = true;
+						int frameWidth = size.x / 4;
+						int frameHeight = size.y;
+
+						for (int i = 0; i < 4; ++i) {
+							savedFruit.animationFrames.push_back(sf::IntRect({ i * frameWidth, 0 }, { frameWidth, frameHeight }));
+						}
+						savedFruit.sprite->setTextureRect(savedFruit.animationFrames[0]);
+						savedFruit.sprite->setOrigin({ frameWidth / 2.0f, frameHeight / 2.0f });
 					}
-					savedFruit.sprite->setTextureRect(savedFruit.animationFrames[0]);
-					savedFruit.sprite->setOrigin({ frameWidth / 2.0f, frameHeight / 2.0f });
-				}
-				else
-				{
-					savedFruit.isAnimated = false;
-					savedFruit.sprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
+					else
+					{
+						savedFruit.isAnimated = false;
+						savedFruit.sprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
+					}
 				}
 			}
 			else
 			{
-				// Console warning if the path is empty or the file does not exist
-				std::cerr << "[WARNING] Cannot load texture: '" << texPath << "' for character " << jsonKey << "\n";
+				std::cerr << "[WARNING] Missing character image in RAM buffer for: " << jsonKey << "\n";
 			}
 		}
 	}
@@ -245,9 +219,6 @@ namespace game::states
 				spr->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
 				spr->setPosition(pos);
 			}
-		}
-		else {
-			std::cerr << "[SELECT ERROR] Missing UI texture in buffer: " << key << "\n";
 		}
 	}
 
@@ -266,9 +237,10 @@ namespace game::states
 			else if (keyPressed->code == sf::Keyboard::Key::Enter || keyPressed->code == sf::Keyboard::Key::Space) {
 				game->playUIClick();
 				int N = roster.size();
-				game->selectedFruitType = roster[(targetIndex % N + N) % N].type;
-				game->menuMusic.stop();
-				game->getStateMachine().changeState(StateType::Playing);
+				if (N > 0) {
+					game->selectedFruitType = roster[(targetIndex % N + N) % N].type;
+					game->getStateMachine().changeState(StateType::MapSelect); // <-- Zmieniono na MapSelect
+				}
 			}
 			else if (keyPressed->code == sf::Keyboard::Key::Escape) {
 				game->playUIClick();
@@ -292,8 +264,10 @@ namespace game::states
 				if (selectBtnSprite && selectBtnSprite->getGlobalBounds().contains(worldPos)) {
 					game->playUIClick();
 					int N = roster.size();
-					game->selectedFruitType = roster[(targetIndex % N + N) % N].type;
-					game->getStateMachine().changeState(StateType::Playing);
+					if (N > 0) {
+						game->selectedFruitType = roster[(targetIndex % N + N) % N].type;
+						game->getStateMachine().changeState(StateType::MapSelect); // <-- Zmieniono na MapSelect
+					}
 				}
 				if (backBtnSprite && backBtnSprite->getGlobalBounds().contains(worldPos)) {
 					game->playUIClick();
@@ -307,9 +281,7 @@ namespace game::states
 	{
 		if (roster.empty()) return;
 
-		// Smooth scrolling logic
 		currentScroll += (targetIndex - currentScroll) * 12.0f * dt;
-
 		updateFireflies(dt);
 
 		float N = static_cast<float>(roster.size());
@@ -320,7 +292,6 @@ namespace game::states
 		for (int i = 0; i < roster.size(); ++i)
 		{
 			float diff = static_cast<float>(i) - currentScroll;
-			// Normalize distance for circular scrolling
 			while (diff < -N / 2.0f) diff += N;
 			while (diff > N / 2.0f) diff -= N;
 			float dist = diff;
@@ -340,12 +311,11 @@ namespace game::states
 			{
 				roster[i].platformSprite->setPosition({ xPos, platformYOffset });
 				roster[i].platformSprite->setScale({ platformScale, platformScale });
-				roster[i].platformSprite->setColor(sf::Color(colorTint, colorTint, colorTint, alpha));
+				roster[i].platformSprite->setColor(sf::Color(colorTint, colorTint, colorTint, static_cast<std::uint8_t>(alpha)));
 			}
 
 			if (roster[i].sprite)
 			{
-				// Only animate the central (currently selected) character
 				if (roster[i].isAnimated && std::abs(dist) < 0.5f)
 				{
 					roster[i].animationTimer += dt;
@@ -356,24 +326,21 @@ namespace game::states
 					}
 				}
 				else if (roster[i].isAnimated) {
-					// Reset animation for non-central characters
 					roster[i].animationTimer = 0.0f;
 					roster[i].currentFrameIndex = 0;
 					roster[i].sprite->setTextureRect(roster[i].animationFrames[0]);
 				}
 
 				float characterYOffset = platformYOffset - (24.0f * characterScale);
-
 				roster[i].sprite->setPosition({ xPos, characterYOffset });
 				roster[i].sprite->setScale({ characterScale, characterScale });
-				roster[i].sprite->setColor(sf::Color(colorTint, colorTint, colorTint, alpha));
+				roster[i].sprite->setColor(sf::Color(colorTint, colorTint, colorTint, static_cast<std::uint8_t>(alpha)));
 			}
 		}
 
 		sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
 		sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(pixelPos);
 
-		// Helper to handle button hover states
 		auto updateHover = [&](std::optional<sf::Sprite>& btn, sf::Vector2f targetSize) {
 			if (!btn) return;
 			sf::Vector2f texSize(btn->getTexture().getSize());
@@ -395,19 +362,18 @@ namespace game::states
 		updateHover(selectBtnSprite, { 170.f, 70.f });
 		updateHover(backBtnSprite, { 120.f, 60.f });
 
-		// Update UI texts for the currently selected character
 		int actualIndex = (targetIndex % (int)N + (int)N) % (int)N;
 		if (characterNameText) {
 			characterNameText->setString(roster[actualIndex].displayName);
 			sf::FloatRect bounds = characterNameText->getLocalBounds();
 			characterNameText->setOrigin({ bounds.size.x / 2.0f, bounds.size.y / 2.0f });
-			characterNameText->setPosition({ centerX, 80.f });
+			characterNameText->setPosition({ centerX, 70.f });
 		}
 		if (characterTitleText) {
 			characterTitleText->setString(roster[actualIndex].title);
 			sf::FloatRect bounds = characterTitleText->getLocalBounds();
 			characterTitleText->setOrigin({ bounds.size.x / 2.0f, bounds.size.y / 2.0f });
-			characterTitleText->setPosition({ centerX, 125.f });
+			characterTitleText->setPosition({ centerX, 115.f });
 		}
 	}
 
@@ -424,21 +390,18 @@ namespace game::states
 		float barHeight = 10.f;
 		float radius = barHeight / 2.0f;
 
-		// "Super bright pastel" background. Opaque with slight transparency.
 		sf::Color bgColor(
 			std::min(255, color.r + 190),
 			std::min(255, color.g + 190),
 			std::min(255, color.b + 190),
-			200 // 200 alpha eliminates visual issues
+			200
 		);
 
-		// 1. Drawing the smooth background
 		sf::ConvexShape bgBar = createRoundedRect(barWidth, barHeight, radius);
 		bgBar.setPosition(pos);
 		bgBar.setFillColor(bgColor);
 		window.draw(bgBar);
 
-		// 2. Drawing the actual fill (also as 1 coherent shape!)
 		float fillPercentage = std::min(1.0f, static_cast<float>(value) / static_cast<float>(maxValue));
 		float currentWidth = barWidth * fillPercentage;
 
@@ -456,7 +419,6 @@ namespace game::states
 		if (bgSprite) window.draw(*bgSprite);
 		window.draw(darkOverlay);
 
-		// Sort characters by Z-order (distance from center) so center ones draw on top
 		std::vector<std::pair<float, int>> zOrder;
 		int N = roster.size();
 		for (int i = 0; i < N; ++i) {
@@ -477,8 +439,6 @@ namespace game::states
 				shadow.setScale({ groupScale * 1.1f, groupScale * 0.3f });
 
 				sf::Vector2f charPos = roster[item.second].sprite->getPosition();
-
-				// SHADOW CHANGE: Increased downward offset (Y + 23.0f) so it lies perfectly UNDER the feet
 				shadow.setPosition({ charPos.x, charPos.y + (23.0f * groupScale) });
 
 				sf::Color spriteColor = roster[item.second].sprite->getColor();
@@ -491,7 +451,6 @@ namespace game::states
 			}
 		}
 
-		// Fireflies above the character
 		for (const auto& f : fireflies) {
 			if (f.alpha > 0.0f) {
 				sf::CircleShape particle(f.size);
@@ -506,9 +465,8 @@ namespace game::states
 		sf::Vector2f viewSize = game->getWindow().getView().getSize();
 		float centerX = viewSize.x / 2.0f;
 
-		// --- CHANGE: Bar position calculated from the Log, not the bottom of the screen. Guarantees no overlap! ---
 		float mainPlatformY = (viewSize.y / 2.0f - 50.f) + (20.0f * 3.5f);
-		float baseBarY = mainPlatformY + 62.0f; // Bars start 50 px below the log
+		float baseBarY = mainPlatformY + 62.0f;
 		float barStartX = centerX - 60.f;
 
 		drawStatBar(window, "HP", roster[actualIndex].hp, 20,
@@ -530,16 +488,13 @@ namespace game::states
 		}
 
 		if (characterNameText) {
-			// 1. Save the original position
 			sf::Vector2f originalPos = characterNameText->getPosition();
 
-			// 2. Draw the SHADOW (offset by 4 pixels down and right)
 			characterNameText->setPosition({ originalPos.x + 4.0f, originalPos.y + 4.0f });
-			characterNameText->setFillColor(sf::Color(0, 0, 0, 150)); // Semi-transparent black shadow
-			characterNameText->setOutlineThickness(0.0f); // The shadow has no outline
+			characterNameText->setFillColor(sf::Color(0, 0, 0, 150));
+			characterNameText->setOutlineThickness(0.0f);
 			window.draw(*characterNameText);
 
-			// 3. Draw the ACTUAL TEXT (restore position, white color, and outline)
 			characterNameText->setPosition(originalPos);
 			characterNameText->setFillColor(sf::Color(255, 255, 255));
 			characterNameText->setOutlineColor(sf::Color::Black);
