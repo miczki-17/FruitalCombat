@@ -28,6 +28,10 @@ namespace game::states
 		std::optional<sf::Text> mapDescText;
 		std::optional<sf::Text> mapStatsText;
 
+		// --- MAP UI ICONS ---
+		sf::Texture starFullTex, starEmptyTex;
+		std::optional<sf::Sprite> starFullSprite, starEmptySprite;
+
 		sf::Clock animationClock;
 
 		struct Firefly {

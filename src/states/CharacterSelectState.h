@@ -26,6 +26,12 @@ namespace game::states
 		sf::Texture selectBtnTex, backBtnTex;
 		std::optional<sf::Sprite> selectBtnSprite, backBtnSprite;
 
+
+		// --- UI ICONS ---
+		sf::Texture hpIconTex, dmgIconTex, spdIconTex;
+		std::optional<sf::Sprite> hpIconSprite, dmgIconSprite, spdIconSprite;
+
+
 		// --- TYPOGRAPHY ---
 		sf::Font font;
 		std::optional<sf::Text> characterNameText;
@@ -85,7 +91,7 @@ namespace game::states
 		// --- HELPER METHODS ---
 		void setupButton(const std::string& key, sf::Texture& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize);
 		void loadRoster();
-		void drawStatBar(sf::RenderWindow& window, const std::string& label, int value, int maxValue, sf::Vector2f pos, sf::Color color);
+		void drawStatBar(sf::RenderWindow& window, std::optional<sf::Sprite>& icon, int value, int maxValue, sf::Vector2f pos, sf::Color color);
 
 	public:
 		CharacterSelectState(game::Game* game);

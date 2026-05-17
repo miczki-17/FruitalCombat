@@ -77,6 +77,11 @@ namespace game::states
 		setupButton("right_arrow", rightArrowTex, rightArrowSprite, { centerX + 450.f, centerY - 50.f }, { 80.f, 80.f });
 		setupButton("choose", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
 		setupButton("back", backBtnTex, backBtnSprite, { 80.f, 50.f }, { 120.f, 60.f });
+
+		// £adowanie nowych ikon statystyk
+		setupButton("hp_icon", hpIconTex, hpIconSprite, { 0.f, 0.f }, { 28.f, 24.f });
+		setupButton("dmg_icon", dmgIconTex, dmgIconSprite, { 0.f, 0.f }, { 28.f, 24.f });
+		setupButton("spd_icon", spdIconTex, spdIconSprite, { 0.f, 0.f }, { 28.f, 24.f });
 	}
 
 	void CharacterSelectState::initFireflies()
@@ -127,7 +132,6 @@ namespace game::states
 	void CharacterSelectState::loadRoster()
 	{
 		roster.clear();
-		
 
 		for (auto& el : game->fruitsConfig.items())
 		{
@@ -169,7 +173,7 @@ namespace game::states
 				if (savedFruit.platformTexture.loadFromImage(game->menuUiBuffer["log_platform"]))
 				{
 					savedFruit.platformSprite.emplace(savedFruit.platformTexture);
-					sf::Vector2i logSize(savedFruit.platformTexture.getSize());
+					sf::Vector2u logSize(savedFruit.platformTexture.getSize());
 					savedFruit.platformSprite->setOrigin({ logSize.x / 2.0f, logSize.y / 2.0f });
 				}
 			}
@@ -179,7 +183,7 @@ namespace game::states
 				if (savedFruit.texture.loadFromImage(game->characterImageBuffer[jsonKey]))
 				{
 					savedFruit.sprite.emplace(savedFruit.texture);
-					sf::Vector2i size(savedFruit.texture.getSize());
+					sf::Vector2u size(savedFruit.texture.getSize());
 
 					if (size.x > size.y * 2)
 					{
@@ -200,10 +204,6 @@ namespace game::states
 					}
 				}
 			}
-			else
-			{
-				std::cerr << "[WARNING] Missing character image in RAM buffer for: " << jsonKey << "\n";
-			}
 		}
 	}
 
@@ -214,7 +214,7 @@ namespace game::states
 			if (tex.loadFromImage(game->menuUiBuffer[key]))
 			{
 				spr = sf::Sprite(tex);
-				sf::Vector2f originalSize(tex.getSize());
+				sf::Vector2u originalSize(tex.getSize());
 				spr->setScale({ targetSize.x / originalSize.x, targetSize.y / originalSize.y });
 				spr->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
 				spr->setPosition(pos);
@@ -343,7 +343,7 @@ namespace game::states
 
 		auto updateHover = [&](std::optional<sf::Sprite>& btn, sf::Vector2f targetSize) {
 			if (!btn) return;
-			sf::Vector2f texSize(btn->getTexture().getSize());
+			sf::Vector2u texSize(btn->getTexture().getSize());
 			float baseScaleX = targetSize.x / texSize.x;
 			float baseScaleY = targetSize.y / texSize.y;
 
@@ -363,39 +363,30 @@ namespace game::states
 		updateHover(backBtnSprite, { 120.f, 60.f });
 
 		int actualIndex = (targetIndex % (int)N + (int)N) % (int)N;
+
+		// Zastosowanie SFML 3 Syntax do Tekstów
 		if (characterNameText) {
 			characterNameText->setString(roster[actualIndex].displayName);
 			sf::FloatRect bounds = characterNameText->getLocalBounds();
-
-			// SFML 3: u¿ywamy bounds.position.x/y oraz bounds.size.x/y z zaokr¹gleniem
-			characterNameText->setOrigin({
-				std::round(bounds.position.x + bounds.size.x / 2.0f),
-				std::round(bounds.position.y + bounds.size.y / 2.0f)
-				});
-			// Zaokr¹glamy pozycjê X (Y i tak jest okr¹g³e w Twoim kodzie)
+			characterNameText->setOrigin({ std::round(bounds.position.x + bounds.size.x / 2.0f), std::round(bounds.position.y + bounds.size.y / 2.0f) });
 			characterNameText->setPosition({ std::round(centerX), 80.f });
 		}
-
 		if (characterTitleText) {
 			characterTitleText->setString(roster[actualIndex].title);
 			sf::FloatRect bounds = characterTitleText->getLocalBounds();
-
-			characterTitleText->setOrigin({
-				std::round(bounds.position.x + bounds.size.x / 2.0f),
-				std::round(bounds.position.y + bounds.size.y / 2.0f)
-				});
-			characterTitleText->setPosition({ std::round(centerX), 125.f });
+			characterTitleText->setOrigin({ std::round(bounds.position.x + bounds.size.x / 2.0f), std::round(bounds.position.y + bounds.size.y / 2.0f) });
+			characterTitleText->setPosition({ std::round(centerX), 120.f });
 		}
 	}
 
-	void CharacterSelectState::drawStatBar(sf::RenderWindow& window, const std::string& label, int value, int maxValue, sf::Vector2f pos, sf::Color color)
+	// Nowa wersja przyjmuj¹ca ikonê zamiast tekstu
+	void CharacterSelectState::drawStatBar(sf::RenderWindow& window, std::optional<sf::Sprite>& icon, int value, int maxValue, sf::Vector2f pos, sf::Color color)
 	{
-		sf::Text labelText(font, label, 16);
-		labelText.setFillColor(color);
-		labelText.setOutlineColor(sf::Color::Black);
-		labelText.setOutlineThickness(2.0f);
-		labelText.setPosition({ pos.x - 45.f, pos.y - 4.f });
-		window.draw(labelText);
+		if (icon) {
+			// Pozycjonowanie grafiki ikony po lewej stronie paska statystyk
+			icon->setPosition({ std::round(pos.x - 35.f), std::round(pos.y + 5.f) });
+			window.draw(*icon);
+		}
 
 		float barWidth = 140.f;
 		float barHeight = 10.f;
@@ -480,13 +471,14 @@ namespace game::states
 		float baseBarY = mainPlatformY + 62.0f;
 		float barStartX = centerX - 60.f;
 
-		drawStatBar(window, "HP", roster[actualIndex].hp, 20,
+		// Rysowanie pasków z nowymi ikonami
+		drawStatBar(window, hpIconSprite, roster[actualIndex].hp, 20,
 			{ barStartX, baseBarY }, sf::Color(255, 110, 110));
 
-		drawStatBar(window, "DMG", roster[actualIndex].damage, 20,
+		drawStatBar(window, dmgIconSprite, roster[actualIndex].damage, 20,
 			{ barStartX, baseBarY + 30.f }, sf::Color(255, 180, 80));
 
-		drawStatBar(window, "SPD", roster[actualIndex].speed, 500,
+		drawStatBar(window, spdIconSprite, roster[actualIndex].speed, 500,
 			{ barStartX, baseBarY + 60.f }, sf::Color(100, 200, 255));
 
 		if (!roster.empty()) {

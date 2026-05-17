@@ -53,7 +53,10 @@ namespace game::states
 		setupButton("left_arrow", leftArrowTex, leftArrowSprite, { centerX - 550.f, centerY }, { 80.f, 80.f });
 		setupButton("right_arrow", rightArrowTex, rightArrowSprite, { centerX + 550.f, centerY }, { 80.f, 80.f });
 		setupButton("choose", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
-		setupButton("back", backBtnTex, backBtnSprite, { 100.f, 80.f }, { 120.f, 60.f });
+		setupButton("back", backBtnTex, backBtnSprite, { 80.f, 50.f }, { 120.f, 60.f });
+
+		setupButton("star_full_icon", starFullTex, starFullSprite, { 0.f, 0.f }, { 25.f, 25.f });
+		setupButton("star_empty_icon", starEmptyTex, starEmptySprite, { 0.f, 0.f }, { 25.f, 25.f });
 	}
 
 	void MapSelectState::initFireflies()
@@ -120,7 +123,6 @@ namespace game::states
 			roster.push_back(std::move(opt));
 			auto& savedMap = roster.back();
 
-			
 			if (game->mapImageBuffer.contains(jsonKey))
 			{
 				if (savedMap.thumbnailTexture.loadFromImage(game->mapImageBuffer[jsonKey]))
@@ -129,10 +131,6 @@ namespace game::states
 					sf::Vector2u size = savedMap.thumbnailTexture.getSize();
 					savedMap.thumbnailSprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
 				}
-			}
-			else
-			{
-				std::cerr << "[WARNING] Missing thumbnail in RAM buffer for map: " << jsonKey << "\n";
 			}
 		}
 	}
@@ -144,23 +142,12 @@ namespace game::states
 			if (tex.loadFromImage(game->menuUiBuffer[key]))
 			{
 				spr = sf::Sprite(tex);
-				sf::Vector2f originalSize(tex.getSize());
+				sf::Vector2u originalSize(tex.getSize());
 				spr->setScale({ targetSize.x / originalSize.x, targetSize.y / originalSize.y });
 				spr->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
 				spr->setPosition(pos);
 			}
 		}
-	}
-
-	std::string MapSelectState::getDifficultyStars(int stars)
-	{
-		std::string result = "";
-		stars = std::clamp(stars, 1, 5);
-		for (int i = 0; i < 5; ++i) {
-			if (i < stars) result += "* ";
-			else result += "- ";
-		}
-		return result;
 	}
 
 	StateType MapSelectState::getType() const { return StateType::MapSelect; }
@@ -180,7 +167,7 @@ namespace game::states
 				int N = roster.size();
 				if (N > 0) {
 					int actualIndex = (targetIndex % N + N) % N;
-					game->selectedMapKey = roster[actualIndex].jsonKey;		std::cout << "selected map: " << game->selectedMapKey << '\n';
+					game->selectedMapKey = roster[actualIndex].jsonKey;
 					game->getStateMachine().changeState(StateType::Playing);
 				}
 			}
@@ -259,7 +246,7 @@ namespace game::states
 
 		auto updateHover = [&](std::optional<sf::Sprite>& btn, sf::Vector2f targetSize) {
 			if (!btn) return;
-			sf::Vector2f texSize(btn->getTexture().getSize());
+			sf::Vector2u texSize(btn->getTexture().getSize());
 			float baseScaleX = targetSize.x / texSize.x;
 			float baseScaleY = targetSize.y / texSize.y;
 
@@ -283,33 +270,23 @@ namespace game::states
 		if (mapNameText) {
 			mapNameText->setString(roster[actualIndex].name);
 			sf::FloatRect bounds = mapNameText->getLocalBounds();
-			mapNameText->setOrigin({ 
-				std::round(bounds.position.x + bounds.size.x / 2.0f),
-				std::round(bounds.position.y + bounds.size.y / 2.0f) 
-				});
+			mapNameText->setOrigin({ std::round(bounds.position.x + bounds.size.x / 2.0f), std::round(bounds.position.y + bounds.size.y / 2.0f) });
 			mapNameText->setPosition({ std::round(centerX), 80.f });
 		}
 		if (mapDescText) {
 			mapDescText->setString(roster[actualIndex].description);
 			sf::FloatRect bounds = mapDescText->getLocalBounds();
-			mapDescText->setOrigin({ 
-				std::round(bounds.position.x + bounds.size.x / 2.0f),
-				std::round(bounds.position.y + bounds.size.y / 2.0f)
-				});
+			mapDescText->setOrigin({ std::round(bounds.position.x + bounds.size.x / 2.0f), std::round(bounds.position.y + bounds.size.y / 2.0f) });
 			mapDescText->setPosition({ std::round(centerX), 125.f });
 		}
+
 		if (mapStatsText) {
 			std::stringstream ss;
-			ss << "Difficulty: " << getDifficultyStars(roster[actualIndex].difficultyStars);
-			ss << "   |   Damage Modifier: " << std::fixed << std::setprecision(1) << roster[actualIndex].damageMultiplier << "x";
+			ss << "Damage Modifier: " << std::fixed << std::setprecision(1) << roster[actualIndex].damageMultiplier << "x   |   ";
 
 			mapStatsText->setString(ss.str());
 			sf::FloatRect bounds = mapStatsText->getLocalBounds();
-			mapStatsText->setOrigin({ 
-				std::round(bounds.position.x + bounds.size.x / 2.0f),
-				std::round(bounds.position.y + bounds.size.y / 2.0f)
-				});
-			mapStatsText->setPosition({ std::round(centerX), viewSize.y - 200.f });
+			mapStatsText->setOrigin({ 0.f, std::round(bounds.position.y + bounds.size.y / 2.0f) });
 		}
 	}
 
@@ -371,7 +348,37 @@ namespace game::states
 		}
 
 		if (mapDescText) window.draw(*mapDescText);
-		if (mapStatsText) window.draw(*mapStatsText);
+
+		int actualIndex = (targetIndex % (int)N + (int)N) % (int)N;
+		sf::Vector2f viewSize = game->getWindow().getView().getSize();
+		float centerX = viewSize.x / 2.0f;
+		float uiYPosition = viewSize.y - 150.f;
+
+		
+		float starSpacing = 28.0f;
+		float starsTotalWidth = (4 * starSpacing) + 25.f;
+		float textWidth = mapStatsText ? mapStatsText->getLocalBounds().size.x : 0.f;
+		float totalGroupWidth = textWidth + starsTotalWidth;
+
+		float startX = centerX - (totalGroupWidth / 2.0f);
+
+		// --- 1. Draw multiply ---
+		if (mapStatsText) {
+			mapStatsText->setPosition({ std::round(startX), std::round(uiYPosition) });
+			window.draw(*mapStatsText);
+		}
+
+		// --- 2. Draw stars ---
+		int difficulty = roster[actualIndex].difficultyStars;
+		float starsStartX = startX + textWidth;
+
+		for (int i = 0; i < 5; ++i) {
+			auto& currentStar = (i < difficulty) ? starFullSprite : starEmptySprite;
+			if (currentStar) {
+				currentStar->setPosition({ std::round(starsStartX + 12.5f + (i * starSpacing)), std::round(uiYPosition) - 10 });
+				window.draw(*currentStar);
+			}
+		}
 
 		if (leftArrowSprite) window.draw(*leftArrowSprite);
 		if (rightArrowSprite) window.draw(*rightArrowSprite);
