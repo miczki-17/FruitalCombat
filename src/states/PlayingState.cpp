@@ -11,8 +11,13 @@ namespace game::states
 	{
 		std::cout << "[PLAYING STATE] Budowanie areny d¿ungli...\n";
 
+		std::string mapKey = game->selectedMapKey;
+		const auto& mapData = game->mapsConfig[mapKey];
+		std::string mapPath = mapData.value("texturePath", "");
+		std::string mapMaskPath = mapData.value("maskPath", "");
+
 		// 1. £adowanie mapy wizualnej
-		if (mapTexture.loadFromFile("../../../assets/textures/maps/jungle_arena.png"))
+		if (mapTexture.loadFromFile(mapPath))
 		{
 			mapSprite.emplace(mapTexture);
 			mapSprite->setScale({ mapScale, mapScale });
@@ -22,9 +27,9 @@ namespace game::states
 		}
 
 		// 2. £adowanie maski kolizji do RAM
-		if (!collisionMask.loadFromFile("../../../assets/textures/maps/jungle_mask.png"))
+		if (!collisionMask.loadFromFile(mapMaskPath))
 		{
-			std::cerr << "[B£¥D] Nie mo¿na za³adowaæ pliku jungle_mask.png!\n";
+			std::cerr << "[B£¥D] Nie mo¿na za³adowaæ pliku " << mapMaskPath << '\n';
 		}
 
 		// 3. £adowanie zasobów interfejsu (HUD)

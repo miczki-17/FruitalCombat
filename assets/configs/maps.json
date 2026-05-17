@@ -4,8 +4,9 @@
     "description": "A natural arena surrounded by dense jungle.",
     "difficultyStars": 1,
     "damageMultiplier": 1.0,
-    "texturePath": "assets/textures/maps/jungle_arena.jpg",
+    "texturePath": "assets/textures/maps/wild_ochard.png",
     "thumbnailPath": "assets/textures/ui/maps/thumb_ochard.png",
+    "maskPath": "assets/textures/maps/wild_ochard_mask.png",
     "musicPath": "assets/audio/music/jungle_brawl.ogg",
     "physics": {
       "friction": 1.0,
@@ -34,8 +35,9 @@
     "description": "Watch your step! This kitchen counter is a warzone.",
     "difficultyStars": 4,
     "damageMultiplier": 1.2,
-    "texturePath": "assets/textures/maps/chopping_block.jpg",
+    "texturePath": "assets/textures/maps/chopping_block.png",
     "thumbnailPath": "assets/textures/ui/maps/thumb_kitchen.png",
+    "maskPath": "assets/textures/maps/chopping_block_mask.png",
     "musicPath": "assets/audio/music/kitchen_chaos.ogg",
     "physics": {
       "friction": 0.8,
@@ -60,12 +62,13 @@
   },
 
   "CrisperDrawer": {
-    "name": "The Crisper Drawer",
+    "name": "Frosbite Fridge",
     "description": "Sub-zero temperatures make for slippery battles!",
     "difficultyStars": 3,
     "damageMultiplier": 1.0,
-    "texturePath": "assets/textures/maps/crisper_drawer.jpg",
+    "texturePath": "assets/textures/maps/frosbite_fridge.png",
     "thumbnailPath": "assets/textures/ui/maps/thumb_ice.png",
+    "maskPath": "assets/textures/maps/frosbite_fridge_mask.png",
     "musicPath": "assets/audio/music/chill_vibes.ogg",
     "physics": {
       "friction": 0.2,

@@ -118,6 +118,10 @@ namespace game::states
 			isMapConfigLoaded = false;
 		}
 
+		//for (const auto& [key, data] : game->mapsConfig.items()) {
+		//	std::cout << game->mapsConfig;
+		//}
+
 		// ==========================================
 		// 3. £ADOWANIE UI I T£A
 		// ==========================================
@@ -139,7 +143,7 @@ namespace game::states
 			{"back", "assets/textures/ui/back_button.png"},
 			{"log_platform", "assets/textures/ui/log_platform.png"},
 			{"settings_bg", "assets/textures/ui/settings_bg.png" },
-			{"character_select_bg", "assets/textures/ui/character_select_bg.png"}
+			{"select_bg", "assets/textures/ui/select_bg.png"}
 		};
 
 		for (const auto& [key, path] : uiPaths) {
@@ -160,7 +164,6 @@ namespace game::states
 			auto keyEvent = event.getIf<sf::Event::KeyPressed>();
 			if (keyEvent->code == sf::Keyboard::Key::Space || keyEvent->code == sf::Keyboard::Key::Enter)
 			{
-				// Ochrona: przepuszcza tylko jeœli owoce, mapy i UI s¹ gotowe
 				if (isMenuLoaded && isConfigLoaded && isMapConfigLoaded) {
 					introMusic.stop();
 					game->getStateMachine().changeState(StateType::Menu);

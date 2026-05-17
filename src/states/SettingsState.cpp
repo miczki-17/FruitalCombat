@@ -24,7 +24,7 @@ namespace game::states
 		}
 
 		// Font load
-		if (!font.openFromFile("../../../assets/fonts/ARIAL.TTF"))
+		if (!font.openFromFile("../../../assets/fonts/Minecraftia-Regular.ttf"))
 		{
 			std::cerr << "[SETTINGS ERROR] can not load font\n";
 		}
@@ -43,7 +43,7 @@ namespace game::states
 		sliderHandle.setPosition({ leftColX + 95.f, 360.f });
 
 		volumeValueText = sf::Text(font, "100%", 20);
-		(*volumeValueText).setPosition({ leftColX + 45.f, 380.f });
+		(*volumeValueText).setPosition({ leftColX + 45.f, 390.f });
 
 		// --- RIGHT SECTION BINDS ---
 		float rightColX = viewSize.x * 0.7f;
@@ -57,10 +57,10 @@ namespace game::states
 			(*btn).setPosition({ rightColX + 50.f, yPos });
 		};
 
-		setupBindRow(upLabel, upBtnText, "Move Up", 250.f);
-		setupBindRow(leftLabel, leftBtnText, "Move Left", 310.f);
-		setupBindRow(downLabel, downBtnText, "Move Down", 370.f);
-		setupBindRow(rightLabel, rightBtnText, "Move Right", 430.f);
+		setupBindRow(upLabel, upBtnText, "Move Up", 340.f);
+		setupBindRow(leftLabel, leftBtnText, "Move Left", 400.f);
+		setupBindRow(downLabel, downBtnText, "Move Down", 460.f);
+		setupBindRow(rightLabel, rightBtnText, "Move Right", 520.f);
 
 		// --- BACK BUTTON ---
 		if (game->menuUiBuffer.contains("back"))

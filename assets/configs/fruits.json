@@ -4,7 +4,7 @@
     "title": "The Apple Fighter",
     "hp": 12,
     "damage": 12,
-    "maxSpeed": 350.0,
+    "maxSpeed": 450.0,
     "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "assets/textures/entities/characters/appleWalk.png",
     "abilities": [ "Seed Buckshot", "Cider Dash" ]
@@ -14,7 +14,7 @@
     "title": "Bananarang Ninja",
     "hp": 10,
     "damage": 15,
-    "maxSpeed": 450.0,
+    "maxSpeed": 550.0,
     "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "",
     "abilities": [ "Bananarang", "Phantom Peel" ]
@@ -24,7 +24,7 @@
     "title": "Pit & Spit",
     "hp": 9,
     "damage": 18,
-    "maxSpeed": 400.0,
+    "maxSpeed": 440.0,
     "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "",
     "abilities": [ "Gatling Pits", "Cherry Bomb" ]
@@ -34,7 +34,7 @@
     "title": "The Red Menace",
     "hp": 10,
     "damage": 15,
-    "maxSpeed": 400.0,
+    "maxSpeed": 500.0,
     "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "",
     "abilities": [ "Seed Burst", "Jam Flurry" ]
@@ -44,7 +44,7 @@
     "title": "The Wild Bramble",
     "hp": 15,
     "damage": 16,
-    "maxSpeed": 320.0,
+    "maxSpeed": 410.0,
     "texturePath": "",
     "walkTexturePath": "",
     "abilities": [ "Cluster Smash", "Thorn Armor" ]

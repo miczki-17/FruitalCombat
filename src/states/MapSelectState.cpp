@@ -16,9 +16,9 @@ namespace game::states
 		float centerX = viewSize.x / 2.0f;
 		float centerY = viewSize.y / 2.0f;
 
-		if (game->menuUiBuffer.contains("character_select_bg"))
+		if (game->menuUiBuffer.contains("select_bg"))
 		{
-			if (bgTex.loadFromImage(game->menuUiBuffer["character_select_bg"])) {
+			if (bgTex.loadFromImage(game->menuUiBuffer["select_bg"])) {
 				bgSprite = sf::Sprite(bgTex);
 				sf::Vector2f bgSize(bgTex.getSize());
 				bgSprite->setScale({ viewSize.x / bgSize.x, viewSize.y / bgSize.y });
@@ -28,16 +28,16 @@ namespace game::states
 		darkOverlay.setSize(viewSize);
 		darkOverlay.setFillColor(sf::Color(0, 0, 0, 80));
 
-		if (!font.openFromFile("assets/fonts/ARIAL.TTF")) {
+		if (!font.openFromFile("assets/fonts/Minecraftia-Regular.ttf")) {
 			std::cerr << "[SELECT ERROR] Cannot load font.\n";
 		}
 
-		mapNameText.emplace(font, "", 43);
+		mapNameText.emplace(font, "", 35);
 		mapNameText->setFillColor(sf::Color(255, 255, 255));
 		mapNameText->setOutlineColor(sf::Color::Black);
 		mapNameText->setOutlineThickness(4.5f);
 
-		mapDescText.emplace(font, "", 15);
+		mapDescText.emplace(font, "", 12);
 		mapDescText->setFillColor(sf::Color(255, 210, 120));
 		mapDescText->setOutlineColor(sf::Color::Black);
 		mapDescText->setOutlineThickness(2.5f);
@@ -180,7 +180,7 @@ namespace game::states
 				int N = roster.size();
 				if (N > 0) {
 					int actualIndex = (targetIndex % N + N) % N;
-					game->selectedMapKey = roster[actualIndex].jsonKey;
+					game->selectedMapKey = roster[actualIndex].jsonKey;		std::cout << "selected map: " << game->selectedMapKey << '\n';
 					game->getStateMachine().changeState(StateType::Playing);
 				}
 			}
@@ -283,14 +283,20 @@ namespace game::states
 		if (mapNameText) {
 			mapNameText->setString(roster[actualIndex].name);
 			sf::FloatRect bounds = mapNameText->getLocalBounds();
-			mapNameText->setOrigin({ bounds.size.x / 2.0f, bounds.size.y / 2.0f });
-			mapNameText->setPosition({ centerX, 70.f });
+			mapNameText->setOrigin({ 
+				std::round(bounds.position.x + bounds.size.x / 2.0f),
+				std::round(bounds.position.y + bounds.size.y / 2.0f) 
+				});
+			mapNameText->setPosition({ std::round(centerX), 80.f });
 		}
 		if (mapDescText) {
 			mapDescText->setString(roster[actualIndex].description);
 			sf::FloatRect bounds = mapDescText->getLocalBounds();
-			mapDescText->setOrigin({ bounds.size.x / 2.0f, bounds.size.y / 2.0f });
-			mapDescText->setPosition({ centerX, 120.f });
+			mapDescText->setOrigin({ 
+				std::round(bounds.position.x + bounds.size.x / 2.0f),
+				std::round(bounds.position.y + bounds.size.y / 2.0f)
+				});
+			mapDescText->setPosition({ std::round(centerX), 125.f });
 		}
 		if (mapStatsText) {
 			std::stringstream ss;
@@ -299,8 +305,11 @@ namespace game::states
 
 			mapStatsText->setString(ss.str());
 			sf::FloatRect bounds = mapStatsText->getLocalBounds();
-			mapStatsText->setOrigin({ bounds.size.x / 2.0f, bounds.size.y / 2.0f });
-			mapStatsText->setPosition({ centerX, viewSize.y - 180.f });
+			mapStatsText->setOrigin({ 
+				std::round(bounds.position.x + bounds.size.x / 2.0f),
+				std::round(bounds.position.y + bounds.size.y / 2.0f)
+				});
+			mapStatsText->setPosition({ std::round(centerX), viewSize.y - 200.f });
 		}
 	}
 

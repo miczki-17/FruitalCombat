@@ -44,9 +44,9 @@ namespace game::states
 		float centerX = viewSize.x / 2.0f;
 		float centerY = viewSize.y / 2.0f;
 
-		if (game->menuUiBuffer.contains("character_select_bg"))
+		if (game->menuUiBuffer.contains("select_bg"))
 		{
-			if (bgTex.loadFromImage(game->menuUiBuffer["character_select_bg"])) {
+			if (bgTex.loadFromImage(game->menuUiBuffer["select_bg"])) {
 				bgSprite = sf::Sprite(bgTex);
 				sf::Vector2f bgSize(bgTex.getSize());
 				bgSprite->setScale({ viewSize.x / bgSize.x, viewSize.y / bgSize.y });
@@ -56,16 +56,16 @@ namespace game::states
 		darkOverlay.setSize(viewSize);
 		darkOverlay.setFillColor(sf::Color(0, 0, 0, 80));
 
-		if (!font.openFromFile("assets/fonts/ARIAL.TTF")) {
+		if (!font.openFromFile("assets/fonts/Minecraftia-Regular.ttf")) {
 			std::cerr << "[SELECT ERROR] Cannot load font.\n";
 		}
 
-		characterNameText.emplace(font, "", 55);
+		characterNameText.emplace(font, "", 45);
 		characterNameText->setFillColor(sf::Color(255, 255, 255));
 		characterNameText->setOutlineColor(sf::Color::Black);
 		characterNameText->setOutlineThickness(4.5f);
 
-		characterTitleText.emplace(font, "", 25);
+		characterTitleText.emplace(font, "", 20);
 		characterTitleText->setFillColor(sf::Color(255, 210, 120));
 		characterTitleText->setOutlineColor(sf::Color::Black);
 		characterTitleText->setOutlineThickness(3.0f);
@@ -366,14 +366,25 @@ namespace game::states
 		if (characterNameText) {
 			characterNameText->setString(roster[actualIndex].displayName);
 			sf::FloatRect bounds = characterNameText->getLocalBounds();
-			characterNameText->setOrigin({ bounds.size.x / 2.0f, bounds.size.y / 2.0f });
-			characterNameText->setPosition({ centerX, 70.f });
+
+			// SFML 3: u¿ywamy bounds.position.x/y oraz bounds.size.x/y z zaokr¹gleniem
+			characterNameText->setOrigin({
+				std::round(bounds.position.x + bounds.size.x / 2.0f),
+				std::round(bounds.position.y + bounds.size.y / 2.0f)
+				});
+			// Zaokr¹glamy pozycjê X (Y i tak jest okr¹g³e w Twoim kodzie)
+			characterNameText->setPosition({ std::round(centerX), 80.f });
 		}
+
 		if (characterTitleText) {
 			characterTitleText->setString(roster[actualIndex].title);
 			sf::FloatRect bounds = characterTitleText->getLocalBounds();
-			characterTitleText->setOrigin({ bounds.size.x / 2.0f, bounds.size.y / 2.0f });
-			characterTitleText->setPosition({ centerX, 115.f });
+
+			characterTitleText->setOrigin({
+				std::round(bounds.position.x + bounds.size.x / 2.0f),
+				std::round(bounds.position.y + bounds.size.y / 2.0f)
+				});
+			characterTitleText->setPosition({ std::round(centerX), 125.f });
 		}
 	}
 
