@@ -1,0 +1,123 @@
+3 Grywalne Postacie (Owoce)
+Każda testuje inny aspekt silnika: fizykę odrzutu, pociski obszarowe i zadawanie obrażeń w czasie (DoT).
+
+1. 🍊 Orange (Citrus Maximus) - Opancerzony Gladiator
+Do testowania: Stanów nakładanych na wrogów (DoT) i zmiany fizyki ruchu gracza.
+
+HP: 150 | Szybkość: 180 (Średnia)
+
+Skill 1: Acid Squirt (Kwasowy Strumień).
+
+Działanie: rzuca kulkami kwasu.
+
+Mechanika: Nie zadaje dużych obrażeń od razu, ale nakłada na trafionych wrogów flagę bitową Status::Poison. Wróg traci 5 HP co sekundę przez 3 sekundy.
+
+Skill 2: Rind Roll (Szarża w Skorupie).
+
+Działanie: Przyspiesza do przodu ignorując obrażenia.
+
+Mechanika: Gracz dostaje x2 do Szybkości, traci możliwość strzelania, a każdy wróg, z którym wejdzie w kolizję, otrzymuje obrażenia i jest odrzucany w tył (Knockback).
+
+
+
+
+2. 🍎 Apple (Mac-Smash) - Klasyczny Brawler
+Do testowania: Rozrzutu pocisków (Shotgun) i stref spowalniających na mapie.
+
+HP: 100 | Szybkość: 200 (Szybki)
+
+Skill 1: Seed Buckshot (Śrut z Pestek).
+
+Działanie: Strzela pestkami.
+
+Mechanika: generowanie pestkowych pocisków, możliwość ulepszenia o więcej jednostek.
+
+Skill 2: Cider Dash (Odskok z Cydrem).
+
+Działanie: Szybki unik (Dash), który zostawia kałużę.
+
+Mechanika: Tworzysz na mapie nieruchomy obiekt "Kałuża". Każde warzywo, którego Bounding Box przecina się z kałużą, ma Szybkość zmniejszoną o 50%.
+
+
+
+
+
+3. 🍓 Strawberry (Juice Lee) - Mistrz Sztuk Walki
+Do testowania: Ataków wręcz (Melee Hitboxy) i wybuchów obszarowych (AoE).
+
+HP: 120 | Szybkość: 220 (Bardzo Szybki)
+
+Skill 1: Seed Burst (Wybuch Pestek).
+
+Działanie: Wystrzeliwuje pestki w 360 stopniach.
+
+Mechanika: Generujesz 8-12 pocisków rozchodzących się promieniście od środka gracza.
+
+Skill 2: Jam Flurry (Seria Ciosów).
+
+Działanie: Szybki atak wręcz na krótki dystans.
+
+Mechanika: Generujesz niewidzialny okrąg (Hitbox) tuż przed graczem. Każdy wróg w tym okręgu dostaje serię 3 szybkich obrażeń i mocny Knockback.
+
+
+
+
+
+
+
+
+
+
+
+5 Podstawowych Warzyw (Mięso Armatnie i Baza Mutacji)
+Zaprojektowane tak, by w kodzie opierały się na prostych tagach (flagach bitowych), które łatwo później ze sobą krzyżować w funkcji fuseEnemies().
+
+
+1. Marchewka (Karaterot)
+
+DNA Tag: Trait::Fast | Trait::Melee
+
+Parametry: HP: 30, Obrażenia: 10, Szybkość: 150
+
+Zachowanie: Biegnie prosto na gracza w linii prostej. Podstawa do tworzenia szybkich mutantów.
+
+
+
+2. Ziemniak (Spudnik)
+jeżeli się rozwali rozbija się na 4 szybkie frytki
+
+DNA Tag: Trait::Slow | Trait::Armor
+
+Parametry: HP: 80, Obrażenia: 20, Szybkość: 60
+
+Zachowanie: Powolny czołg. Jego tag Armor oznacza w kodzie redukcję przyjmowanych obrażeń o np. 30%.
+
+
+
+3. Brokuł (Brocc-Hulk)
+
+DNA Tag: Trait::Slow | Trait::Bruiser (Mocne uderzenie)
+
+Parametry: HP: 60, Obrażenia: 40, Szybkość: 80
+
+Zachowanie: Podąża za graczem powoli, ale jeśli podejdzie na bliską odległość, wykonuje "atak z zamachem" (zatrzymuje się na 0.5s przed zadaniem dużych obrażeń).
+
+
+
+4. Kukurydza (Colonel Corn)
+
+DNA Tag: Trait::Stationary | Trait::Ranged
+
+Parametry: HP: 40, Obrażenia: 15, Szybkość: 40
+
+Zachowanie: Zatrzymuje się w pewnej odległości od gracza i co 2 sekundy wystrzeliwuje pocisk (ziarenko popcornu), który leci w linii prostej.
+
+
+
+5. Czosnek (Count Clovula)
+
+DNA Tag: Trait::Medium | Trait::Support
+
+Parametry: HP: 50, Obrażenia: 5, Szybkość: 100
+
+Zachowanie: Unika bezpośredniej walki. Posiada wokół siebie niewidzialny promień działania (Aura). Inne warzywa znajdujące się w tym promieniu odzyskują 2 HP co sekundę.
