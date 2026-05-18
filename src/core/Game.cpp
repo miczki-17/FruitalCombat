@@ -66,4 +66,47 @@ namespace game
 		uiClickSound->stop();
 		uiClickSound->play();
 	}
+
+	//cursor
+	void Game::drawMenuCursor()
+	{
+		if (!isCursorInitialized)
+		{
+			if (menuUiBuffer.contains("cursor"))
+			{
+				if (menuCursorTex.loadFromImage(menuUiBuffer["cursor"]))
+				{
+					menuCursorSprite.emplace(menuCursorTex);
+
+					menuCursorSprite->setTextureRect(sf::IntRect({ 0, 0 }, { 64, 64 }));
+					menuCursorSprite->setOrigin({ 14.f, 10.f });
+
+					window.setMouseCursorVisible(false);
+					isCursorInitialized = true;
+				}
+			}
+		}
+
+		if (isCursorInitialized && menuCursorSprite.has_value())
+		{
+			sf::View oldView = window.getView();
+			window.setView(window.getDefaultView());
+
+			sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+
+			menuCursorSprite->setPosition({ static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) });
+
+			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+			{
+				menuCursorSprite->setTextureRect(sf::IntRect({ 0, 64 }, { 64, 64 })); // Dolna klatka
+			}
+			else
+			{
+				menuCursorSprite->setTextureRect(sf::IntRect({ 0, 0 }, { 64, 64 }));  // Górna klatka
+			}
+
+			window.draw(*menuCursorSprite);
+			window.setView(oldView); 
+		}
+	}
 }

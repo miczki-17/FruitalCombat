@@ -180,5 +180,6 @@ namespace game::states
             if (settingsBtn.has_value()) window.draw(*settingsBtn);
             if (exitBtn.has_value()) window.draw(*exitBtn);
         }
+        game->drawMenuCursor();
     }
 }

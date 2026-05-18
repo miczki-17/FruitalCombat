@@ -38,6 +38,25 @@ namespace game::states
 			std::cerr << "[OSTRZE¯ENIE] Brak czcionki interfejsu!\n";
 		}
 
+		if (game->menuUiBuffer.contains("crosshair"))
+		{
+			if (crosshairTex.loadFromImage(game->menuUiBuffer["crosshair"]))
+			{
+				crosshairSprite.emplace(crosshairTex);
+				sf::Vector2u size = crosshairTex.getSize();
+
+				// Punkt zaczepienia musi byæ idealnie na œrodku
+				crosshairSprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
+
+				// Ukrywamy kursor systemowy
+				game->getWindow().setMouseCursorVisible(false);
+			}
+		}
+		else
+		{
+			std::cerr << "[OSTRZE¯ENIE] Brak tekstury celownika w buforze pamiêci!\n";
+		}
+
 		/*if (coinIconTexture.loadFromFile("../../../assets/textures/ui/coin_icon.png"))
 		{
 			coinIconSprite.emplace(coinIconTexture);
@@ -88,6 +107,7 @@ namespace game::states
 		// Inicjalizacja kamery
 		cameraView = game->getWindow().getDefaultView();
 		cameraView.zoom(1.4f); // Oddalenie o 40%
+
 	}
 
 	StateType PlayingState::getType() const
@@ -311,5 +331,21 @@ namespace game::states
 		if (settingsBtnSprite.has_value()) window.draw(*settingsBtnSprite);
 
 		renderHUD(window);
+
+		// -- RYSOWANIE CELOWNKA --
+		if (crosshairSprite.has_value())
+		{
+			sf::View oldView = window.getView();
+
+			window.setView(window.getDefaultView());
+
+			sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+
+			crosshairSprite->setPosition({ static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) });
+
+			window.draw(*crosshairSprite);
+
+			window.setView(oldView);
+		}
 	}
 }

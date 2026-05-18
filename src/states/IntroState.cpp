@@ -153,7 +153,9 @@ namespace game::states
 			{"settings_btn", "assets/textures/ui/settings_button_pause.png"},
 			{"exit_btn", "assets/textures/ui/exit_button.png",},
 			{"yes_btn", "assets/textures/ui/yes_button.png"},
-			{"no_btn", "assets/textures/ui/no_button.png"}
+			{"no_btn", "assets/textures/ui/no_button.png"},
+			{"cursor", "assets/textures/ui/cursor.png" },
+			{"crosshair", "assets/textures/ui/crosshairV3.png"}
 		};
 
 		for (const auto& [key, path] : uiPaths) {

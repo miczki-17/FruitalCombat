@@ -179,6 +179,8 @@ namespace game::states
 		if (settingsBtnSprite.has_value()) window.draw(*settingsBtnSprite);
 		if (shopBtnSprite.has_value()) window.draw(*shopBtnSprite);
 		if (achievementsBtnSprite.has_value()) window.draw(*achievementsBtnSprite);
+
+		game->drawMenuCursor();
 	}
 
 	void MenuState::buttonPulse(std::optional<sf::Sprite>& btnSprite, sf::Vector2f targetSizeInPixels)

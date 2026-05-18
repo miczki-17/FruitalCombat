@@ -229,6 +229,8 @@ namespace game::states
 		if (rightBtnText.has_value())     window.draw(*rightBtnText);
 
 		if (backBtnSprite)	window.draw(*backBtnSprite);
+
+		game->drawMenuCursor();
 		
 	}
 

@@ -37,6 +37,9 @@ namespace game::states
 		sf::Texture settingsBtnTex;
 		std::optional<sf::Sprite> settingsBtnSprite;
 
+		// -- CWLOWNIK --
+		sf::Texture crosshairTex;
+		std::optional<sf::Sprite> crosshairSprite;
 
 		void renderHUD(sf::RenderWindow& window);
 

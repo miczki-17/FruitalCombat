@@ -511,5 +511,7 @@ namespace game::states
 		if (rightArrowSprite) window.draw(*rightArrowSprite);
 		if (selectBtnSprite) window.draw(*selectBtnSprite);
 		if (backBtnSprite) window.draw(*backBtnSprite);
+
+		game->drawMenuCursor();
 	}
 }

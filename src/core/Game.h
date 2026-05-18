@@ -21,6 +21,10 @@ namespace game
 		sf::RenderWindow window;
 		StateMachine stateMachine;
 
+		sf::Texture menuCursorTex;
+		std::optional<sf::Sprite> menuCursorSprite;
+		bool isCursorInitialized = false;
+
 	public:
 		Game();
 
@@ -28,6 +32,9 @@ namespace game
 
 		// UI
 		void playUIClick();
+
+		//cuursor
+		void drawMenuCursor();
 
 		StateMachine& getStateMachine();
 		sf::RenderWindow& getWindow();
