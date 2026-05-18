@@ -37,6 +37,8 @@ namespace game
 		void update(float dt);
 		void render(sf::RenderWindow& window);
 
+		states::StateType getCurrentStateType() const;
+
 		
 		void processStateChanges();
 	};

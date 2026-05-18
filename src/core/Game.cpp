@@ -8,13 +8,6 @@ namespace game
 		window.create(sf::VideoMode({ config::WINDOW_WIDTH, config::WINDOW_LENGTH }), "FRUITAL COMBAT");
 		window.setFramerateLimit(config::FPS_LIMIT);
 
-		// load global sounds
-		if (!uiClickBuffer.loadFromFile("../../../assets/audio/ui/click.mp3"))
-		{
-			std::cerr << "can not load uiClickBuffer\n";
-		}
-		uiClickSound.emplace(uiClickBuffer);
-
 		stateMachine.changeState(states::StateType::Intro);
 	}
 
@@ -67,6 +60,7 @@ namespace game
 		uiClickSound->play();
 	}
 
+
 	//cursor
 	void Game::drawMenuCursor()
 	{
@@ -93,8 +87,8 @@ namespace game
 			window.setView(window.getDefaultView());
 
 			sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-
-			menuCursorSprite->setPosition({ static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) });
+			sf::Vector2f worldPos = window.mapPixelToCoords(mousePos, window.getDefaultView());
+			menuCursorSprite->setPosition({ worldPos });
 
 			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 			{

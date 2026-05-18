@@ -43,7 +43,7 @@ namespace game::states
 		float centerX = viewSize.x / 2.0f;
 		float margin = 20.0f;
 
-		setupButton("button", startBtnTex, startBtnSprite, { centerX, 600.0f }, { 300.0f, 120.0f });
+		setupButton("empty_button", startBtnTex, startBtnSprite, { centerX, 600.0f }, { 300.0f, 120.0f });
 
 		if (!customFont.openFromFile("assets/fonts/Minecraftia-Regular.ttf")) {
 			std::cerr << "[MENU ERROR] Cannot load font.\n";

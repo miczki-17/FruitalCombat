@@ -23,6 +23,7 @@ namespace game::states
 		std::atomic<bool> isMenuLoaded{ false };
 		std::atomic<bool> isConfigLoaded{ false };
 		std::atomic<bool> isMapConfigLoaded{ false };
+		std::atomic<bool> isUiSoundsLoaded{ false };
 
 		void loadAssetsInBg();
 

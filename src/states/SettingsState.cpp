@@ -12,7 +12,6 @@ namespace game::states
 	{
 		sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
 
-		//£adowanie t³a ustawieñ 
 		if (game->menuUiBuffer.contains("settings_bg"))
 		{
 			if (bgTexture.loadFromImage(game->menuUiBuffer["settings_bg"]))
@@ -28,7 +27,7 @@ namespace game::states
 		{
 			std::cerr << "[SETTINGS ERROR] can not load font\n";
 		}
-		std::cout << "FONT LOADED\n";
+		//std::cout << "FONT LOADED\n";
 
 		// --- LEFT SECTION: AUDIO ---
 		float leftColX = viewSize.x * 0.25f;
@@ -70,18 +69,18 @@ namespace game::states
 				backBtnSprite = sf::Sprite(backBtnTex);
 				sf::Vector2f originalSize(backBtnTex.getSize());
 
-				sf::Vector2f targetSize(120.f, 60.f);
+				sf::Vector2f targetSize(60.f, 60.f);
 				backBtnSprite->setScale({ targetSize.x / originalSize.x, targetSize.y / originalSize.y });
 
 				backBtnSprite->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
 
-				backBtnSprite->setPosition({ 80.f, 50.f });
+				backBtnSprite->setPosition({ 50.f, 50.f });
 			}
 		}
 
 		currentVolume = sf::Listener::getGlobalVolume();
 
-		std::cout << "TEXT CREATED\n";
+		//std::cout << "TEXT CREATED\n";
 	}
 
 	StateType SettingsState::getType() const
@@ -91,7 +90,6 @@ namespace game::states
 
 	void SettingsState::handleEvent(const sf::Event& event)
 	{
-		// POPRAWKA: Bezwzglêdnie mapujemy kursor na sta³y widok UI kamery okna!
 		sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
 		sf::Vector2f mousePos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
 
@@ -114,6 +112,16 @@ namespace game::states
 				currentRebind = RebindTarget::None;
 			}
 			return;
+		}
+		if (event.is<sf::Event::KeyPressed>())
+		{
+			auto keyEvent = event.getIf<sf::Event::KeyPressed>();
+			if (keyEvent->code == sf::Keyboard::Key::Escape)
+			{
+				game->playUIClick();
+				game->getStateMachine().popState();
+				return;
+			}
 		}
 
 		// mouse listening
@@ -182,19 +190,18 @@ namespace game::states
 		if (backBtnSprite)
 		{
 			sf::Vector2f texSize(backBtnSprite->getTexture().getSize());
-			// Musimy znaæ bazow¹ skalê dla rozmiaru 120x60
-			float baseScaleX = 120.f / texSize.x;
+			float baseScaleX = 60.f / texSize.x;
 			float baseScaleY = 60.f / texSize.y;
 
 			if (backBtnSprite->getGlobalBounds().contains(uiMousePos))
 			{
-				backBtnSprite->setColor(sf::Color(255, 255, 255)); // Pe³na jasnoœæ
-				backBtnSprite->setScale({ baseScaleX * 1.1f, baseScaleY * 1.1f }); // Powiêkszenie o 10%
+				backBtnSprite->setColor(sf::Color(255, 255, 255));
+				backBtnSprite->setScale({ baseScaleX * 1.1f, baseScaleY * 1.1f });
 			}
 			else
 			{
-				backBtnSprite->setColor(sf::Color(210, 210, 210)); // Lekkie przyciemnienie, gdy mysz jest poza
-				backBtnSprite->setScale({ baseScaleX, baseScaleY }); // Powrót do normalnego rozmiaru
+				backBtnSprite->setColor(sf::Color(210, 210, 210));
+				backBtnSprite->setScale({ baseScaleX, baseScaleY });
 			}
 		}
 	}

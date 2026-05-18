@@ -92,4 +92,12 @@ namespace game
 			if (stateStack[i]) stateStack[i]->render(window);
 		}
 	}
+
+
+	// get last state
+	states::StateType StateMachine::getCurrentStateType() const
+	{
+		if (stateStack.empty()) return states::StateType::Intro; // Default state
+		return stateStack.back()->getType();
+	}	
 }

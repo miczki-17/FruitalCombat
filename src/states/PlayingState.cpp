@@ -332,20 +332,23 @@ namespace game::states
 
 		renderHUD(window);
 
-		// -- RYSOWANIE CELOWNKA --
-		if (crosshairSprite.has_value())
+		// -- CROSSHAIR DRAW --
+		if (game->getStateMachine().getCurrentStateType() == states::StateType::Playing)
 		{
-			sf::View oldView = window.getView();
+			if (crosshairSprite.has_value())
+			{
+				sf::View oldView = window.getView();
 
-			window.setView(window.getDefaultView());
+				window.setView(window.getDefaultView());
 
-			sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+				sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 
-			crosshairSprite->setPosition({ static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) });
+				crosshairSprite->setPosition({ static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) });
 
-			window.draw(*crosshairSprite);
+				window.draw(*crosshairSprite);
 
-			window.setView(oldView);
+				window.setView(oldView);
+			}
 		}
 	}
 }

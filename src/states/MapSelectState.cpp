@@ -52,7 +52,7 @@ namespace game::states
 
 		setupButton("left_arrow", leftArrowTex, leftArrowSprite, { centerX - 550.f, centerY }, { 80.f, 80.f });
 		setupButton("right_arrow", rightArrowTex, rightArrowSprite, { centerX + 550.f, centerY }, { 80.f, 80.f });
-		setupButton("button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
+		setupButton("empty_button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
 
 		selectBtnText.emplace(font, "CHOOSE", 27);
 		selectBtnText->setFillColor(sf::Color::White);
@@ -65,7 +65,7 @@ namespace game::states
 		selectBtnText->setPosition({ centerX, viewSize.y - 100.f });
 		// ------------------------------------------------
 
-		setupButton("back", backBtnTex, backBtnSprite, { 80.f, 60.f }, { 60.f, 60.f });
+		setupButton("back", backBtnTex, backBtnSprite, { 50.f, 50.f }, { 60.f, 60.f });
 
 		setupButton("star_full_icon", starFullTex, starFullSprite, { 0.f, 0.f }, { 25.f, 25.f });
 		setupButton("star_empty_icon", starEmptyTex, starEmptySprite, { 0.f, 0.f }, { 25.f, 25.f });
@@ -180,6 +180,7 @@ namespace game::states
 				if (N > 0) {
 					int actualIndex = (targetIndex % N + N) % N;
 					game->selectedMapKey = roster[actualIndex].jsonKey;
+					game->menuMusic.stop();
 					game->getStateMachine().changeState(StateType::Playing);
 				}
 			}
@@ -208,6 +209,7 @@ namespace game::states
 					if (N > 0) {
 						int actualIndex = (targetIndex % N + N) % N;
 						game->selectedMapKey = roster[actualIndex].jsonKey;
+						game->menuMusic.stop();
 						game->getStateMachine().changeState(StateType::Playing);
 					}
 				}

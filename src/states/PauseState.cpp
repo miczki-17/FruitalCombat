@@ -1,5 +1,6 @@
 #include "PauseState.h"
 #include <iostream>
+#include <cmath> // Do std::round
 
 namespace game::states
 {
@@ -12,17 +13,18 @@ namespace game::states
         darkOverlay.setFillColor(sf::Color(0, 0, 0, 180));
 
         try {
-            // loading font
-            uiFont.emplace("../../../assets/fonts/Minecraftia-Regular.ttf");
+            // loading font (SFML 3 = openFromFile)
+            uiFont.emplace();
+            if (!uiFont->openFromFile("../../../assets/fonts/Minecraftia-Regular.ttf")) {
+                throw std::runtime_error("Cannot load font file");
+            }
 
-            
-            confirmText.emplace(*uiFont);
-            confirmText->setString("Are you sure you want to exit?");
-            confirmText->setCharacterSize(36);
+            confirmText.emplace(*uiFont, "Are you sure you want to exit?", 36);
             confirmText->setFillColor(sf::Color::White);
 
             sf::FloatRect textBounds = confirmText->getLocalBounds();
-            confirmText->setOrigin({ textBounds.size.x / 2.0f, textBounds.size.y / 2.0f });
+            confirmText->setOrigin({ textBounds.position.x + textBounds.size.x / 2.0f,
+                                     textBounds.position.y + textBounds.size.y / 2.0f });
             confirmText->setPosition({ viewSize.x / 2.0f, viewSize.y / 2.0f - 100.0f });
         }
         catch (const std::exception& e) {
@@ -32,12 +34,31 @@ namespace game::states
         float centerX = viewSize.x / 2.0f;
         float centerY = viewSize.y / 2.0f;
 
-        setupButton("resume_btn", resumeTex, resumeBtn, { centerX, centerY - 80.0f }, { 200.0f, 60.0f });
-        setupButton("settings_btn", settingsTex, settingsBtn, { centerX, centerY }, { 200.0f, 60.0f });
-        setupButton("exit_btn", exitTex, exitBtn, { centerX, centerY + 80.0f }, { 200.0f, 60.0f });
+        setupButton("empty_button", resumeTex, resumeBtn, { centerX, centerY - 80.0f }, { 200.0f, 60.0f });
+        setupButton("empty_button", settingsTex, settingsBtn, { centerX, centerY }, { 200.0f, 60.0f });
+        setupButton("empty_button", exitTex, exitBtn, { centerX, centerY + 80.0f }, { 200.0f, 60.0f });
 
-        setupButton("yes_btn", yesTex, yesBtn, { centerX - 120.0f, centerY }, { 150.0f, 60.0f });
-        setupButton("no_btn", noTex, noBtn, { centerX + 120.0f, centerY }, { 150.0f, 60.0f });
+        setupButton("empty_button", yesTex, yesBtn, { centerX - 120.0f, centerY }, { 150.0f, 60.0f });
+        setupButton("empty_button", noTex, noBtn, { centerX + 120.0f, centerY }, { 150.0f, 60.0f });
+
+        if (uiFont.has_value()) {
+            setupButtonText(resumeText, "RESUME", { centerX, centerY - 80.0f });
+            setupButtonText(settingsText, "SETTINGS", { centerX, centerY });
+            setupButtonText(exitText, "EXIT", { centerX, centerY + 80.0f });
+            setupButtonText(yesText, "YES", { centerX - 120.0f, centerY });
+            setupButtonText(noText, "NO", { centerX + 120.0f, centerY });
+        }
+    }
+
+    void PauseState::setupButtonText(std::optional<sf::Text>& textObj, const std::string& str, sf::Vector2f pos, int fontSize)
+    {
+        textObj.emplace(*uiFont, str, fontSize);
+        textObj->setFillColor(sf::Color::White);
+
+        sf::FloatRect bounds = textObj->getLocalBounds();
+        textObj->setOrigin({ std::round(bounds.position.x + bounds.size.x / 2.0f),
+                             std::round(bounds.position.y + bounds.size.y / 2.0f) });
+        textObj->setPosition(pos);
     }
 
     void PauseState::setupButton(const std::string& key, std::optional<sf::Texture>& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
@@ -136,17 +157,17 @@ namespace game::states
         sf::Vector2f mousePos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
 
         if (showExitConfirm) {
-            updateHover(yesBtn, { 150.0f, 60.0f }, mousePos);
-            updateHover(noBtn, { 150.0f, 60.0f }, mousePos);
+            updateHover(yesBtn, { 150.0f, 60.0f }, mousePos, &yesText);
+            updateHover(noBtn, { 150.0f, 60.0f }, mousePos, &noText);
         }
         else {
-            updateHover(resumeBtn, { 200.0f, 60.0f }, mousePos);
-            updateHover(settingsBtn, { 200.0f, 60.0f }, mousePos);
-            updateHover(exitBtn, { 200.0f, 60.0f }, mousePos);
+            updateHover(resumeBtn, { 200.0f, 60.0f }, mousePos, &resumeText);
+            updateHover(settingsBtn, { 200.0f, 60.0f }, mousePos, &settingsText);
+            updateHover(exitBtn, { 200.0f, 60.0f }, mousePos, &exitText);
         }
     }
 
-    void PauseState::updateHover(std::optional<sf::Sprite>& btn, sf::Vector2f targetSize, sf::Vector2f mousePos)
+    void PauseState::updateHover(std::optional<sf::Sprite>& btn, sf::Vector2f targetSize, sf::Vector2f mousePos, std::optional<sf::Text>* linkedText)
     {
         if (!btn) return;
 
@@ -157,10 +178,20 @@ namespace game::states
         if (btn->getGlobalBounds().contains(mousePos)) {
             btn->setColor(sf::Color(255, 255, 255));
             btn->setScale({ baseScaleX * 1.1f, baseScaleY * 1.1f });
+
+            if (linkedText && linkedText->has_value()) {
+                (*linkedText)->setFillColor(sf::Color(255, 255, 255));
+                (*linkedText)->setScale({ 1.1f, 1.1f });
+            }
         }
         else {
             btn->setColor(sf::Color(210, 210, 210));
             btn->setScale({ baseScaleX, baseScaleY });
+
+            if (linkedText && linkedText->has_value()) {
+                (*linkedText)->setFillColor(sf::Color(210, 210, 210));
+                (*linkedText)->setScale({ 1.0f, 1.0f });
+            }
         }
     }
 
@@ -172,13 +203,29 @@ namespace game::states
 
         if (showExitConfirm) {
             if (confirmText.has_value()) window.draw(*confirmText);
-            if (yesBtn.has_value()) window.draw(*yesBtn);
-            if (noBtn.has_value()) window.draw(*noBtn);
+
+            if (yesBtn.has_value()) {
+                window.draw(*yesBtn);
+                if (yesText) window.draw(*yesText);
+            }
+            if (noBtn.has_value()) {
+                window.draw(*noBtn);
+                if (noText) window.draw(*noText);
+            }
         }
         else {
-            if (resumeBtn.has_value()) window.draw(*resumeBtn);
-            if (settingsBtn.has_value()) window.draw(*settingsBtn);
-            if (exitBtn.has_value()) window.draw(*exitBtn);
+            if (resumeBtn.has_value()) {
+                window.draw(*resumeBtn);
+                if (resumeText) window.draw(*resumeText);
+            }
+            if (settingsBtn.has_value()) {
+                window.draw(*settingsBtn);
+                if (settingsText) window.draw(*settingsText);
+            }
+            if (exitBtn.has_value()) {
+                window.draw(*exitBtn);
+                if (exitText) window.draw(*exitText);
+            }
         }
         game->drawMenuCursor();
     }

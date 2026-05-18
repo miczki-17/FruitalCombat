@@ -50,7 +50,7 @@ namespace game::states
 		game->mapImageBuffer.clear();
 
 		// ==========================================
-		// 1. £ADOWANIE CONFIGU POSTACI I TEKSTUR
+		// 1. CHARACTERS CONFIG & TEXTURES
 		// ==========================================
 		std::cout << "[ASYNC] Characters config loading...\n";
 		std::ifstream configFile("assets/configs/fruits.json");
@@ -84,7 +84,7 @@ namespace game::states
 		}
 
 		// ==========================================
-		// 2. £ADOWANIE CONFIGU MAP I TEKSTUR
+		// 2. MAP CONFIG & TEXTURES
 		// ==========================================
 		std::cout << "[ASYNC] Maps config loading...\n";
 		std::ifstream mapsFile("assets/configs/maps.json");
@@ -123,7 +123,7 @@ namespace game::states
 		//}
 
 		// ==========================================
-		// 3. £ADOWANIE UI I T£A
+		// 3. UI & BACKGROUND TEXTURES
 		// ==========================================
 		for (int i = 1; i <= 6; ++i)
 		{
@@ -133,7 +133,7 @@ namespace game::states
 		}
 
 		std::map<std::string, std::string> uiPaths = {
-			{"button", "assets/textures/ui/button.png"},
+			{"empty_button", "assets/textures/ui/empty_button.png"},
 			{"settings", "assets/textures/ui/settings_button.png"},
 			{"shop", "assets/textures/ui/shop.png"},
 			{"achievements", "assets/textures/ui/achievements.png"},
@@ -158,6 +158,21 @@ namespace game::states
 		}
 
 		isMenuLoaded = true;
+
+		
+		// ==========================================
+		// 4. UI SOUNDS
+		// ==========================================
+		if (!game->uiClickBuffer.loadFromFile("../../../assets/audio/ui/click.mp3"))
+		{
+			std::cerr << "can not load uiClickBuffer\n";
+		}
+		game->uiClickSound.emplace(game->uiClickBuffer);
+
+		isUiSoundsLoaded = true;
+
+		std::cout << "[ASYNC] UI sounds loaded successfully.\n";
+
 		std::cout << "[ASYNC] All assets loaded to RAM safely.\n";
 	}
 
@@ -170,7 +185,7 @@ namespace game::states
 			auto keyEvent = event.getIf<sf::Event::KeyPressed>();
 			if (keyEvent->code == sf::Keyboard::Key::Space || keyEvent->code == sf::Keyboard::Key::Enter)
 			{
-				if (isMenuLoaded && isConfigLoaded && isMapConfigLoaded) {
+				if (isMenuLoaded && isConfigLoaded && isMapConfigLoaded && isUiSoundsLoaded) {
 					introMusic.stop();
 					game->getStateMachine().changeState(StateType::Menu);
 				}

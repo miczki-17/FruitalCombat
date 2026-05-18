@@ -75,7 +75,7 @@ namespace game::states
 
 		setupButton("left_arrow", leftArrowTex, leftArrowSprite, { centerX - 450.f, centerY - 50.f }, { 80.f, 80.f });
 		setupButton("right_arrow", rightArrowTex, rightArrowSprite, { centerX + 450.f, centerY - 50.f }, { 80.f, 80.f });
-		setupButton("button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
+		setupButton("empty_button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
 
 		selectBtnText.emplace(font, "CHOOSE", 27);
 		selectBtnText->setFillColor(sf::Color::White);
@@ -87,7 +87,7 @@ namespace game::states
 								   std::round(chooseTextRect.position.y + chooseTextRect.size.y / 2.0f) });
 		selectBtnText->setPosition({ centerX, viewSize.y - 100.f });
 
-		setupButton("back", backBtnTex, backBtnSprite, { 80.f, 60.f }, { 60.f, 60.f });
+		setupButton("back", backBtnTex, backBtnSprite, { 50.f, 50.f }, { 60.f, 60.f });
 
 		setupButton("hp_icon", hpIconTex, hpIconSprite, { 0.f, 0.f }, { 28.f, 24.f });
 		setupButton("dmg_icon", dmgIconTex, dmgIconSprite, { 0.f, 0.f }, { 28.f, 24.f });
