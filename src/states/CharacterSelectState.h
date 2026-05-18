@@ -26,11 +26,12 @@ namespace game::states
 		sf::Texture selectBtnTex, backBtnTex;
 		std::optional<sf::Sprite> selectBtnSprite, backBtnSprite;
 
+		// --- GENEROWANY TEKST PRZYCISKU CHOOSE ---
+		std::optional<sf::Text> selectBtnText;
 
 		// --- UI ICONS ---
 		sf::Texture hpIconTex, dmgIconTex, spdIconTex;
 		std::optional<sf::Sprite> hpIconSprite, dmgIconSprite, spdIconSprite;
-
 
 		// --- TYPOGRAPHY ---
 		sf::Font font;

@@ -133,13 +133,12 @@ namespace game::states
 		}
 
 		std::map<std::string, std::string> uiPaths = {
-			{"start", "assets/textures/ui/start.png"},
+			{"button", "assets/textures/ui/button.png"},
 			{"settings", "assets/textures/ui/settings_button.png"},
 			{"shop", "assets/textures/ui/shop.png"},
 			{"achievements", "assets/textures/ui/achievements.png"},
 			{"left_arrow", "assets/textures/ui/left_arrow.png"},
 			{"right_arrow", "assets/textures/ui/right_arrow.png"},
-			{"choose", "assets/textures/ui/choose.png"},
 			{"back", "assets/textures/ui/back_button.png"},
 			{"log_platform", "assets/textures/ui/log_platform.png"},
 			{"settings_bg", "assets/textures/ui/settings_bg.png" },
@@ -149,11 +148,6 @@ namespace game::states
 			{"dmg_icon", "assets/textures/ui/dmg_icon.png"},
 			{"star_full_icon", "assets/textures/ui/star_full_icon.png"},
 			{"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
-			{"resume_btn", "assets/textures/ui/resume_button.png"},
-			{"settings_btn", "assets/textures/ui/settings_button_pause.png"},
-			{"exit_btn", "assets/textures/ui/exit_button.png",},
-			{"yes_btn", "assets/textures/ui/yes_button.png"},
-			{"no_btn", "assets/textures/ui/no_button.png"},
 			{"cursor", "assets/textures/ui/cursor.png" },
 			{"crosshair", "assets/textures/ui/crosshairV3.png"}
 		};

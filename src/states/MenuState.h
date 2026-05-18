@@ -1,6 +1,10 @@
 #pragma once
 
 #include "../core/State.h"
+#include <SFML/Graphics/Font.hpp>
+#include <SFML/Graphics/Text.hpp>
+#include <optional>
+#include <vector>
 
 namespace game::states
 {
@@ -15,6 +19,10 @@ namespace game::states
 		// Menu Buttons
 		sf::Texture startBtnTex;
 		std::optional<sf::Sprite> startBtnSprite;
+
+		// START text
+		sf::Font customFont;
+		std::optional<sf::Text> startText;
 
 		sf::Texture settingsBtnTex;
 		std::optional<sf::Sprite> settingsBtnSprite;
@@ -49,6 +57,6 @@ namespace game::states
 		void update(float dt) override;
 		void render(sf::RenderWindow& window) override;
 
-		void buttonPulse(std::optional<sf::Sprite>& btnSprite, sf::Vector2f targetSizeInPixels);
+		void buttonPulse(std::optional<sf::Sprite>& btnSprite, sf::Vector2f targetSizeInPixels, std::optional<sf::Text>* linkedText = nullptr);
 	};
 }

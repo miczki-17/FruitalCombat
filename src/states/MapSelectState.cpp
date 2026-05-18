@@ -52,8 +52,20 @@ namespace game::states
 
 		setupButton("left_arrow", leftArrowTex, leftArrowSprite, { centerX - 550.f, centerY }, { 80.f, 80.f });
 		setupButton("right_arrow", rightArrowTex, rightArrowSprite, { centerX + 550.f, centerY }, { 80.f, 80.f });
-		setupButton("choose", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
-		setupButton("back", backBtnTex, backBtnSprite, { 80.f, 50.f }, { 120.f, 60.f });
+		setupButton("button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
+
+		selectBtnText.emplace(font, "CHOOSE", 27);
+		selectBtnText->setFillColor(sf::Color::White);
+		selectBtnText->setOutlineColor(sf::Color::Black);
+		selectBtnText->setOutlineThickness(4.5f);
+
+		sf::FloatRect chooseTextRect = selectBtnText->getLocalBounds();
+		selectBtnText->setOrigin({ std::round(chooseTextRect.position.x + chooseTextRect.size.x / 2.0f),
+								   std::round(chooseTextRect.position.y + chooseTextRect.size.y / 2.0f) });
+		selectBtnText->setPosition({ centerX, viewSize.y - 100.f });
+		// ------------------------------------------------
+
+		setupButton("back", backBtnTex, backBtnSprite, { 80.f, 60.f }, { 60.f, 60.f });
 
 		setupButton("star_full_icon", starFullTex, starFullSprite, { 0.f, 0.f }, { 25.f, 25.f });
 		setupButton("star_empty_icon", starEmptyTex, starEmptySprite, { 0.f, 0.f }, { 25.f, 25.f });
@@ -244,7 +256,7 @@ namespace game::states
 		sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
 		sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(pixelPos);
 
-		auto updateHover = [&](std::optional<sf::Sprite>& btn, sf::Vector2f targetSize) {
+		auto updateHover = [&](std::optional<sf::Sprite>& btn, sf::Vector2f targetSize, std::optional<sf::Text>* txt = nullptr) {
 			if (!btn) return;
 			sf::Vector2u texSize(btn->getTexture().getSize());
 			float baseScaleX = targetSize.x / texSize.x;
@@ -253,17 +265,27 @@ namespace game::states
 			if (btn->getGlobalBounds().contains(worldPos)) {
 				btn->setColor(sf::Color(255, 255, 255));
 				btn->setScale({ baseScaleX * 1.08f, baseScaleY * 1.08f });
+
+				if (txt && txt->has_value()) {
+					(*txt)->setFillColor(sf::Color(255, 255, 255));
+					(*txt)->setScale({ 1.08f, 1.08f }); // Skalowanie tekstu o 8%
+				}
 			}
 			else {
 				btn->setColor(sf::Color(210, 210, 210));
 				btn->setScale({ baseScaleX, baseScaleY });
+
+				if (txt && txt->has_value()) {
+					(*txt)->setFillColor(sf::Color(210, 210, 210));
+					(*txt)->setScale({ 1.0f, 1.0f });
+				}
 			}
-		};
+			};
 
 		updateHover(leftArrowSprite, { 80.f, 80.f });
 		updateHover(rightArrowSprite, { 80.f, 80.f });
-		updateHover(selectBtnSprite, { 170.f, 70.f });
-		updateHover(backBtnSprite, { 120.f, 60.f });
+		updateHover(selectBtnSprite, { 170.f, 70.f }, &selectBtnText);
+		updateHover(backBtnSprite, { 60.f, 60.f });
 
 		int actualIndex = (targetIndex % (int)N + (int)N) % (int)N;
 
@@ -354,7 +376,7 @@ namespace game::states
 		float centerX = viewSize.x / 2.0f;
 		float uiYPosition = viewSize.y - 150.f;
 
-		
+
 		float starSpacing = 28.0f;
 		float starsTotalWidth = (4 * starSpacing) + 25.f;
 		float textWidth = mapStatsText ? mapStatsText->getLocalBounds().size.x : 0.f;
@@ -382,7 +404,15 @@ namespace game::states
 
 		if (leftArrowSprite) window.draw(*leftArrowSprite);
 		if (rightArrowSprite) window.draw(*rightArrowSprite);
-		if (selectBtnSprite) window.draw(*selectBtnSprite);
+
+		// draw choose
+		if (selectBtnSprite) {
+			window.draw(*selectBtnSprite);
+			if (selectBtnText) {
+				window.draw(*selectBtnText);
+			}
+		}
+
 		if (backBtnSprite) window.draw(*backBtnSprite);
 
 		game->drawMenuCursor();

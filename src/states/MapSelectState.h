@@ -23,6 +23,9 @@ namespace game::states
 		sf::Texture selectBtnTex, backBtnTex;
 		std::optional<sf::Sprite> selectBtnSprite, backBtnSprite;
 
+		// --- NOWY TEKST DLA PRZYCISKU CHOOSE ---
+		std::optional<sf::Text> selectBtnText;
+
 		sf::Font font;
 		std::optional<sf::Text> mapNameText;
 		std::optional<sf::Text> mapDescText;
