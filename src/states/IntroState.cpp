@@ -148,7 +148,12 @@ namespace game::states
 			{"spd_icon", "assets/textures/ui/spd_icon.png"},
 			{"dmg_icon", "assets/textures/ui/dmg_icon.png"},
 			{"star_full_icon", "assets/textures/ui/star_full_icon.png"},
-			{"starr_empty_icon", "assets/textures/ui/star_empty_icon.png"}
+			{"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
+			{"resume_btn", "assets/textures/ui/resume_button.png"},
+			{"settings_btn", "assets/textures/ui/settings_button_pause.png"},
+			{"exit_btn", "assets/textures/ui/exit_button.png",},
+			{"yes_btn", "assets/textures/ui/yes_button.png"},
+			{"no_btn", "assets/textures/ui/no_button.png"}
 		};
 
 		for (const auto& [key, path] : uiPaths) {

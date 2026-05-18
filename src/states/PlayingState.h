@@ -32,6 +32,12 @@ namespace game::states
 		sf::Texture coinIconTexture;
 		std::optional<sf::Sprite> coinIconSprite;
 
+
+		// settings button
+		sf::Texture settingsBtnTex;
+		std::optional<sf::Sprite> settingsBtnSprite;
+
+
 		void renderHUD(sf::RenderWindow& window);
 
 	public:

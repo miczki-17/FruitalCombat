@@ -35,7 +35,7 @@ namespace game
 		// ----- BUFORY DANYCH (RAM) -----
 		std::map<std::string, sf::Image> menuUiBuffer;
 		std::vector<sf::Image> menuImageBuffer;
-		std::map<std::string, sf::Image> characterImageBuffer; // NOWY BUFOR NA POSTACIE
+		std::map<std::string, sf::Image> characterImageBuffer; // BUFOR NA POSTACIE
 		std::map<std::string, sf::Image> mapImageBuffer;
 
 

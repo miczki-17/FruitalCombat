@@ -44,6 +44,38 @@ namespace game::states
 		}*/
 
 
+		// Helper to configure and load button graphics
+		auto setupButton = [&](const std::string& key, sf::Texture& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
+			{
+				if (game->menuUiBuffer.contains(key))
+				{
+					if (tex.loadFromImage(game->menuUiBuffer[key]))
+					{
+						spr = sf::Sprite(tex);
+						sf::Vector2f originalSize(tex.getSize());
+						float scaleX = targetSize.x / originalSize.x;
+						float scaleY = targetSize.y / originalSize.y;
+						(*spr).setScale({ scaleX, scaleY });
+						(*spr).setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
+						(*spr).setPosition(pos);
+					}
+				}
+				else {
+					std::cerr << "[MENU ERROR] cannot find " << key << " in buffer\n";
+				}
+			};
+		sf::Vector2f viewSize = game->getWindow().getView().getSize();
+		float centerX = viewSize.x / 2.0f;
+		float margin = 20.0f;
+
+		setupButton("settings", settingsBtnTex, settingsBtnSprite, { 0.0f, 0.0f }, { 60.0f, 60.0f });
+
+		if (settingsBtnSprite.has_value()) {
+			sf::FloatRect bounds = (*settingsBtnSprite).getGlobalBounds();
+			(*settingsBtnSprite).setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f), margin + (bounds.size.y / 2.0f) });
+		}
+
+
 		game::ArenaContext context{ bullets };
 		game::factories::FruitFactory factory(context, game->fruitsConfig);
 		player = factory.createFruit(game->selectedFruitType);
@@ -78,7 +110,7 @@ namespace game::states
 			// Pauza
 			if (keyPressed->code == sf::Keyboard::Key::Escape)
 			{
-				game->getStateMachine().pushState(StateType::Settings);
+				game->getStateMachine().pushState(StateType::Pause);
 			}
 
 			// --- JEDNORAZOWY DASH POD SPACJ? ---
@@ -90,6 +122,22 @@ namespace game::states
 					sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
 
 					player->useSkill(mouseWorldPos);
+				}
+			}
+		}
+
+		if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>())
+		{
+			if (mousePressed->button == sf::Mouse::Button::Left)
+			{
+				sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
+				sf::Vector2f uiPos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
+				// Check if settings button was clicked
+				if (settingsBtnSprite.has_value() && settingsBtnSprite->getGlobalBounds().contains(uiPos))
+				{
+					game->playUIClick();
+					game->getStateMachine().pushState(StateType::Pause);
+					return;
 				}
 			}
 		}
@@ -142,6 +190,30 @@ namespace game::states
 
 			cameraView.setCenter(targetCenter);
 			game->getWindow().setView(cameraView);
+
+
+			// --- 5. HOVER EFFECT SETTINGS BUTTON ---
+			sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
+			sf::Vector2f uiHoverPos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
+
+			auto updateHover = [&](std::optional<sf::Sprite>& btn, sf::Vector2f targetSize) {
+				if (!btn) return;
+
+				sf::Vector2f texSize(btn->getTexture().getSize());
+				float baseScaleX = targetSize.x / texSize.x;
+				float baseScaleY = targetSize.y / texSize.y;
+
+				// ZMIANA TUTAJ: Zamiast worldPos sprawdzamy uiHoverPos
+				if (btn->getGlobalBounds().contains(uiHoverPos)) {
+					btn->setColor(sf::Color(255, 255, 255));
+					btn->setScale({ baseScaleX * 1.1f, baseScaleY * 1.1f });
+				}
+				else {
+					btn->setColor(sf::Color(210, 210, 210));
+					btn->setScale({ baseScaleX, baseScaleY });
+				}
+				};
+			updateHover(settingsBtnSprite, { 60.0f, 60.0f });
 		}
 	}
 
@@ -217,6 +289,7 @@ namespace game::states
 
 	void PlayingState::render(sf::RenderWindow& window)
 	{
+		// 1. world draw (player camera)
 		window.setView(cameraView);
 
 		if (mapSprite.has_value()) window.draw(*mapSprite);
@@ -230,6 +303,12 @@ namespace game::states
 		{
 			player->render(window);
 		}
+
+		// 2. interface draw (draw interface)
+		window.setView(window.getDefaultView());
+
+		// SETTINGS BUTTON RENDERING
+		if (settingsBtnSprite.has_value()) window.draw(*settingsBtnSprite);
 
 		renderHUD(window);
 	}

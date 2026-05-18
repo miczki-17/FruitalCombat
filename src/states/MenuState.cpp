@@ -70,6 +70,8 @@ namespace game::states
 			frameSprite->setScale({ viewSize.x / introSize.x, viewSize.y / introSize.y });
 			frameSprite->setPosition({ 0.f, 0.f });
 		}
+	
+		sf::Listener::setGlobalVolume(35.0f);
 
 		if (game->menuMusic.getStatus() != sf::SoundSource::Status::Playing)
 		{

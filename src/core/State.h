@@ -23,7 +23,8 @@ namespace game::states
 		Playing,
 		Settings,
 		CharacterSelect,
-		MapSelect
+		MapSelect,
+		Pause
 	};
 
 
