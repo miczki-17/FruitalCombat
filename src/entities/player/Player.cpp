@@ -11,11 +11,12 @@ namespace game::entities
 		shape.setOutlineThickness(0.0f);
 	}
 
-	void Player::setStats(int newHp, float newMaxSpeed)
+	void Player::setStats(int newHp, float newMaxSpeed, float newAttackSpeed)
 	{
 		hp = newHp;
 		maxHp = newHp;
 		maxSpeed = newMaxSpeed;
+		attackSpeed = newAttackSpeed;
 	}
 
 	void Player::loadTextures(const std::string& idlePath, const std::string& walkPath)
@@ -23,13 +24,12 @@ namespace game::entities
 		if (animator.loadTextures(idlePath, walkPath))
 		{
 			playerSprite.emplace(animator.getDefaultTexture());
-
 			playerSprite->setOrigin({ 32.0f, 32.0f });
 			playerSprite->setScale({ 2.0f, 2.0f });
 		}
 		else
 		{
-			std::cerr << "[OSTRZE¯ENIE] Brak tekstur postaci!\n";
+			std::cerr << "[WARNING] Player textures assets missing!\n";
 		}
 	}
 
@@ -48,8 +48,16 @@ namespace game::entities
 		velocity += force;
 		if (uncapDuration > 0.0f)
 		{
-			speedUncapTimer = uncapDuration; // Uruchamiamy stoper braku limitu
+			speedUncapTimer = uncapDuration;
 		}
+	}
+
+	// --- INICJACJA TOCZENIA ---
+	void Player::startRoll(sf::Vector2f initialDir, float speed, float duration)
+	{
+		rollTimer = duration;
+		rollSpeedLimit = speed;
+		velocity = initialDir * speed; // Nadaje pocz?tkowe szarpni?cie w stron? myszki
 	}
 
 	void Player::useWeapon(sf::Vector2f targetWorldPos)
@@ -76,13 +84,12 @@ namespace game::entities
 		if (sf::Keyboard::isKeyPressed(game->keyLeft))  targetDir.x -= 1.f;
 		if (sf::Keyboard::isKeyPressed(game->keyRight)) targetDir.x += 1.f;
 
-		// --- ODCZYT STANU DO ANIMATORA ---
-		static bool facingRight = true; // Pamiêta kierunek po puszczeniu klawisza
+		static bool facingRight = true;
 		if (targetDir.x > 0.1f)       facingRight = true;
 		else if (targetDir.x < -0.1f) facingRight = false;
 
 		bool isMoving = (targetDir.x != 0.f || targetDir.y != 0.f);
-		animator.setMovementState(isMoving, facingRight); // Wysy³amy stan do kontrolera
+		animator.setMovementState(isMoving, facingRight);
 
 		if (isMoving)
 		{
@@ -91,6 +98,7 @@ namespace game::entities
 			targetDir.y /= length;
 		}
 
+		// Zawsze pozwalamy WSAD-owi dodawa? p?d, dzi?ki czemu mo?emy ZAKR?CA? w trakcie toczenia
 		smoothedInput += (targetDir - smoothedInput) * turnSpeed * dt;
 
 		float smoothedLength = std::sqrt(smoothedInput.x * smoothedInput.x + smoothedInput.y * smoothedInput.y);
@@ -105,13 +113,26 @@ namespace game::entities
 			if (std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y) < 10.0f) velocity = { 0.f, 0.f };
 		}
 
-		// --- KONTROLA LIMITU PRÊDKOŒCI ---
-		if (speedUncapTimer > 0.0f)
+		// --- DYNAMICZNY LIMIT PR?DKO?CI ---
+		if (rollTimer > 0.0f)
 		{
+			// Tryb Toczenia: Ograniczamy wektor do rollSpeedLimit (z JSON-a)
+			rollTimer -= dt;
+			float currentSpeed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+			if (currentSpeed > rollSpeedLimit)
+			{
+				velocity.x = (velocity.x / currentSpeed) * rollSpeedLimit;
+				velocity.y = (velocity.y / currentSpeed) * rollSpeedLimit;
+			}
+		}
+		else if (speedUncapTimer > 0.0f)
+		{
+			// Klasyczny Dash bez limitu
 			speedUncapTimer -= dt;
 		}
 		else
 		{
+			// Zwyk?e chodzenie
 			float currentSpeed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
 			if (currentSpeed > maxSpeed)
 			{
@@ -120,7 +141,7 @@ namespace game::entities
 			}
 		}
 
-		// --- MAŒLANY POŒLIZG (SONAR WEKTOROWY) ---
+		// --- MA?LANY PO?LIZG (SONAR WEKTOROWY) ---
 		sf::Vector2f nextPos = position + velocity * dt;
 		float fullRadius = shape.getRadius() + shape.getOutlineThickness();
 		sf::Vector2u maskSize = collisionMask.getSize();
@@ -220,15 +241,22 @@ namespace game::entities
 		{
 			playerSprite->setPosition(position);
 
-			// --- DELEGACJA ANIMACJI DO KONTROLERA ---
-			animator.updateAndApply(*playerSprite, dt);
+			// Agresywna rotacja odpala si? zarówno przy dashu jak i toczeniu
+			if (speedUncapTimer > 0.0f || rollTimer > 0.0f)
+			{
+				playerSprite->rotate(sf::degrees(450.0f * dt));
+			}
+			else
+			{
+				playerSprite->setRotation(sf::degrees(0.f));
+				animator.updateAndApply(*playerSprite, dt);
+			}
 		}
 		else
 		{
 			shape.setPosition(position);
 		}
 
-		// --- Aktualizacja stanów umiejêtnoœci (Cooldowny) ---
 		if (primaryWeapon != nullptr)
 		{
 			primaryWeapon->update(dt);
@@ -255,4 +283,5 @@ namespace game::entities
 	sf::Vector2f Player::getPosition() const { return position; }
 	sf::Vector2f Player::getVelocity() const { return velocity; }
 	void Player::setPosition(sf::Vector2f pos) { position = pos; }
+	float Player::getAttackSpeed() const { return attackSpeed; }
 }

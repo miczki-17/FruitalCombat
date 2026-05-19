@@ -270,7 +270,7 @@ namespace game::states
 
 				if (txt && txt->has_value()) {
 					(*txt)->setFillColor(sf::Color(255, 255, 255));
-					(*txt)->setScale({ 1.08f, 1.08f }); // Skalowanie tekstu o 8%
+					(*txt)->setScale({ 1.08f, 1.08f }); // text scaling 8%
 				}
 			}
 			else {

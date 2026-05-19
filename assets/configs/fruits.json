@@ -5,6 +5,7 @@
     "hp": 12,
     "damage": 12,
     "maxSpeed": 450.0,
+    "attackSpeed": 1.0,
     "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "assets/textures/entities/characters/appleWalk.png",
     "abilities": [ "Seed Buckshot", "Cider Dash" ]
@@ -15,6 +16,7 @@
     "hp": 10,
     "damage": 15,
     "maxSpeed": 550.0,
+    "attackSpeed": 1.2,
     "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "",
     "abilities": [ "Bananarang", "Phantom Peel" ]
@@ -25,6 +27,7 @@
     "hp": 9,
     "damage": 18,
     "maxSpeed": 440.0,
+    "attackSpeed": 1.1,
     "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "",
     "abilities": [ "Gatling Pits", "Cherry Bomb" ]
@@ -35,6 +38,7 @@
     "hp": 10,
     "damage": 15,
     "maxSpeed": 500.0,
+    "attackSpeed": 1.0,
     "texturePath": "assets/textures/entities/characters/appleStand.png",
     "walkTexturePath": "",
     "abilities": [ "Seed Burst", "Jam Flurry" ]
@@ -45,6 +49,7 @@
     "hp": 15,
     "damage": 16,
     "maxSpeed": 410.0,
+    "attackSpeed": 1.0,
     "texturePath": "",
     "walkTexturePath": "",
     "abilities": [ "Cluster Smash", "Thorn Armor" ]
@@ -54,9 +59,13 @@
     "title": "The Iron Rind",
     "hp": 20,
     "damage": 20,
-    "maxSpeed": 300.0,
+    "maxSpeed": 280.0,
+    "attackSpeed": 0.5,
+    "rollDuration": 1.8,
+    "rollSpeed": 305.0,
     "texturePath": "assets/textures/entities/characters/appleStand.png",
+    "projectileTexture": "assets/textures/entities/characters/CitrusMaximus/acid_blob.png",
     "walkTexturePath": "",
-    "abilities": [ "Acid Squirt", "Rind Roll" ]
+    "abilities": [ "AcidSquirt", "RindRoll" ]
   }
 }

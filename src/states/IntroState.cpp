@@ -8,32 +8,59 @@
 namespace game::states
 {
 	IntroState::IntroState(game::Game* game)
-		: State(game), elapsedTime(0.f)
+		: State(game)
 	{
-		frameDuration = 1.0f / 30.0f;
-		std::cout << "[INTRO] Initializing video intro...\n";
+		std::cout << "[INTRO] Initializing static intro and progress bar...\n";
 
-		std::string videoPath = "assets/video/intro/intro.mp4";
-		if (!videoPlayer.load(videoPath)) {
-			std::cerr << "[INTRO ERROR] Failed to load intro video!\n";
+		std::string imagePath = "assets/textures/ui/bg_1.png";
+		if (!introTexture.loadFromFile(imagePath)) {
+			std::cerr << "[INTRO ERROR] Failed to load intro image!\n";
+		}
+		else {
+			introTexture.setSmooth(true);
+
+			introSprite.emplace(introTexture);
 		}
 
 		sf::Vector2f viewSize = game->getWindow().getView().getSize();
-		videoPlayer.fitToView(viewSize);
+		if (introSprite.has_value() && introTexture.getSize().x > 0 && introTexture.getSize().y > 0) {
+			introSprite->setScale({
+				viewSize.x / static_cast<float>(introTexture.getSize().x),
+				viewSize.y / static_cast<float>(introTexture.getSize().y)
+				});
+		}
 
-		// Odpalamy w¹tek pobierania danych w tle
+		// 2. Configure progress bar
+		float barWidth = viewSize.x * 0.8f;
+		float barHeight = 20.f;
+		float barX = (viewSize.x - barWidth) / 2.f; // Centered
+		float barY = viewSize.y * 0.9f;             // Near the bottom
+
+		progressBarBg.setSize({ barWidth, barHeight });
+		progressBarBg.setPosition({ barX, barY });
+		progressBarBg.setFillColor(sf::Color(50, 50, 50, 200));
+		progressBarBg.setOutlineColor(sf::Color(0, 0, 0)); // Black outline
+		progressBarBg.setOutlineThickness(2.f);
+
+		progressBarFill.setSize({ 0.f, barHeight }); // Start with 0 width
+		progressBarFill.setPosition({ barX, barY });
+		progressBarFill.setFillColor(sf::Color(0, 200, 0, 255)); // Green fill
+
+		// 3. Load and play intro music
+		//if (introMusic.openFromFile("assets/audio/intro/intro.mp3")) {
+		//	introMusic.play();
+		//}
+		//else {
+		//	std::cerr << "[INTRO ERROR] Cannot load intro music.\n";
+		//}
+
+		// 4. Start the background asset loading thread
 		workerThread = std::make_unique<std::thread>(&IntroState::loadAssetsInBg, this);
-
-		if (introMusic.openFromFile("assets/audio/intro/intro.mp3")) {
-			introMusic.play();
-		}
-		else {
-			std::cerr << "[INTRO ERROR] Cannot load intro music.\n";
-		}
 	}
 
 	IntroState::~IntroState()
 	{
+		// Ensure the thread finishes before destroying the state
 		if (workerThread && workerThread->joinable()) {
 			workerThread->join();
 		}
@@ -43,14 +70,16 @@ namespace game::states
 	{
 		std::cout << "[ASYNC] Assets loading started...\n";
 
-		// Czyszczenie buforów
+		// Clear existing buffers
 		game->menuImageBuffer.clear();
 		game->menuUiBuffer.clear();
 		game->characterImageBuffer.clear();
 		game->mapImageBuffer.clear();
 
+		loadProgress = 5; // Initial progress
+
 		// ==========================================
-		// 1. CHARACTERS CONFIG & TEXTURES
+		// 1. CHARACTERS CONFIG & TEXTURES (approx. 30% progress)
 		// ==========================================
 		std::cout << "[ASYNC] Characters config loading...\n";
 		std::ifstream configFile("assets/configs/fruits.json");
@@ -58,8 +87,10 @@ namespace game::states
 		{
 			try {
 				configFile >> (game->fruitsConfig);
-				isConfigLoaded = true;
 				std::cout << "[ASYNC] fruits.json loaded successfully.\n";
+
+				int index = 0;
+				int totalItems = game->fruitsConfig.size();
 
 				for (auto& [characterKey, characterData] : game->fruitsConfig.items()) {
 					if (characterData.contains("texturePath")) {
@@ -71,20 +102,23 @@ namespace game::states
 							}
 						}
 					}
+					index++;
+					// Update progress proportionally from 5% to 35%
+					if (totalItems > 0) loadProgress = 5 + (30 * index / totalItems);
 				}
 			}
 			catch (const nlohmann::json::parse_error& e) {
 				std::cerr << "[ASYNC ERROR] fruits.json Parse error: " << e.what() << "\n";
-				isConfigLoaded = false;
 			}
 		}
 		else {
 			std::cerr << "[ASYNC ERROR] Cannot open fruits.json!\n";
-			isConfigLoaded = false;
 		}
 
+		loadProgress = 35;
+
 		// ==========================================
-		// 2. MAP CONFIG & TEXTURES
+		// 2. MAP CONFIG & TEXTURES (approx. 30% progress)
 		// ==========================================
 		std::cout << "[ASYNC] Maps config loading...\n";
 		std::ifstream mapsFile("assets/configs/maps.json");
@@ -92,8 +126,10 @@ namespace game::states
 		{
 			try {
 				mapsFile >> (game->mapsConfig);
-				isMapConfigLoaded = true;
 				std::cout << "[ASYNC] maps.json loaded successfully.\n";
+
+				int index = 0;
+				int totalMaps = game->mapsConfig.size();
 
 				for (auto& [mapKey, mapData] : game->mapsConfig.items()) {
 					if (mapData.contains("thumbnailPath")) {
@@ -106,30 +142,30 @@ namespace game::states
 							}
 						}
 					}
+					index++;
+					// Update progress proportionally from 35% to 65%
+					if (totalMaps > 0) loadProgress = 35 + (30 * index / totalMaps);
 				}
 			}
 			catch (const nlohmann::json::parse_error& e) {
 				std::cerr << "[ASYNC ERROR] maps.json Parse error: " << e.what() << "\n";
-				isMapConfigLoaded = false;
 			}
 		}
 		else {
 			std::cerr << "[ASYNC ERROR] Cannot open maps.json!\n";
-			isMapConfigLoaded = false;
 		}
 
-		//for (const auto& [key, data] : game->mapsConfig.items()) {
-		//	std::cout << game->mapsConfig;
-		//}
+		loadProgress = 65;
 
 		// ==========================================
-		// 3. UI & BACKGROUND TEXTURES
+		// 3. UI & BACKGROUND TEXTURES (approx. 30% progress)
 		// ==========================================
 		for (int i = 1; i <= 6; ++i)
 		{
 			std::string filename = std::format("assets/textures/ui/bg_{:01}.png", i);
 			sf::Image img;
 			if (img.loadFromFile(filename)) game->menuImageBuffer.push_back(std::move(img));
+			loadProgress = 65 + (5 * i / 6); // Progress from 65% to 70%
 		}
 
 		std::map<std::string, std::string> uiPaths = {
@@ -152,41 +188,50 @@ namespace game::states
 			{"crosshair", "assets/textures/ui/crosshairV3.png"}
 		};
 
+		int uiIndex = 0;
+		int uiTotal = uiPaths.size();
 		for (const auto& [key, path] : uiPaths) {
 			sf::Image img;
 			if (img.loadFromFile(path)) game->menuUiBuffer[key] = std::move(img);
+
+			uiIndex++;
+			loadProgress = 70 + (25 * uiIndex / uiTotal); // Progress from 70% to 95%
 		}
 
-		isMenuLoaded = true;
-
-		
 		// ==========================================
-		// 4. UI SOUNDS
+		// 4. UI SOUNDS (final 5%)
 		// ==========================================
 		if (!game->uiClickBuffer.loadFromFile("../../../assets/audio/ui/click.mp3"))
 		{
-			std::cerr << "can not load uiClickBuffer\n";
+			std::cerr << "[ASYNC ERROR] Cannot load uiClickBuffer\n";
 		}
-		game->uiClickSound.emplace(game->uiClickBuffer);
-
-		isUiSoundsLoaded = true;
+		else
+		{
+			// Emplace creates the sound instance directly in the std::optional
+			game->uiClickSound.emplace(game->uiClickBuffer);
+		}
 
 		std::cout << "[ASYNC] UI sounds loaded successfully.\n";
 
-		std::cout << "[ASYNC] All assets loaded to RAM safely.\n";
+		// Finalize loading
+		loadProgress = 100;
+		isFinished = true;
+		std::cout << "[ASYNC] All assets safely loaded to RAM.\n";
 	}
 
 	StateType IntroState::getType() const { return StateType::Intro; }
 
 	void IntroState::handleEvent(const sf::Event& event)
 	{
-		if (event.is<sf::Event::KeyPressed>())
+		// SFML 3: Checking event type using getIf returns std::optional-like pointer
+		if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>())
 		{
-			auto keyEvent = event.getIf<sf::Event::KeyPressed>();
+			// Allow skipping the intro by pressing Space or Enter, 
+			// but ONLY if the background loading is completely finished.
 			if (keyEvent->code == sf::Keyboard::Key::Space || keyEvent->code == sf::Keyboard::Key::Enter)
 			{
-				if (isMenuLoaded && isConfigLoaded && isMapConfigLoaded && isUiSoundsLoaded) {
-					introMusic.stop();
+				if (isFinished) {
+					//introMusic.stop();
 					game->getStateMachine().changeState(StateType::Menu);
 				}
 			}
@@ -195,26 +240,31 @@ namespace game::states
 
 	void IntroState::update(float dt)
 	{
-		if (dt > 0.1f) dt = 0.1f;
 		elapsedTime += dt;
 
-		sf::Vector2f viewSize = game->getWindow().getView().getSize();
-		videoPlayer.fitToView(viewSize);
+		// Safely retrieve the current progress from the atomic variable
+		int currentProgress = loadProgress.load();
 
-		while (elapsedTime >= frameDuration)
-		{
-			elapsedTime -= frameDuration;
-			if (!videoPlayer.isDone()) {
-				videoPlayer.update();
-			}
-			else {
-				if (isMenuLoaded && isConfigLoaded && isMapConfigLoaded) {
-					introMusic.stop();
-					game->getStateMachine().changeState(StateType::Menu);
-				}
-			}
+		// Update the width of the progress bar fill
+		float maxWidth = progressBarBg.getSize().x;
+		float newWidth = maxWidth * (static_cast<float>(currentProgress) / 100.f);
+		progressBarFill.setSize({ newWidth, progressBarFill.getSize().y });
+
+		// Automatically transition to the Menu state when loading is done 
+		// AND the minimum display time has passed (to avoid instant flashes)
+		if (isFinished && elapsedTime >= minDisplayTime) {
+			//introMusic.stop();
+			game->getStateMachine().changeState(StateType::Menu);
 		}
 	}
 
-	void IntroState::render(sf::RenderWindow& window) { window.draw(videoPlayer.getSprite()); }
+	void IntroState::render(sf::RenderWindow& window)
+	{
+		// Draw the static intro frame and the progress bar layers
+		if (introSprite.has_value()) {
+			window.draw(*introSprite);
+		}
+		window.draw(progressBarBg);
+		window.draw(progressBarFill);
+	}
 }

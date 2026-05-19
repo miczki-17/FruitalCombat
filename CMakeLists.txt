@@ -58,7 +58,7 @@ add_executable(FruitalCombat
     src/states/PauseState.cpp
     src/states/MapSelectState.h
     src/states/MapSelectState.cpp
-)
+ "src/components/AcidSquirtAbility.h" "src/components/AcidSquirtAbility.cpp" "src/components/RindRollAbility.h" "src/components/RindRollAbility.cpp")
 
 
 # --- 3. NAG?ÓWKI I LINKOWANIE ---
