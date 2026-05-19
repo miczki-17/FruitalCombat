@@ -7,9 +7,12 @@
 #include <string>
 #include <vector>
 #include <optional>
+
 #include "Config.h"
 #include "StateMachine.h"
 #include "State.h"
+#include "ArenaContext.h"
+
 #include "../entities/EntityTypes.h"
 #include "../vendor/nlohmann/json.hpp"
 
@@ -23,6 +26,7 @@ namespace game
 
 		sf::Texture menuCursorTex;
 		std::optional<sf::Sprite> menuCursorSprite;
+
 		bool isCursorInitialized = false;
 
 	public:
@@ -33,40 +37,41 @@ namespace game
 		// UI
 		void playUIClick();
 
-		//cuursor
+		// Cursor rendering
 		void drawMenuCursor();
 
 		StateMachine& getStateMachine();
 		sf::RenderWindow& getWindow();
 
-		// ----- BUFORY DANYCH (RAM) -----
+		// ---------- IMAGE BUFFERS ----------
 		std::map<std::string, sf::Image> menuUiBuffer;
 		std::vector<sf::Image> menuImageBuffer;
-		std::map<std::string, sf::Image> characterImageBuffer; // BUFOR NA POSTACIE
+		std::map<std::string, sf::Image> characterImageBuffer;
 		std::map<std::string, sf::Image> mapImageBuffer;
 
-
-		// --- WSAD ---
+		// ---------- INPUT ----------
 		sf::Keyboard::Key keyUp = sf::Keyboard::Key::W;
 		sf::Keyboard::Key keyLeft = sf::Keyboard::Key::A;
 		sf::Keyboard::Key keyDown = sf::Keyboard::Key::S;
 		sf::Keyboard::Key keyRight = sf::Keyboard::Key::D;
 
-		// sounds
+		// ---------- AUDIO ----------
 		sf::SoundBuffer uiClickBuffer;
 		std::optional<sf::Sound> uiClickSound;
 
-		// music
 		sf::Music menuMusic;
 
-		// default character
-		game::entities::FruitType selectedFruitType = game::entities::FruitType::Apple;
-		//default map & map key <-----V
+		// ---------- PLAYER SELECTION ----------
+		game::entities::FruitType selectedFruitType =
+			game::entities::FruitType::Orange;
+
 		std::string selectedMapKey = "WildOrchard";
 
-		// characters configs
+		// ---------- CONFIGS ----------
 		nlohmann::json fruitsConfig;
-		// maps config
 		nlohmann::json mapsConfig;
+
+		// ---------- SHARED ARENA CONTEXT ----------
+		ArenaContext arenaContext;
 	};
 }

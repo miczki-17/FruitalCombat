@@ -11,20 +11,19 @@ namespace game::components
         shape.setFillColor(bulletColor);
         shape.setOrigin({ bulletRadius, bulletRadius });
         shape.setPosition(position);
-
         velocity = direction * speed;
     }
 
     void Bullet::setAnimation(std::shared_ptr<sf::Texture> tex, int frames, float animSpeed, sf::Vector2i size)
     {
-        if (!tex || tex->getSize().x == 0) return; // Zabezpieczenie przed pust? tekstur?
+        if (!tex || tex->getSize().x == 0) return;
 
         useTexture = true;
+        renderFallbackShape = false;
         texture = tex;
         totalFrames = frames;
         frameDuration = animSpeed;
         frameSize = size;
-
         currentFrame = 0;
         frameTimer = frameDuration;
 
@@ -61,10 +60,8 @@ namespace game::components
     void Bullet::update(float dt, const sf::Image& collisionMask, float mapScale)
     {
         if (!isActive) return;
-
         lifetime += dt;
 
-        // --- FRAME ANIMATION LOGIC ---
         if (useTexture && totalFrames > 1 && sprite.has_value())
         {
             frameTimer -= dt;
@@ -85,30 +82,30 @@ namespace game::components
             if (distLeft < 8.0f || (velocity.x * toTarget.x + velocity.y * toTarget.y) < 0.0f)
             {
                 position = targetPos;
+                spawnSplash = true;
                 isActive = false;
                 return;
             }
 
             position += velocity * dt;
-
             sf::Vector2f traveledVec = position - startPos;
             float traveledDist = std::sqrt(traveledVec.x * traveledVec.x + traveledVec.y * traveledVec.y);
             float progress = std::clamp(traveledDist / totalDistance, 0.0f, 1.0f);
 
+            float maxDistanceForArc = 900.0f;
+            float distanceFactor = std::clamp(totalDistance / maxDistanceForArc, 0.0f, 1.0f);
+            float arcHeight = minArcHeight + distanceFactor * (maxArcHeight - minArcHeight);
             float currentHeight = 4.0f * arcHeight * progress * (1.0f - progress);
 
-            // Pozycjonowanie
             sf::Vector2f visualPos = { position.x, position.y - currentHeight };
             shape.setPosition(visualPos);
             if (sprite.has_value()) sprite->setPosition(visualPos);
 
-            // shadow
             shadowShape.setPosition(position);
             float shadowScale = 1.0f - (currentHeight / arcHeight) * 0.5f;
             shadowShape.setScale({ shadowScale, shadowScale });
             shadowShape.setFillColor(sf::Color(0, 0, 0, static_cast<uint8_t>(100 * (1.0f - progress * 0.3f))));
 
-            // 3D Fake Roll
             if (isFake3DRoll)
             {
                 float baseScaleX = 1.0f + wobbleIntensity * std::sin(lifetime * wobbleSpeed);
@@ -133,7 +130,6 @@ namespace game::components
 
             float angleRad = std::atan2(velocity.y, velocity.x);
             float angleDeg = angleRad * 180.0f / 3.14159265f;
-
             if (sprite.has_value()) {
                 sprite->setRotation(sf::degrees(angleDeg + 90.0f));
             }
@@ -151,7 +147,6 @@ namespace game::components
             if (sprite.has_value()) sprite->setPosition(position);
         }
 
-        // Kolizje
         sf::Vector2u maskSize = collisionMask.getSize();
         int px = static_cast<int>(position.x / mapScale);
         int py = static_cast<int>(position.y / mapScale);
@@ -170,12 +165,10 @@ namespace game::components
         if (isParabolic) {
             window.draw(shadowShape);
         }
-
-        
         if (useTexture && sprite.has_value()) {
             window.draw(*sprite);
         }
-        else {
+        if (renderFallbackShape) {
             window.draw(shape);
         }
     }
@@ -198,4 +191,11 @@ namespace game::components
     void Bullet::setSpeedMultiplier(float multi) { speedMultiplier = multi; }
     void Bullet::setStatusEffect(StatusEffect status) { payloadStatus = status; }
     void Bullet::setWobble(bool state, bool fake3DRoll) { isWobbly = state; isFake3DRoll = fake3DRoll; }
+
+    bool Bullet::consumeSplash()
+    {
+        bool value = spawnSplash;
+        spawnSplash = false;
+        return value;
+    }
 }

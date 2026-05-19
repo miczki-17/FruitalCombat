@@ -10,45 +10,40 @@
 
 namespace game::states
 {
-	class PlayingState : public State
-	{
-	private:
-		sf::Texture mapTexture;
-		std::optional<sf::Sprite> mapSprite;
-		sf::Vector2f mapLimits;
+    class PlayingState : public State
+    {
+    private:
+        sf::Texture mapTexture;
+        std::optional<sf::Sprite> mapSprite;
+        sf::Vector2f mapLimits;
 
-		sf::Image collisionMask;
-		float mapScale = 1.5f;
+        sf::Image collisionMask;
+        float mapScale = 1.5f;
 
-		sf::View cameraView;
+        sf::View cameraView;
+        std::unique_ptr<game::entities::Player> player;
 
-		std::unique_ptr<game::entities::Player> player;
+        // Bullets container owned cleanly by the arena environment state
+        std::vector<game::components::Bullet> bullets;
 
-		// --- MAGAZYNEK NA W£ASNOŒÆ STANU GRY ---
-		std::vector<game::components::Bullet> bullets;
+        sf::Font uiFont;
+        sf::Texture coinIconTexture;
+        std::optional<sf::Sprite> coinIconSprite;
 
-		// Zasoby interfejsu (HUD)
-		sf::Font uiFont;
-		sf::Texture coinIconTexture;
-		std::optional<sf::Sprite> coinIconSprite;
+        sf::Texture settingsBtnTex;
+        std::optional<sf::Sprite> settingsBtnSprite;
 
+        sf::Texture crosshairTex;
+        std::optional<sf::Sprite> crosshairSprite;
 
-		// settings button
-		sf::Texture settingsBtnTex;
-		std::optional<sf::Sprite> settingsBtnSprite;
+        void renderHUD(sf::RenderWindow& window);
 
-		// -- CWLOWNIK --
-		sf::Texture crosshairTex;
-		std::optional<sf::Sprite> crosshairSprite;
+    public:
+        PlayingState(game::Game* game);
 
-		void renderHUD(sf::RenderWindow& window);
-
-	public:
-		PlayingState(game::Game* game);
-
-		StateType getType() const override;
-		void handleEvent(const sf::Event& event) override;
-		void update(float dt) override;
-		void render(sf::RenderWindow& window) override;
-	};
+        StateType getType() const override;
+        void handleEvent(const sf::Event& event) override;
+        void update(float dt) override;
+        void render(sf::RenderWindow& window) override;
+    };
 }

@@ -7,319 +7,329 @@
 
 namespace game::states
 {
-	// Sludge puddle instance blueprint
-	struct AcidPuddle {
-		sf::CircleShape shape;
-		float lifetime = 4.0f;
-		float radius = 55.0f;
-	};
+    PlayingState::PlayingState(game::Game* game)
+        : State(game)
+    {
+        std::cout << "[PLAYING STATE] Building arena elements...\n";
 
-	// Container allocating current map puddle layers
-	static std::vector<AcidPuddle> acidPuddles;
+        std::string mapKey = game->selectedMapKey;
+        const auto& mapData = game->mapsConfig[mapKey];
+        std::string mapPath = mapData.value("texturePath", "");
+        std::string mapMaskPath = mapData.value("maskPath", "");
 
-	PlayingState::PlayingState(game::Game* game)
-		: State(game)
-	{
-		std::cout << "[PLAYING STATE] arena building...\n";
+        if (mapTexture.loadFromFile(mapPath))
+        {
+            mapSprite.emplace(mapTexture);
+            mapSprite->setScale({ mapScale, mapScale });
 
-		std::string mapKey = game->selectedMapKey;
-		const auto& mapData = game->mapsConfig[mapKey];
-		std::string mapPath = mapData.value("texturePath", "");
-		std::string mapMaskPath = mapData.value("maskPath", "");
+            sf::Vector2u rawSize = mapTexture.getSize();
+            mapLimits = sf::Vector2f(rawSize.x * mapScale, rawSize.y * mapScale);
+        }
 
-		// 1. Map texture layout loads
-		if (mapTexture.loadFromFile(mapPath))
-		{
-			mapSprite.emplace(mapTexture);
-			mapSprite->setScale({ mapScale, mapScale });
+        if (!collisionMask.loadFromFile(mapMaskPath))
+        {
+            std::cerr << "[ERROR] Could not load collision mask from: " << mapMaskPath << '\n';
+        }
 
-			sf::Vector2u rawSize = mapTexture.getSize();
-			mapLimits = sf::Vector2f(rawSize.x * mapScale, rawSize.y * mapScale);
-		}
+        if (!uiFont.openFromFile("../../../assets/fonts/Arial.TTF"))
+        {
+            std::cerr << "[WARNING] Missing asset UI Font!\n";
+        }
 
-		// 2. Collision mask array buffer cache
-		if (!collisionMask.loadFromFile(mapMaskPath))
-		{
-			std::cerr << "[ERROR] can not load file " << mapMaskPath << '\n';
-		}
+        if (game->menuUiBuffer.contains("crosshair"))
+        {
+            if (crosshairTex.loadFromImage(game->menuUiBuffer["crosshair"]))
+            {
+                crosshairSprite.emplace(crosshairTex);
+                sf::Vector2u size = crosshairTex.getSize();
+                crosshairSprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
+                game->getWindow().setMouseCursorVisible(false);
+            }
+        }
 
-		// 3. User interface HUD resources allocation
-		if (!uiFont.openFromFile("../../../assets/fonts/Arial.TTF"))
-		{
-			std::cerr << "[WARNING] lack of font!\n";
-		}
+        // Cache effects vector pipeline buffers
+        game->arenaContext.splashTextures.clear();
+        game->arenaContext.dynamicZones.clear();
+        game->arenaContext.acidSplashes.clear();
 
-		if (game->menuUiBuffer.contains("crosshair"))
-		{
-			if (crosshairTex.loadFromImage(game->menuUiBuffer["crosshair"]))
-			{
-				crosshairSprite.emplace(crosshairTex);
-				sf::Vector2u size = crosshairTex.getSize();
+        for (int i = 1; i <= 3; i++)
+        {
+            auto tex = std::make_shared<sf::Texture>();
+            if (tex->loadFromFile("assets/textures/effects/orange_acid_splash_" + std::to_string(i) + ".png"))
+            {
+                tex->setSmooth(true);
+                game->arenaContext.splashTextures.push_back(tex);
+            }
+        }
 
-				crosshairSprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
-				game->getWindow().setMouseCursorVisible(false);
-			}
-		}
-		else
-		{
-			std::cerr << "[WARNING] lack of crosshair!\n";
-		}
+        auto setupButton = [&](const std::string& key, sf::Texture& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
+            {
+                if (game->menuUiBuffer.contains(key))
+                {
+                    if (tex.loadFromImage(game->menuUiBuffer[key]))
+                    {
+                        spr = sf::Sprite(tex);
+                        sf::Vector2f originalSize(tex.getSize());
+                        float scaleX = targetSize.x / originalSize.x;
+                        float scaleY = targetSize.y / originalSize.y;
+                        (*spr).setScale({ scaleX, scaleY });
+                        (*spr).setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
+                        (*spr).setPosition(pos);
+                    }
+                }
+            };
 
-		// Helper to configure and load button graphics
-		auto setupButton = [&](const std::string& key, sf::Texture& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
-			{
-				if (game->menuUiBuffer.contains(key))
-				{
-					if (tex.loadFromImage(game->menuUiBuffer[key]))
-					{
-						spr = sf::Sprite(tex);
-						sf::Vector2f originalSize(tex.getSize());
-						float scaleX = targetSize.x / originalSize.x;
-						float scaleY = targetSize.y / originalSize.y;
-						(*spr).setScale({ scaleX, scaleY });
-						(*spr).setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
-						(*spr).setPosition(pos);
-					}
-				}
-				else {
-					std::cerr << "[MENU ERROR] cannot find " << key << " in buffer\n";
-				}
-			};
-		sf::Vector2f viewSize = game->getWindow().getView().getSize();
-		float centerX = viewSize.x / 2.0f;
-		float margin = 20.0f;
+        sf::Vector2f viewSize = game->getWindow().getView().getSize();
+        float margin = 20.0f;
+        setupButton("settings", settingsBtnTex, settingsBtnSprite, { 0.0f, 0.0f }, { 60.0f, 60.0f });
 
-		setupButton("settings", settingsBtnTex, settingsBtnSprite, { 0.0f, 0.0f }, { 60.0f, 60.0f });
+        if (settingsBtnSprite.has_value()) {
+            sf::FloatRect bounds = (*settingsBtnSprite).getGlobalBounds();
+            (*settingsBtnSprite).setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f), margin + (bounds.size.y / 2.0f) });
+        }
 
-		if (settingsBtnSprite.has_value()) {
-			sf::FloatRect bounds = (*settingsBtnSprite).getGlobalBounds();
-			(*settingsBtnSprite).setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f), margin + (bounds.size.y / 2.0f) });
-		}
+        // Connect global processing pipelines
+        game->arenaContext.bullets = &bullets;
 
-		game::ArenaContext context{ bullets };
-		game::factories::FruitFactory factory(context, game->fruitsConfig);
-		player = factory.createFruit(game->selectedFruitType);
+        game::factories::FruitFactory factory(game->arenaContext, game->fruitsConfig);
+        player = factory.createFruit(game->selectedFruitType);
 
-		if (player != nullptr)
-		{
-			player->setPosition({ mapLimits.x / 2.0f, mapLimits.y / 2.0f });
-		}
+        if (player != nullptr)
+        {
+            player->setPosition({ mapLimits.x / 2.0f, mapLimits.y / 2.0f });
+        }
 
-		cameraView = game->getWindow().getDefaultView();
-		cameraView.zoom(1.4f);
-	}
+        cameraView = game->getWindow().getDefaultView();
+        cameraView.zoom(1.4f);
+    }
 
-	StateType PlayingState::getType() const
-	{
-		return StateType::Playing;
-	}
+    StateType PlayingState::getType() const { return StateType::Playing; }
 
-	void PlayingState::handleEvent(const sf::Event& event)
-	{
-		if (const auto* scroll = event.getIf<sf::Event::MouseWheelScrolled>())
-		{
-			if (scroll->delta > 0)      cameraView.zoom(0.9f);
-			else if (scroll->delta < 0) cameraView.zoom(1.1f);
-		}
+    void PlayingState::handleEvent(const sf::Event& event)
+    {
+        if (const auto* scroll = event.getIf<sf::Event::MouseWheelScrolled>())
+        {
+            if (scroll->delta > 0)      cameraView.zoom(0.9f);
+            else if (scroll->delta < 0) cameraView.zoom(1.1f);
+        }
 
-		if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
-		{
-			if (keyPressed->code == sf::Keyboard::Key::Escape)
-			{
-				game->getStateMachine().pushState(StateType::Pause);
-			}
+        if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
+        {
+            if (keyPressed->code == sf::Keyboard::Key::Escape)
+            {
+                game->getStateMachine().pushState(StateType::Pause);
+            }
+            if (keyPressed->code == sf::Keyboard::Key::LShift && player != nullptr)
+            {
+                sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
+                sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
+                player->useSkill(mouseWorldPos);
+            }
+        }
 
-			if (keyPressed->code == sf::Keyboard::Key::LShift)
-			{
-				if (player != nullptr)
-				{
-					sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
-					sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
+        if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>())
+        {
+            if (mousePressed->button == sf::Mouse::Button::Left)
+            {
+                sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
+                sf::Vector2f uiPos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
+                if (settingsBtnSprite.has_value() && settingsBtnSprite->getGlobalBounds().contains(uiPos))
+                {
+                    game->playUIClick();
+                    game->getStateMachine().pushState(StateType::Pause);
+                }
+            }
+        }
+    }
 
-					player->useSkill(mouseWorldPos);
-				}
-			}
-		}
+    void PlayingState::update(float dt)
+    {
+        static float shakeIntensity = 0.0f;
 
-		if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>())
-		{
-			if (mousePressed->button == sf::Mouse::Button::Left)
-			{
-				sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
-				sf::Vector2f uiPos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
-				if (settingsBtnSprite.has_value() && settingsBtnSprite->getGlobalBounds().contains(uiPos))
-				{
-					game->playUIClick();
-					game->getStateMachine().pushState(StateType::Pause);
-					return;
-				}
-			}
-		}
-	}
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::H))
+        {
+            shakeIntensity = 20.0f;
+            sf::sleep(sf::milliseconds(45));
+        }
 
-	void PlayingState::update(float dt)
-	{
-		static float shakeIntensity = 0.0f;
+        if (player != nullptr)
+        {
+            player->update(dt, game, mapLimits, collisionMask, mapScale);
 
-		// --- IMPACT SIMULATION CHEAT FOR DEV TESTING --- 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::H))
-		{
-			shakeIntensity = 20.0f;
-			sf::sleep(sf::milliseconds(45)); // Hit-Stop game feel freezes
-		}
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+            {
+                sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
+                sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
+                player->useWeapon(mouseWorldPos);
+            }
 
-		if (player != nullptr)
-		{
-			// 1. Player moves & physics
-			player->update(dt, game, mapLimits, collisionMask, mapScale);
+            // Centralized projectile lifecycle and splash management tracking loop
+            for (int i = static_cast<int>(bullets.size()) - 1; i >= 0; --i)
+            {
+                sf::Vector2f explodePos = bullets[i].getPosition();
+                bullets[i].update(dt, collisionMask, mapScale);
 
-			// 2. Attack execution
-			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
-			{
-				sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
-				sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
+                if (bullets[i].consumeSplash())
+                {
+                    if (!game->arenaContext.splashTextures.empty())
+                    {
+                        int randomTexIdx = rand() % game->arenaContext.splashTextures.size();
 
-				player->useWeapon(mouseWorldPos);
-			}
+                        game->arenaContext.acidSplashes.emplace_back(
+                            explodePos,
+                            game->arenaContext.splashTextures[randomTexIdx]
+                        );
+                    }
+                }
 
-			// 3. Update bullets & handle splash impact drops
-			for (int i = static_cast<int>(bullets.size()) - 1; i >= 0; --i)
-			{
-				sf::Vector2f explodePos = bullets[i].getPosition();
-				bullets[i].update(dt, collisionMask, mapScale);
+                if (!bullets[i].getIsActive())
+                {
+                    if (bullets[i].getRadius() > 10.0f)
+                    {
+                        if (!game->arenaContext.splashTextures.empty())
+                        {
+                            AoEZone puddle;
+                            puddle.radius = 55.0f;
 
-				if (!bullets[i].getIsActive())
-				{
-					// If mortar shell drops (detected using radius footprint)
-					if (bullets[i].getRadius() > 10.0f)
-					{
-						AcidPuddle puddle;
-						puddle.shape.setRadius(puddle.radius);
-						puddle.shape.setOrigin({ puddle.radius, puddle.radius });
-						puddle.shape.setPosition(explodePos);
-						puddle.shape.setFillColor(sf::Color(255, 100, 0, 130)); // Translucent sludge
+                            int randomTexIdx = rand() % game->arenaContext.splashTextures.size();
 
-						acidPuddles.push_back(puddle);
-						shakeIntensity = 8.0f; // Soft juice screenshake on splashdown
-					}
-					bullets.erase(bullets.begin() + i);
-				}
-			}
+                            puddle.shape.setRadius(puddle.radius);
+                            puddle.shape.setOrigin({ puddle.radius, puddle.radius });
+                            puddle.shape.setPosition(explodePos);
 
-			// 3.5 Fade puddle entities
-			for (int i = static_cast<int>(acidPuddles.size()) - 1; i >= 0; --i) {
-				acidPuddles[i].lifetime -= dt;
+                            puddle.shape.setFillColor(sf::Color::Transparent);
 
-				if (acidPuddles[i].lifetime < 1.0f) {
-					sf::Color c = acidPuddles[i].shape.getFillColor();
-					c.a = static_cast<uint8_t>(130 * acidPuddles[i].lifetime);
-					acidPuddles[i].shape.setFillColor(c);
-				}
+                            puddle.shape.setOutlineColor(sf::Color::Transparent);
+                            puddle.shape.setOutlineThickness(0.0f);
 
-				if (acidPuddles[i].lifetime <= 0.0f) {
-					acidPuddles.erase(acidPuddles.begin() + i);
-				}
-			}
+                            puddle.lifetime = 4.0f;
+                            puddle.maxLifetime = 4.0f;
 
-			// 4. Save camera adjustments (CLAMPING)
-			sf::Vector2f viewSize = cameraView.getSize();
-			float halfWidth = viewSize.x / 2.0f;
-			float halfHeight = viewSize.y / 2.0f;
+                            game->arenaContext.dynamicZones.push_back(puddle);
+                        }
 
-			sf::Vector2f targetCenter = player->getPosition();
+                        shakeIntensity = 8.0f;
+                    }
+                    bullets.erase(bullets.begin() + i);
+                }
+            }
 
-			float minX = halfWidth;
-			float maxX = mapLimits.x - halfWidth;
-			float minY = halfHeight;
-			float maxY = mapLimits.y - halfHeight;
+            // Update hazard zones safely mapped outside local static scope
+            for (int i = static_cast<int>(game->arenaContext.dynamicZones.size()) - 1; i >= 0; --i)
+            {
+                auto& puddle = game->arenaContext.dynamicZones[i];
+                puddle.lifetime -= dt;
 
-			if (maxX < minX) targetCenter.x = mapLimits.x / 2.0f;
-			else             targetCenter.x = std::clamp(targetCenter.x, minX, maxX);
+                if (puddle.lifetime <= 0.0f)
+                {
+                    game->arenaContext.dynamicZones.erase(game->arenaContext.dynamicZones.begin() + i);
+                    continue;
+                }
 
-			if (maxY < minY) targetCenter.y = mapLimits.y / 2.0f;
-			else             targetCenter.y = std::clamp(targetCenter.y, minY, maxY);
+                float alphaFactor = puddle.lifetime / puddle.maxLifetime;
+                uint8_t alpha = static_cast<uint8_t>(alphaFactor * 255.0f);
 
-			cameraView.setCenter(targetCenter);
+                puddle.shape.setFillColor(sf::Color::Transparent);
+                puddle.shape.setOutlineColor(sf::Color::Transparent);
+            }
 
-			// 4.5 Shake vector implementation logic
-			if (shakeIntensity > 0.0f)
-			{
-				std::random_device rd;
-				std::mt19937 gen(rd());
-				std::uniform_real_distribution<float> offset(-shakeIntensity, shakeIntensity);
+            // Camera calculations and clamping restrictions
+            sf::Vector2f viewSize = cameraView.getSize();
+            float halfWidth = viewSize.x / 2.0f;
+            float halfHeight = viewSize.y / 2.0f;
+            sf::Vector2f targetCenter = player->getPosition();
 
-				cameraView.move({ offset(gen), offset(gen) });
+            float minX = halfWidth, maxX = mapLimits.x - halfWidth;
+            float minY = halfHeight, maxY = mapLimits.y - halfHeight;
 
-				shakeIntensity -= dt * 50.0f;
-				if (shakeIntensity < 0.0f) shakeIntensity = 0.0f;
-			}
+            targetCenter.x = (maxX < minX) ? mapLimits.x / 2.0f : std::clamp(targetCenter.x, minX, maxX);
+            targetCenter.y = (maxY < minY) ? mapLimits.y / 2.0f : std::clamp(targetCenter.y, minY, maxY);
+            cameraView.setCenter(targetCenter);
 
-			game->getWindow().setView(cameraView);
+            if (shakeIntensity > 0.0f)
+            {
+                std::random_device rd;
+                std::mt19937 gen(rd());
+                std::uniform_real_distribution<float> offset(-shakeIntensity, shakeIntensity);
+                cameraView.move({ offset(gen), offset(gen) });
 
-			// 5. Interface button hover interactions
-			sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
-			sf::Vector2f uiHoverPos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
+                shakeIntensity -= dt * 50.0f;
+                if (shakeIntensity < 0.0f) shakeIntensity = 0.0f;
+            }
+            game->getWindow().setView(cameraView);
 
-			auto updateHover = [&](std::optional<sf::Sprite>& btn, sf::Vector2f targetSize) {
-				if (!btn) return;
+            // Menu overlay interface button configurations
+            sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
+            sf::Vector2f uiHoverPos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
 
-				sf::Vector2f texSize(btn->getTexture().getSize());
-				float baseScaleX = targetSize.x / texSize.x;
-				float baseScaleY = targetSize.y / texSize.y;
+            auto updateHover = [&](std::optional<sf::Sprite>& btn, sf::Vector2f targetSize) {
+                if (!btn) return;
+                sf::Vector2f texSize(btn->getTexture().getSize());
+                float baseScaleX = targetSize.x / texSize.x;
+                float baseScaleY = targetSize.y / texSize.y;
 
-				if (btn->getGlobalBounds().contains(uiHoverPos)) {
-					btn->setColor(sf::Color(255, 255, 255));
-					btn->setScale({ baseScaleX * 1.1f, baseScaleY * 1.1f });
-				}
-				else {
-					btn->setColor(sf::Color(210, 210, 210));
-					btn->setScale({ baseScaleX, baseScaleY });
-				}
-				};
-			updateHover(settingsBtnSprite, { 60.0f, 60.0f });
-		}
-	}
+                if (btn->getGlobalBounds().contains(uiHoverPos)) {
+                    btn->setColor(sf::Color(255, 255, 255));
+                    btn->setScale({ baseScaleX * 1.1f, baseScaleY * 1.1f });
+                }
+                else {
+                    btn->setColor(sf::Color(210, 210, 210));
+                    btn->setScale({ baseScaleX, baseScaleY });
+                }
+                };
+            updateHover(settingsBtnSprite, { 60.0f, 60.0f });
 
-	void PlayingState::renderHUD(sf::RenderWindow& window) {}
+            for (auto& splash : game->arenaContext.acidSplashes) {
+                splash.update(dt);
+            }
 
-	void PlayingState::render(sf::RenderWindow& window)
-	{
-		window.setView(cameraView);
+            game->arenaContext.acidSplashes.erase(
+                std::remove_if(game->arenaContext.acidSplashes.begin(), game->arenaContext.acidSplashes.end(),
+                    [](const auto& s) { return !s.isActive(); }),
+                game->arenaContext.acidSplashes.end());
+        }
+    }
 
-		if (mapSprite.has_value()) window.draw(*mapSprite);
+    void PlayingState::renderHUD(sf::RenderWindow& window) {}
 
-		// Ground layer rendering context for acid puddles
-		for (auto& puddle : acidPuddles) {
-			window.draw(puddle.shape);
-		}
+    void PlayingState::render(sf::RenderWindow& window)
+    {
+        window.setView(cameraView);
+        if (mapSprite.has_value()) window.draw(*mapSprite);
 
-		for (auto& bullet : bullets)
-		{
-			bullet.render(window);
-		}
+        // Draw circles underneath other processing entities
+        for (const auto& zone : game->arenaContext.dynamicZones) {
+            window.draw(zone.shape);
+        }
 
-		if (player != nullptr)
-		{
-			player->render(window);
-		}
+        for (auto& bullet : bullets) {
+            bullet.render(window);
+        }
 
-		window.setView(window.getDefaultView());
+        if (player != nullptr) {
+            player->render(window);
+        }
 
-		if (settingsBtnSprite.has_value()) window.draw(*settingsBtnSprite);
+        for (auto& splash : game->arenaContext.acidSplashes) {
+            splash.render(window);
+        }
 
-		renderHUD(window);
+        window.setView(window.getDefaultView());
+        if (settingsBtnSprite.has_value()) window.draw(*settingsBtnSprite);
+        renderHUD(window);
 
-		if (game->getStateMachine().getCurrentStateType() == states::StateType::Playing)
-		{
-			if (crosshairSprite.has_value())
-			{
-				sf::View oldView = window.getView();
-				window.setView(window.getDefaultView());
-				sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-				crosshairSprite->setPosition({ static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) });
-				window.draw(*crosshairSprite);
-				window.setView(oldView);
-			}
-		}
-	}
+        if (game->getStateMachine().getCurrentStateType() == states::StateType::Playing)
+        {
+            if (crosshairSprite.has_value())
+            {
+                sf::View oldView = window.getView();
+                window.setView(window.getDefaultView());
+                sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
+                sf::Vector2f mouseWorld = window.mapPixelToCoords(mousePixel, window.getDefaultView());
+                crosshairSprite->setPosition(mouseWorld);
+                window.draw(*crosshairSprite);
+                window.setView(oldView);
+            }
+        }
+    }
 }
