@@ -55,7 +55,7 @@ namespace game::states
         for (int i = 1; i <= 3; i++)
         {
             auto tex = std::make_shared<sf::Texture>();
-            if (tex->loadFromFile("assets/textures/effects/orange_acid_splash_" + std::to_string(i) + ".png"))
+            if (tex->loadFromFile("assets/textures/entities/characters/citrus_maximus/orange_acid_splash_" + std::to_string(i) + ".png"))
             {
                 tex->setSmooth(true);
                 game->arenaContext.splashTextures.push_back(tex);

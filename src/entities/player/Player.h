@@ -44,7 +44,7 @@ namespace game::entities
 		Player();
 
 		void setStats(int newHp, float newMaxSpeed, float newAttackSpeed);
-		void loadTextures(const std::string& idlePath, const std::string& walkPath);
+		void loadTextures(const std::string& idlePath,const int& idleFrames, const std::string& walkPath, const int& walkFrames);
 
 		void setWeapon(std::unique_ptr<game::components::Ability> weapon);
 		void setSkill(std::unique_ptr<game::components::Ability> skill);

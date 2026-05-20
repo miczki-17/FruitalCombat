@@ -19,9 +19,9 @@ namespace game::entities
 		attackSpeed = newAttackSpeed;
 	}
 
-	void Player::loadTextures(const std::string& idlePath, const std::string& walkPath)
+	void Player::loadTextures(const std::string& idlePath, const int& idleFrames, const std::string& walkPath, const int& walkFrames)
 	{
-		if (animator.loadTextures(idlePath, walkPath))
+		if (animator.loadTextures(idlePath, idleFrames, walkPath, walkFrames))
 		{
 			playerSprite.emplace(animator.getDefaultTexture());
 			playerSprite->setOrigin({ 32.0f, 32.0f });

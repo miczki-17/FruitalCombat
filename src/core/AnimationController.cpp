@@ -1,8 +1,11 @@
+// only gameplay
+
 #include "AnimationController.h"
+#include "Game.h"
 
 namespace game::components
 {
-	bool AnimationController::loadTextures(const std::string& idlePath, const std::string& walkPath)
+	bool AnimationController::loadTextures(const std::string& idlePath, const int& idleFrames, const std::string& walkPath, const int& walkFrames)
 	{
 		if (!idleTexture.loadFromFile(idlePath))
 		{
@@ -14,6 +17,9 @@ namespace game::components
 			std::cerr << "[OSTRZEŻENIE] Brak tekstury walk: " << walkPath << "\n";
 			return false;
 		}
+
+		totalIdleFrames = idleFrames;
+		totalWalkFrames = walkFrames;
 
 		return true;
 	}

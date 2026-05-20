@@ -1,3 +1,6 @@
+// only gameplay
+
+
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <string>
@@ -11,7 +14,7 @@ namespace game::components
 		sf::Texture idleTexture;
 		sf::Texture walkTexture; // --- NOWA TEKSTURA ---
 
-		const sf::Vector2i frameSize = { 64, 64 };
+		const sf::Vector2i frameSize = { 96, 96 };		// 96px x 96px
 
 		int currentFrame = 0;
 		float animationTimer = 0.0f;
@@ -26,7 +29,7 @@ namespace game::components
 		AnimationController() = default;
 
 		// Pobiera teraz dwie ścieżki
-		bool loadTextures(const std::string& idlePath, const std::string& walkPath);
+		bool loadTextures(const std::string& idlePath, const int& idleFrames, const std::string& walkPath, const int& walkFrames);
 
 		const sf::Texture& getDefaultTexture() const { return idleTexture; }
 

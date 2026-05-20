@@ -93,12 +93,23 @@ namespace game::states
 				int totalItems = game->fruitsConfig.size();
 
 				for (auto& [characterKey, characterData] : game->fruitsConfig.items()) {
-					if (characterData.contains("texturePath")) {
-						std::string path = characterData.value("texturePath", "");
+					if (characterData.contains("idleTexturePath")) {
+						std::string path = characterData.value("idleTexturePath", "");
 						if (!path.empty()) {
 							sf::Image img;
 							if (img.loadFromFile(path)) {
 								game->characterImageBuffer[characterKey] = std::move(img);
+							}
+						}
+					}
+
+					if (characterData.contains("initTexturePath")) {
+						std::string path = characterData.value("initTexturePath", "");
+						if (!path.empty()) {
+							sf::Image img;
+							if (img.loadFromFile(path)) {
+								// Zapisujemy z dopiskiem "_start", tak jak oczekuje CharacterSelectState
+								game->characterImageBuffer[characterKey + "_start"] = std::move(img);
 							}
 						}
 					}

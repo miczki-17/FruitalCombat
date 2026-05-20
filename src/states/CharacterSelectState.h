@@ -26,7 +26,7 @@ namespace game::states
 		sf::Texture selectBtnTex, backBtnTex;
 		std::optional<sf::Sprite> selectBtnSprite, backBtnSprite;
 
-		// --- GENEROWANY TEKST PRZYCISKU CHOOSE ---
+		// --- DYNAMIC TEXTS ---
 		std::optional<sf::Text> selectBtnText;
 
 		// --- UI ICONS ---
@@ -38,17 +38,20 @@ namespace game::states
 		std::optional<sf::Text> characterNameText;
 		std::optional<sf::Text> characterTitleText;
 
+		// OPTIMIZATION: std::optional is required in SFML 3 because sf::Text has no default constructor
+		std::optional<sf::Text> abilitiesTextDisplay;
+
 		sf::Clock animationClock;
 
 		// --- STRUCTURE FOR MAGICAL FIREFLIES ---
 		struct Firefly {
 			sf::Vector2f position;
-			float speed = 0.0;
-			float alpha = 0.0;
-			float lifetime = 0.0;
-			float maxLifetime = 0.0;
-			float size = 0.0;
-			float swayOffset = 0.0;
+			float speed = 0.0f;
+			float alpha = 0.0f;
+			float lifetime = 0.0f;
+			float maxLifetime = 0.0f;
+			float size = 0.0f;
+			float swayOffset = 0.0f;
 		};
 		std::vector<Firefly> fireflies;
 		void initFireflies();
@@ -65,6 +68,14 @@ namespace game::states
 			// Character texture and sprite
 			sf::Texture texture;
 			std::optional<sf::Sprite> sprite;
+
+			// --- START ANIMATION (LOBBY START) ---
+			sf::Texture startTexture;
+			std::vector<sf::IntRect> startAnimationFrames;
+			bool hasStartAnimation = false;
+			bool isPlayingStartAnimation = false;
+			bool hasPlayedStartAnimation = false;
+			// ---------------------------------------
 
 			// Platform texture and sprite
 			sf::Texture platformTexture;
@@ -83,11 +94,14 @@ namespace game::states
 			std::string abilitiesText;
 		};
 
-		// --- std::deque ---
+		// --- ROSTER DATA ---
 		std::deque<FruitOption> roster;
 
 		int targetIndex;
 		float currentScroll;
+
+		// OPTIMIZATION: Pre-allocated vector for z-order sorting to avoid allocations in render loop
+		std::vector<std::pair<float, int>> renderZOrder;
 
 		// --- HELPER METHODS ---
 		void setupButton(const std::string& key, sf::Texture& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize);

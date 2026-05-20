@@ -6,7 +6,7 @@
     "damage": 12,
     "maxSpeed": 450.0,
     "attackSpeed": 1.0,
-    "texturePath": "assets/textures/entities/characters/appleStand.png",
+    "lobbyTexturePath": "",
     "walkTexturePath": "assets/textures/entities/characters/appleWalk.png",
     "abilities": [ "Seed Buckshot", "Cider Dash" ]
   },
@@ -17,7 +17,7 @@
     "damage": 15,
     "maxSpeed": 550.0,
     "attackSpeed": 1.2,
-    "texturePath": "assets/textures/entities/characters/appleStand.png",
+    "lobbyTexturePath": "",
     "walkTexturePath": "",
     "abilities": [ "Bananarang", "Phantom Peel" ]
   },
@@ -28,7 +28,7 @@
     "damage": 18,
     "maxSpeed": 440.0,
     "attackSpeed": 1.1,
-    "texturePath": "assets/textures/entities/characters/appleStand.png",
+    "lobbyTexturePath": "",
     "walkTexturePath": "",
     "abilities": [ "Gatling Pits", "Cherry Bomb" ]
   },
@@ -39,7 +39,7 @@
     "damage": 15,
     "maxSpeed": 500.0,
     "attackSpeed": 1.0,
-    "texturePath": "assets/textures/entities/characters/appleStand.png",
+    "lobbyTexturePath": "",
     "walkTexturePath": "",
     "abilities": [ "Seed Burst", "Jam Flurry" ]
   },
@@ -50,7 +50,7 @@
     "damage": 16,
     "maxSpeed": 410.0,
     "attackSpeed": 1.0,
-    "texturePath": "",
+    "lobbyTexturePath": "",
     "walkTexturePath": "",
     "abilities": [ "Cluster Smash", "Thorn Armor" ]
   },
@@ -63,9 +63,13 @@
     "attackSpeed": 0.5,
     "rollDuration": 1.8,
     "rollSpeed": 305.0,
-    "texturePath": "assets/textures/entities/characters/appleStand.png",
-    "projectileTexture": "assets/textures/entities/characters/CitrusMaximus/acid_blob.png",
+    "initTexturePath": "assets/textures/entities/characters/citrus_maximus/citrus_init_animation.png",
+    "initFrames":  8,
+    "idleTexturePath": "assets/textures/entities/characters/citrus_maximus/citrus_idle_animation.png",
+    "idleFrames":  3,
     "walkTexturePath": "",
+    "walkFrames":  4,
+    "projectileTexture": "assets/textures/entities/characters/citrus_maximus/acid_blob.png",
     "abilities": [ "AcidSquirt", "RindRoll" ]
   }
 }

@@ -71,6 +71,12 @@ namespace game::factories
 			float attackSpeed =
 				data.value("attackSpeed", 1.0f);
 
+			int idleFrames =
+				data["idleFrames"].get<int>();
+			
+			int walkFrames =
+				data["walkFrames"].get<int>();
+
 			player->setStats(
 				hp,
 				speed,
@@ -78,8 +84,10 @@ namespace game::factories
 
 			// Load textures
 			player->loadTextures(
-				data["texturePath"].get<std::string>(),
-				data["walkTexturePath"].get<std::string>());
+				data["idleTexturePath"].get<std::string>(),
+				idleFrames,
+				data["walkTexturePath"].get<std::string>(),
+				walkFrames);
 
 			// Ability loading
 			if (data.contains("abilities"))

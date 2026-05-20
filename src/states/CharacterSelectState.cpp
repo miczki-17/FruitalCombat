@@ -44,11 +44,12 @@ namespace game::states
 		float centerX = viewSize.x / 2.0f;
 		float centerY = viewSize.y / 2.0f;
 
+		// Load Background
 		if (game->menuUiBuffer.contains("select_bg"))
 		{
 			if (bgTex.loadFromImage(game->menuUiBuffer["select_bg"])) {
-				bgSprite = sf::Sprite(bgTex);
-				sf::Vector2f bgSize(bgTex.getSize());
+				bgSprite.emplace(bgTex); // SFML 3 explicit emplace due to strict constructors
+				sf::Vector2u bgSize(bgTex.getSize());
 				bgSprite->setScale({ viewSize.x / bgSize.x, viewSize.y / bgSize.y });
 			}
 		}
@@ -56,10 +57,12 @@ namespace game::states
 		darkOverlay.setSize(viewSize);
 		darkOverlay.setFillColor(sf::Color(0, 0, 0, 80));
 
+		// Load Fonts (SFML 3 uses openFromFile for resources)
 		if (!font.openFromFile("assets/fonts/Minecraftia-Regular.ttf")) {
 			std::cerr << "[SELECT ERROR] Cannot load font.\n";
 		}
 
+		// Setup typography with SFML 3 specific sf::Text constructor order: (font, string, size)
 		characterNameText.emplace(font, "", 45);
 		characterNameText->setFillColor(sf::Color(255, 255, 255));
 		characterNameText->setOutlineColor(sf::Color::Black);
@@ -70,25 +73,33 @@ namespace game::states
 		characterTitleText->setOutlineColor(sf::Color::Black);
 		characterTitleText->setOutlineThickness(3.0f);
 
+		abilitiesTextDisplay.emplace(font, "", 18);
+		abilitiesTextDisplay->setFillColor(sf::Color(210, 210, 210));
+		abilitiesTextDisplay->setOutlineColor(sf::Color::Black);
+		abilitiesTextDisplay->setOutlineThickness(2.5f);
+
 		initFireflies();
 		loadRoster();
 
+		// Setup UI Buttons
 		setupButton("left_arrow", leftArrowTex, leftArrowSprite, { centerX - 450.f, centerY - 50.f }, { 80.f, 80.f });
 		setupButton("right_arrow", rightArrowTex, rightArrowSprite, { centerX + 450.f, centerY - 50.f }, { 80.f, 80.f });
 		setupButton("empty_button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
 
+		// Setup Text for Select Button
 		selectBtnText.emplace(font, "CHOOSE", 27);
-		selectBtnText->setFillColor(sf::Color::White);
+		selectBtnText->setFillColor(sf::Color(255, 255, 255));
 		selectBtnText->setOutlineColor(sf::Color::Black);
 		selectBtnText->setOutlineThickness(4.5f);
 
+		// SFML 3 getLocalBounds uses .position and .size
 		sf::FloatRect chooseTextRect = selectBtnText->getLocalBounds();
 		selectBtnText->setOrigin({ std::round(chooseTextRect.position.x + chooseTextRect.size.x / 2.0f),
 								   std::round(chooseTextRect.position.y + chooseTextRect.size.y / 2.0f) });
 		selectBtnText->setPosition({ centerX, viewSize.y - 100.f });
 
+		// Additional UI
 		setupButton("back", backBtnTex, backBtnSprite, { 50.f, 50.f }, { 60.f, 60.f });
-
 		setupButton("hp_icon", hpIconTex, hpIconSprite, { 0.f, 0.f }, { 28.f, 24.f });
 		setupButton("dmg_icon", dmgIconTex, dmgIconSprite, { 0.f, 0.f }, { 28.f, 24.f });
 		setupButton("spd_icon", spdIconTex, spdIconSprite, { 0.f, 0.f }, { 28.f, 24.f });
@@ -158,7 +169,7 @@ namespace game::states
 
 			opt.abilitiesText = "Skills: ";
 			if (fruitData.contains("abilities") && fruitData["abilities"].is_array() && !fruitData["abilities"].empty()) {
-				for (auto& skill : fruitData["abilities"]) {
+				for (const auto& skill : fruitData["abilities"]) {
 					opt.abilitiesText += skill.get<std::string>() + ", ";
 				}
 				opt.abilitiesText.pop_back();
@@ -188,6 +199,9 @@ namespace game::states
 				}
 			}
 
+			int idleFramesCount = fruitData.value("idleFrames", 8);
+			int initFramesCount = fruitData.value("initFrames", 8);
+
 			if (game->characterImageBuffer.contains(jsonKey))
 			{
 				if (savedFruit.texture.loadFromImage(game->characterImageBuffer[jsonKey]))
@@ -195,13 +209,13 @@ namespace game::states
 					savedFruit.sprite.emplace(savedFruit.texture);
 					sf::Vector2u size(savedFruit.texture.getSize());
 
-					if (size.x > size.y * 2)
+					if (size.x > size.y * 1.5f)
 					{
 						savedFruit.isAnimated = true;
-						int frameWidth = size.x / 4;
+						int frameWidth = size.x / idleFramesCount;
 						int frameHeight = size.y;
 
-						for (int i = 0; i < 4; ++i) {
+						for (int i = 0; i < idleFramesCount; ++i) {
 							savedFruit.animationFrames.push_back(sf::IntRect({ i * frameWidth, 0 }, { frameWidth, frameHeight }));
 						}
 						savedFruit.sprite->setTextureRect(savedFruit.animationFrames[0]);
@@ -214,6 +228,22 @@ namespace game::states
 					}
 				}
 			}
+
+			if (game->characterImageBuffer.contains(jsonKey + "_start"))
+			{
+				if (savedFruit.startTexture.loadFromImage(game->characterImageBuffer[jsonKey + "_start"]))
+				{
+					savedFruit.hasStartAnimation = true;
+					sf::Vector2u size(savedFruit.startTexture.getSize());
+
+					int frameWidth = size.x / initFramesCount;
+					int frameHeight = size.y;
+
+					for (int i = 0; i < initFramesCount; ++i) {
+						savedFruit.startAnimationFrames.push_back(sf::IntRect({ i * frameWidth, 0 }, { frameWidth, frameHeight }));
+					}
+				}
+			}
 		}
 	}
 
@@ -223,7 +253,7 @@ namespace game::states
 		{
 			if (tex.loadFromImage(game->menuUiBuffer[key]))
 			{
-				spr = sf::Sprite(tex);
+				spr.emplace(tex);
 				sf::Vector2u originalSize(tex.getSize());
 				spr->setScale({ targetSize.x / originalSize.x, targetSize.y / originalSize.y });
 				spr->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
@@ -236,6 +266,7 @@ namespace game::states
 
 	void CharacterSelectState::handleEvent(const sf::Event& event)
 	{
+		// SFML 3 standard event handling using std::variant-style getIf
 		if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
 		{
 			if (keyPressed->code == sf::Keyboard::Key::A || keyPressed->code == sf::Keyboard::Key::Left) {
@@ -309,11 +340,17 @@ namespace game::states
 			float xPos = centerX + dist * 320.0f;
 			float yPos = centerY;
 
-			float characterScale = std::max(1.5f, 3.5f - std::abs(dist) * 1.0f);
+			float characterScale = std::max(1.5f, 3.5f - std::abs(dist) * 0.8f);
 			float platformScale = characterScale * 0.35f;
 
 			float alpha = std::max(0.0f, 255.0f - std::abs(dist) * 120.0f);
 			float colorTint = std::max(80.0f, 255.0f - std::abs(dist) * 120.0f);
+			sf::Color targetColor(
+				static_cast<std::uint8_t>(colorTint),
+				static_cast<std::uint8_t>(colorTint),
+				static_cast<std::uint8_t>(colorTint),
+				static_cast<std::uint8_t>(alpha)
+			);
 
 			float platformYOffset = yPos + (20.0f * characterScale);
 
@@ -321,37 +358,79 @@ namespace game::states
 			{
 				roster[i].platformSprite->setPosition({ xPos, platformYOffset });
 				roster[i].platformSprite->setScale({ platformScale, platformScale });
-				roster[i].platformSprite->setColor(sf::Color(colorTint, colorTint, colorTint, static_cast<std::uint8_t>(alpha)));
+				roster[i].platformSprite->setColor(targetColor);
 			}
 
 			if (roster[i].sprite)
 			{
 				if (roster[i].isAnimated && std::abs(dist) < 0.5f)
 				{
-					roster[i].animationTimer += dt;
-					if (roster[i].animationTimer >= 0.12f) {
+					if (roster[i].hasStartAnimation && !roster[i].hasPlayedStartAnimation)
+					{
+						roster[i].isPlayingStartAnimation = true;
+						roster[i].hasPlayedStartAnimation = true;
+						roster[i].currentFrameIndex = 0;
 						roster[i].animationTimer = 0.0f;
-						roster[i].currentFrameIndex = (roster[i].currentFrameIndex + 1) % roster[i].animationFrames.size();
-						roster[i].sprite->setTextureRect(roster[i].animationFrames[roster[i].currentFrameIndex]);
+
+						roster[i].sprite->setTexture(roster[i].startTexture, true);
+						if (!roster[i].startAnimationFrames.empty()) {
+							roster[i].sprite->setTextureRect(roster[i].startAnimationFrames[0]);
+						}
+					}
+
+					roster[i].animationTimer += dt;
+					if (roster[i].animationTimer >= 0.24f)
+					{
+						roster[i].animationTimer -= 0.24f;
+
+						if (roster[i].isPlayingStartAnimation)
+						{
+							roster[i].currentFrameIndex++;
+
+							if (roster[i].currentFrameIndex >= roster[i].startAnimationFrames.size()) {
+								roster[i].isPlayingStartAnimation = false;
+								roster[i].currentFrameIndex = 0;
+
+								roster[i].sprite->setTexture(roster[i].texture, true);
+								if (!roster[i].animationFrames.empty()) {
+									roster[i].sprite->setTextureRect(roster[i].animationFrames[0]);
+								}
+							}
+							else {
+								roster[i].sprite->setTextureRect(roster[i].startAnimationFrames[roster[i].currentFrameIndex]);
+							}
+						}
+						else
+						{
+							roster[i].currentFrameIndex = (roster[i].currentFrameIndex + 1) % roster[i].animationFrames.size();
+							roster[i].sprite->setTexture(roster[i].texture, true);
+							roster[i].sprite->setTextureRect(roster[i].animationFrames[roster[i].currentFrameIndex]);
+						}
 					}
 				}
-				else if (roster[i].isAnimated) {
+				else if (roster[i].isAnimated)
+				{
 					roster[i].animationTimer = 0.0f;
 					roster[i].currentFrameIndex = 0;
-					roster[i].sprite->setTextureRect(roster[i].animationFrames[0]);
+					roster[i].isPlayingStartAnimation = false;
+					roster[i].hasPlayedStartAnimation = false;
+
+					roster[i].sprite->setTexture(roster[i].texture, true);
+					if (!roster[i].animationFrames.empty()) {
+						roster[i].sprite->setTextureRect(roster[i].animationFrames[0]);
+					}
 				}
 
-				float characterYOffset = platformYOffset - (24.0f * characterScale);
+				float characterYOffset = platformYOffset - (48.0f * characterScale);
 				roster[i].sprite->setPosition({ xPos, characterYOffset });
 				roster[i].sprite->setScale({ characterScale, characterScale });
-				roster[i].sprite->setColor(sf::Color(colorTint, colorTint, colorTint, static_cast<std::uint8_t>(alpha)));
+				roster[i].sprite->setColor(targetColor);
 			}
 		}
 
 		sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
 		sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(pixelPos);
 
-		// Zaktualizowany hover tak jak na poprzednim ekranie
 		auto updateHover = [&](std::optional<sf::Sprite>& btn, sf::Vector2f targetSize, std::optional<sf::Text>* txt = nullptr) {
 			if (!btn) return;
 			sf::Vector2u texSize(btn->getTexture().getSize());
@@ -411,9 +490,9 @@ namespace game::states
 		float radius = barHeight / 2.0f;
 
 		sf::Color bgColor(
-			std::min(255, color.r + 190),
-			std::min(255, color.g + 190),
-			std::min(255, color.b + 190),
+			std::min<std::uint8_t>(255, color.r + 190),
+			std::min<std::uint8_t>(255, color.g + 190),
+			std::min<std::uint8_t>(255, color.b + 190),
 			200
 		);
 
@@ -439,15 +518,18 @@ namespace game::states
 		if (bgSprite) window.draw(*bgSprite);
 		window.draw(darkOverlay);
 
-		std::vector<std::pair<float, int>> zOrder;
 		int N = roster.size();
-		for (int i = 0; i < N; ++i) {
-			float dist = std::abs(std::fmod(i - currentScroll + N + N / 2.0f, N) - N / 2.0f);
-			zOrder.push_back({ dist, i });
-		}
-		std::sort(zOrder.begin(), zOrder.end(), [](auto& a, auto& b) { return a.first > b.first; });
 
-		for (auto& item : zOrder) {
+		renderZOrder.clear();
+		if (N > 0) {
+			for (int i = 0; i < N; ++i) {
+				float dist = std::abs(std::fmod(i - currentScroll + N + N / 2.0f, N) - N / 2.0f);
+				renderZOrder.push_back({ dist, i });
+			}
+			std::sort(renderZOrder.begin(), renderZOrder.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
+		}
+
+		for (const auto& item : renderZOrder) {
 			if (roster[item.second].platformSprite) {
 				window.draw(*roster[item.second].platformSprite);
 			}
@@ -481,30 +563,29 @@ namespace game::states
 			}
 		}
 
-		int actualIndex = (targetIndex % N + N) % N;
-		sf::Vector2f viewSize = game->getWindow().getView().getSize();
-		float centerX = viewSize.x / 2.0f;
-
-		float mainPlatformY = (viewSize.y / 2.0f - 50.f) + (20.0f * 3.5f);
-		float baseBarY = mainPlatformY + 62.0f;
-		float barStartX = centerX - 60.f;
-
-		drawStatBar(window, hpIconSprite, roster[actualIndex].hp, 20,
-			{ barStartX, baseBarY }, sf::Color(255, 110, 110));
-
-		drawStatBar(window, dmgIconSprite, roster[actualIndex].damage, 20,
-			{ barStartX, baseBarY + 30.f }, sf::Color(255, 180, 80));
-
-		drawStatBar(window, spdIconSprite, roster[actualIndex].speed, 500,
-			{ barStartX, baseBarY + 60.f }, sf::Color(100, 200, 255));
-
 		if (!roster.empty()) {
-			sf::Text abilitiesText(font, roster[actualIndex].abilitiesText, 18);
-			abilitiesText.setFillColor(sf::Color(210, 210, 210));
-			abilitiesText.setOutlineColor(sf::Color::Black);
-			abilitiesText.setOutlineThickness(2.5f);
-			abilitiesText.setPosition({ barStartX - 45.f, baseBarY + 100.f });
-			window.draw(abilitiesText);
+			int actualIndex = (targetIndex % N + N) % N;
+			sf::Vector2f viewSize = game->getWindow().getView().getSize();
+			float centerX = viewSize.x / 2.0f;
+
+			float mainPlatformY = (viewSize.y / 2.0f - 50.f) + (20.0f * 3.5f);
+			float baseBarY = mainPlatformY + 62.0f;
+			float barStartX = centerX - 60.f;
+
+			drawStatBar(window, hpIconSprite, roster[actualIndex].hp, 20,
+				{ barStartX, baseBarY }, sf::Color(255, 110, 110));
+
+			drawStatBar(window, dmgIconSprite, roster[actualIndex].damage, 20,
+				{ barStartX, baseBarY + 30.f }, sf::Color(255, 180, 80));
+
+			drawStatBar(window, spdIconSprite, roster[actualIndex].speed, 500,
+				{ barStartX, baseBarY + 60.f }, sf::Color(100, 200, 255));
+
+			if (abilitiesTextDisplay) {
+				abilitiesTextDisplay->setString(roster[actualIndex].abilitiesText);
+				abilitiesTextDisplay->setPosition({ barStartX - 45.f, baseBarY + 100.f });
+				window.draw(*abilitiesTextDisplay);
+			}
 		}
 
 		if (characterNameText) {

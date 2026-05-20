@@ -30,7 +30,7 @@ namespace game::factories
         FruitFactory(game::ArenaContext& arenaContext, const nlohmann::json& jsonConfig);
 
         // Call this from anywhere to add a completely new ability package to the engine runtime
-        static void registerAbility(const std::string& name, AbilityCreator creator);
+        //static void registerAbility(const std::string& name, AbilityCreator creator);
 
         std::unique_ptr<game::entities::Player> createFruit(game::entities::FruitType type);
     };
