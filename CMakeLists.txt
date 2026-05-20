@@ -39,26 +39,26 @@ add_executable(FruitalCombat
     src/factories/FruitFactory.cpp
     src/entities/EntityTypes.h
     src/entities/Entity.h
-    src/entities/player/Player.h
-    src/entities/player/Player.cpp
-    src/components/Ability.h
-    src/components/DashAbility.h
-    src/components/DashAbility.cpp
-    src/components/ShootAbility.h
-    src/components/ShootAbility.cpp
-    src/components/Bullet.h
-    src/components/Bullet.cpp
-    src/components/ShotgunAbility.cpp
+    
+    
+    "src/abilities/Ability.h"
+    "src/abilities/DashAbility.h"
+    "src/abilities/DashAbility.cpp"
+    "src/abilities/ShootAbility.h"
+    "src/abilities/ShootAbility.cpp"
+    "src/projectiles/Bullet.h"
+    "src/projectiles/Bullet.cpp"
+    "src/abilities/ShotgunAbility.cpp"
     src/utils/VideoPlayer.h
-    src/core/AnimationController.h
-    src/core/AnimationController.cpp
+    "src/utils/AnimationController.h"
+    "src/utils/AnimationController.cpp"
     src/states/CharacterSelectState.h
     src/states/CharacterSelectState.cpp
     src/states/PauseState
     src/states/PauseState.cpp
     src/states/MapSelectState.h
     src/states/MapSelectState.cpp
- "src/components/AcidSquirtAbility.h" "src/components/AcidSquirtAbility.cpp" "src/components/RindRollAbility.h" "src/components/RindRollAbility.cpp" "src/effects/AcidSplash.h" "src/effects/AcidSplash.cpp")
+ "src/abilities/AcidSquirtAbility.h" "src/abilities/AcidSquirtAbility.cpp" "src/abilities/RindRollAbility.h" "src/abilities/RindRollAbility.cpp" "src/effects/AcidSplash.h" "src/effects/AcidSplash.cpp" "src/core/ResourceManager.h" "src/components/Component.h" "src/components/MovementComponent.h" "src/components/ColliderComponent.h" "src/components/SpriteComponent.h" "src/components/AbilityComponent.h" "src/components/StatsComponent.h")
 
 
 # --- 3. NAG?ÓWKI I LINKOWANIE ---

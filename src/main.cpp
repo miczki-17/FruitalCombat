@@ -1,3 +1,6 @@
+// --- main.cpp ---
+
+
 #include <iostream>
 #include "core/Game.h"
 #include <memory>

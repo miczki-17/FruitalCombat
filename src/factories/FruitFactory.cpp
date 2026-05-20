@@ -1,172 +1,98 @@
 #include "FruitFactory.h"
 
-#include "../components/ShootAbility.h"
-#include "../components/ShotgunAbility.h"
-#include "../components/DashAbility.h"
-#include "../components/AcidSquirtAbility.h"
-#include "../components/RindRollAbility.h"
+// ECS Components
+#include "../abilities/ShootAbility.h"
+#include "../abilities/ShotgunAbility.h"
+#include "../abilities/DashAbility.h"
+#include "../abilities/AcidSquirtAbility.h"
+#include "../abilities/RindRollAbility.h"
+#include "../components/MovementComponent.h"
+#include "../components/ColliderComponent.h"
+#include "../components/SpriteComponent.h"
+#include "../components/AbilityComponent.h"
+#include "../components/StatsComponent.h"
 
+#include "../core/ResourceManager.h"
 #include <iostream>
 
 namespace game::factories
 {
-	FruitFactory::FruitFactory(
-		game::ArenaContext& arenaContext,
-		const nlohmann::json& jsonConfig)
-		: context(arenaContext),
-		config(jsonConfig)
-	{
-	}
+    FruitFactory::FruitFactory(game::ArenaContext& arenaContext, const nlohmann::json& jsonConfig, game::Game* gameRef, const sf::Image& mask, float scale)
+        : context(arenaContext), config(jsonConfig), game(gameRef), collisionMask(mask), mapScale(scale)
+    {
+    }
 
-	std::unique_ptr<game::entities::Player>
-		FruitFactory::createFruit(game::entities::FruitType type)
-	{
-		auto player =
-			std::make_unique<game::entities::Player>();
+    std::unique_ptr<game::entities::Entity> FruitFactory::createFruit(game::entities::FruitType type)
+    {
+        auto entity = std::make_unique<game::entities::Entity>();
+        std::string fruitKey;
 
-		std::string fruitKey;
+        switch (type) {
+        case game::entities::FruitType::Apple:      fruitKey = "Apple"; break;
+        case game::entities::FruitType::Banana:     fruitKey = "Banana"; break;
+        case game::entities::FruitType::Orange:     fruitKey = "Orange"; break;
+        case game::entities::FruitType::Cherry:     fruitKey = "Cherry"; break;
+        case game::entities::FruitType::Strawberry: fruitKey = "Strawberry"; break;
+        case game::entities::FruitType::Blackberry: fruitKey = "Blackberry"; break;
+        default: std::cerr << "[FACTORY ERROR] Unknown fruit type!\n"; return nullptr;
+        }
 
-		switch (type)
-		{
-		case game::entities::FruitType::Apple:
-			fruitKey = "Apple";
-			break;
+        if (config.contains(fruitKey))
+        {
+            const auto& data = config[fruitKey];
 
-		case game::entities::FruitType::Banana:
-			fruitKey = "Banana";
-			break;
+            int hp = data.value("hp", 100);
+            float speed = data.value("maxSpeed", 400.0f);
+            float attackSpeed = data.value("attackSpeed", 1.0f);
+            int idleFrames = data.value("idleFrames", 4);
+            int walkFrames = data.value("walkFrames", 4);
 
-		case game::entities::FruitType::Orange:
-			fruitKey = "Orange";
-			break;
+            // 1. STATYSTYKI
+            entity->addComponent(std::make_unique<game::components::StatsComponent>(hp, attackSpeed));
 
-		case game::entities::FruitType::Cherry:
-			fruitKey = "Cherry";
-			break;
+            // 2. RUCH I FIZYKA
+            entity->addComponent(std::make_unique<game::components::MovementComponent>(game, speed));
+            entity->addComponent(std::make_unique<game::components::ColliderComponent>(collisionMask, mapScale));
 
-		case game::entities::FruitType::Strawberry:
-			fruitKey = "Strawberry";
-			break;
+            // 3. GRAFIKA (Odczytana z czystego ResourceManagera!)
+            auto& res = game::core::ResourceManager::get();
+            sf::Texture* idleTex = res.hasTexture(fruitKey + "_idle") ? &res.getTexture(fruitKey + "_idle") : nullptr;
+            sf::Texture* walkTex = res.hasTexture(fruitKey + "_walk") ? &res.getTexture(fruitKey + "_walk") : nullptr;
+            entity->addComponent(std::make_unique<game::components::SpriteComponent>(
+                idleTex, idleFrames, walkTex, walkFrames
+            ));
 
-		case game::entities::FruitType::Blackberry:
-			fruitKey = "Blackberry";
-			break;
+            // 4. UMIEJ?TNO?CI
+            auto abilities = std::make_unique<game::components::AbilityComponent>();
+            if (data.contains("abilities"))
+            {
+                for (const auto& abName : data["abilities"])
+                {
+                    std::string abilityName = abName.get<std::string>();
 
-		default:
-			std::cerr
-				<< "[FACTORY ERROR] Unknown fruit type!\n";
+                    if (abilityName == "Shoot") {
+                        abilities->setWeapon(std::make_unique<game::components::ShootAbility>(*context.bullets));
+                    }
+                    else if (abilityName == "Shotgun") {
+                        abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(*context.bullets));
+                    }
+                    else if (abilityName == "Dash") {
+                        abilities->setSkill(std::make_unique<game::components::DashAbility>(entity.get()));
+                    }
+                    else if (abilityName == "AcidSquirt") {
+                        std::string texPath = data.value("projectileTexture", "assets/textures/default_bullet.png");
+                        abilities->setWeapon(std::make_unique<game::components::AcidSquirtAbility>(*context.bullets, entity.get(), texPath));
+                    }
+                    else if (abilityName == "RindRoll") {
+                        float rDur = data.value("rollDuration", 1.5f);
+                        float rSpd = data.value("rollSpeed", 80.0f);
+                        abilities->setSkill(std::make_unique<game::components::RindRollAbility>(entity.get(), rDur, rSpd));
+                    }
+                }
+            }
+            entity->addComponent(std::move(abilities));
+        }
 
-			return nullptr;
-		}
-
-		if (config.contains(fruitKey))
-		{
-			const auto& data = config[fruitKey];
-
-			int hp = data["hp"].get<int>();
-
-			float speed =
-				data["maxSpeed"].get<float>();
-
-			float attackSpeed =
-				data.value("attackSpeed", 1.0f);
-
-			int idleFrames =
-				data["idleFrames"].get<int>();
-			
-			int walkFrames =
-				data["walkFrames"].get<int>();
-
-			player->setStats(
-				hp,
-				speed,
-				attackSpeed);
-
-			// Load textures
-			player->loadTextures(
-				data["idleTexturePath"].get<std::string>(),
-				idleFrames,
-				data["walkTexturePath"].get<std::string>(),
-				walkFrames);
-
-			// Ability loading
-			if (data.contains("abilities"))
-			{
-				for (const auto& abName : data["abilities"])
-				{
-					std::string abilityName =
-						abName.get<std::string>();
-
-					// Basic shoot
-					if (abilityName == "Shoot")
-					{
-						player->setWeapon(
-							std::make_unique<
-							game::components::ShootAbility>(
-								*context.bullets));
-					}
-
-					// Shotgun
-					else if (abilityName == "Shotgun")
-					{
-						player->setWeapon(
-							std::make_unique<
-							game::components::ShotgunAbility>(
-								*context.bullets));
-					}
-
-					// Dash
-					else if (abilityName == "Dash")
-					{
-						player->setSkill(
-							std::make_unique<
-							game::components::DashAbility>(
-								player.get()));
-					}
-
-					// Acid mortar projectile
-					else if (abilityName == "AcidSquirt")
-					{
-						std::string texPath =
-							data.value(
-								"projectileTexture",
-								"assets/textures/default_bullet.png");
-
-						player->setWeapon(
-							std::make_unique<
-							game::components::AcidSquirtAbility>(
-								*context.bullets,
-								player.get(),
-								texPath));
-					}
-
-					// Rolling skill
-					else if (abilityName == "RindRoll")
-					{
-						float customRollDuration =
-							data.value("rollDuration", 1.5f);
-
-						float customRollSpeed =
-							data.value("rollSpeed", 80.0f);
-
-						player->setSkill(
-							std::make_unique<
-							game::components::RindRollAbility>(
-								player.get(),
-								customRollDuration,
-								customRollSpeed));
-					}
-					else
-					{
-						std::cerr
-							<< "[FACTORY WARNING] Unknown ability: "
-							<< abilityName
-							<< "\n";
-					}
-				}
-			}
-		}
-
-		return player;
-	}
+        return entity;
+    }
 }

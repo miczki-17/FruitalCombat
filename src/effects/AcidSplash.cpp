@@ -1,3 +1,6 @@
+// --- AcidSplash.cpp ---
+
+
 #include "AcidSplash.h"
 
 #include <cstdlib>

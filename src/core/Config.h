@@ -1,3 +1,6 @@
+// --- Configuration constants for the game ---
+
+
 // CONFIG.H
 
 #pragma once

@@ -1,8 +1,11 @@
+// --- ArenaContext.h ---
+
+
 #pragma once
 #include <vector>
 #include <memory>
 #include <SFML/Graphics.hpp>
-#include "../components/Bullet.h"
+#include "../projectiles/Bullet.h"
 #include "../effects/AcidSplash.h"
 
 namespace game

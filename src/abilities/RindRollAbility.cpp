@@ -1,11 +1,11 @@
 #include "RindRollAbility.h"
+#include "../entities/Entity.h"
 #include <cmath>
 
 namespace game::components
 {
-    RindRollAbility::RindRollAbility(game::entities::Player* p, float customDuration, float customSpeed)
-        : player(p), rollDuration(customDuration), rollSpeed(customSpeed)
-    {
+    RindRollAbility::RindRollAbility(game::entities::Entity* targetEntity, float customDuration, float customSpeed)
+        : entity(targetEntity), rollDuration(customDuration), rollSpeed(customSpeed) {
     }
 
     void RindRollAbility::update(float dt)
@@ -15,7 +15,7 @@ namespace game::components
 
     void RindRollAbility::execute(sf::Vector2f startPos, sf::Vector2f targetWorldPos, sf::Vector2f shooterVelocity)
     {
-        if (currentTimer <= 0.0f && player != nullptr)
+        if (currentTimer <= 0.0f && entity != nullptr)
         {
             sf::Vector2f aimDir = targetWorldPos - startPos;
             float length = std::sqrt(aimDir.x * aimDir.x + aimDir.y * aimDir.y);
@@ -24,8 +24,10 @@ namespace game::components
             {
                 aimDir /= length;
 
-                // Odpalamy sterowalne toczenie (Drift) z parametrami z JSON-a
-                player->startRoll(aimDir, rollSpeed, rollDuration);
+                entity->velocity = aimDir * rollSpeed;
+                entity->overrideSpeedLimit = rollSpeed;
+                entity->isRolling = true;
+                entity->actionTimer = rollDuration;
 
                 currentTimer = cooldown;
             }

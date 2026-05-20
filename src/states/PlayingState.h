@@ -1,8 +1,11 @@
+// --- PlayingState.h ---
+
+
 #pragma once
-#include "../components/Ability.h"
+#include "../abilities/Ability.h"
 #include "../core/Game.h"
-#include "../components/Bullet.h"
-#include "../entities/player/Player.h"
+#include "../projectiles/Bullet.h"
+#include "../entities/Entity.h"
 #include "../core/State.h"
 #include <memory>
 #include <vector>
@@ -21,7 +24,7 @@ namespace game::states
         float mapScale = 1.5f;
 
         sf::View cameraView;
-        std::unique_ptr<game::entities::Player> player;
+        std::unique_ptr<game::entities::Entity> player;
 
         // Bullets container owned cleanly by the arena environment state
         std::vector<game::components::Bullet> bullets;

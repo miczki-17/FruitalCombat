@@ -1,6 +1,11 @@
+// --- PlayingState.cpp --- 
+
+
 #include "PlayingState.h"
 #include "../factories/FruitFactory.h"
 #include "../core/ArenaContext.h"
+#include "../core/ResourceManager.h"
+#include "../components/AbilityComponent.h"
 #include <algorithm>
 #include <iostream>
 #include <random> 
@@ -14,15 +19,15 @@ namespace game::states
 
         std::string mapKey = game->selectedMapKey;
         const auto& mapData = game->mapsConfig[mapKey];
-        std::string mapPath = mapData.value("texturePath", "");
         std::string mapMaskPath = mapData.value("maskPath", "");
 
-        if (mapTexture.loadFromFile(mapPath))
+        // ?ADOWANIE Z RESOURCE MANAGERA! ZERO DYSKU W TRAKCIE GRY!
+        if (game::core::ResourceManager::get().hasTexture(mapKey + "_map"))
         {
-            mapSprite.emplace(mapTexture);
+            mapSprite.emplace(game::core::ResourceManager::get().getTexture(mapKey + "_map"));
             mapSprite->setScale({ mapScale, mapScale });
 
-            sf::Vector2u rawSize = mapTexture.getSize();
+            sf::Vector2u rawSize = game::core::ResourceManager::get().getTexture(mapKey + "_map").getSize();
             mapLimits = sf::Vector2f(rawSize.x * mapScale, rawSize.y * mapScale);
         }
 
@@ -89,14 +94,15 @@ namespace game::states
         }
 
         // Connect global processing pipelines
+        // Connect global processing pipelines
         game->arenaContext.bullets = &bullets;
 
-        game::factories::FruitFactory factory(game->arenaContext, game->fruitsConfig);
+        game::factories::FruitFactory factory(game->arenaContext, game->fruitsConfig, game, collisionMask, mapScale);
         player = factory.createFruit(game->selectedFruitType);
 
         if (player != nullptr)
         {
-            player->setPosition({ mapLimits.x / 2.0f, mapLimits.y / 2.0f });
+            player->position = { mapLimits.x / 2.0f, mapLimits.y / 2.0f };
         }
 
         cameraView = game->getWindow().getDefaultView();
@@ -123,7 +129,10 @@ namespace game::states
             {
                 sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
                 sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
-                player->useSkill(mouseWorldPos);
+
+                if (auto* ab = player->getComponent<game::components::AbilityComponent>()) {
+                    ab->useSkill(mouseWorldPos);
+                }
             }
         }
 
@@ -154,13 +163,17 @@ namespace game::states
 
         if (player != nullptr)
         {
-            player->update(dt, game, mapLimits, collisionMask, mapScale);
+            player->update(dt); // Klasa wywo?a teraz ka?dy komponent sama z siebie!
 
             if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
             {
                 sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
                 sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
-                player->useWeapon(mouseWorldPos);
+
+                // U?ycie przez ECS
+                if (auto* ab = player->getComponent<game::components::AbilityComponent>()) {
+                    ab->useWeapon(mouseWorldPos);
+                }
             }
 
             // Centralized projectile lifecycle and splash management tracking loop
@@ -237,7 +250,7 @@ namespace game::states
             sf::Vector2f viewSize = cameraView.getSize();
             float halfWidth = viewSize.x / 2.0f;
             float halfHeight = viewSize.y / 2.0f;
-            sf::Vector2f targetCenter = player->getPosition();
+            sf::Vector2f targetCenter = player->position;
 
             float minX = halfWidth, maxX = mapLimits.x - halfWidth;
             float minY = halfHeight, maxY = mapLimits.y - halfHeight;

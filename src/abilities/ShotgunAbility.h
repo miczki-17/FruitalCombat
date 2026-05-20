@@ -1,8 +1,11 @@
+// --- ShootAbility.h ---
+
+
 #pragma once
 
 // includes
 #include "Ability.h"
-#include "Bullet.h"
+#include "../projectiles/Bullet.h"
 #include <vector>
 
 namespace game::components

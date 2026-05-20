@@ -1,3 +1,7 @@
+// --- IntroState.cpp ---
+
+
+#include "../core/ResourceManager.h"
 #include "IntroState.h"
 #include "../core/Game.h"
 #include <format>
@@ -70,17 +74,13 @@ namespace game::states
 	{
 		std::cout << "[ASYNC] Assets loading started...\n";
 
-		// Clear existing buffers
 		game->menuImageBuffer.clear();
 		game->menuUiBuffer.clear();
 		game->characterImageBuffer.clear();
 		game->mapImageBuffer.clear();
 
-		loadProgress = 5; // Initial progress
+		loadProgress = 5;
 
-		// ==========================================
-		// 1. CHARACTERS CONFIG & TEXTURES (approx. 30% progress)
-		// ==========================================
 		std::cout << "[ASYNC] Characters config loading...\n";
 		std::ifstream configFile("assets/configs/fruits.json");
 		if (configFile.is_open())
@@ -93,9 +93,14 @@ namespace game::states
 				int totalItems = game->fruitsConfig.size();
 
 				for (auto& [characterKey, characterData] : game->fruitsConfig.items()) {
+					// Wczytywanie tekstury IDLE
 					if (characterData.contains("idleTexturePath")) {
 						std::string path = characterData.value("idleTexturePath", "");
 						if (!path.empty()) {
+							// NOWE: ?adujemy dla ECS!
+							game::core::ResourceManager::get().loadTexture(characterKey + "_idle", path);
+
+							// STARE: Legacy dla CharacterSelectState
 							sf::Image img;
 							if (img.loadFromFile(path)) {
 								game->characterImageBuffer[characterKey] = std::move(img);
@@ -103,18 +108,25 @@ namespace game::states
 						}
 					}
 
+					// Wczytywanie tekstury WALK do ResourceManager
+					if (characterData.contains("walkTexturePath")) {
+						std::string path = characterData.value("walkTexturePath", "");
+						if (!path.empty()) {
+							game::core::ResourceManager::get().loadTexture(characterKey + "_walk", path);
+						}
+					}
+
+					// Wczytywanie tekstury START (Legacy)
 					if (characterData.contains("initTexturePath")) {
 						std::string path = characterData.value("initTexturePath", "");
 						if (!path.empty()) {
 							sf::Image img;
 							if (img.loadFromFile(path)) {
-								// Zapisujemy z dopiskiem "_start", tak jak oczekuje CharacterSelectState
 								game->characterImageBuffer[characterKey + "_start"] = std::move(img);
 							}
 						}
 					}
 					index++;
-					// Update progress proportionally from 5% to 35%
 					if (totalItems > 0) loadProgress = 5 + (30 * index / totalItems);
 				}
 			}
@@ -122,48 +134,41 @@ namespace game::states
 				std::cerr << "[ASYNC ERROR] fruits.json Parse error: " << e.what() << "\n";
 			}
 		}
-		else {
-			std::cerr << "[ASYNC ERROR] Cannot open fruits.json!\n";
-		}
 
 		loadProgress = 35;
 
-		// ==========================================
-		// 2. MAP CONFIG & TEXTURES (approx. 30% progress)
-		// ==========================================
 		std::cout << "[ASYNC] Maps config loading...\n";
 		std::ifstream mapsFile("assets/configs/maps.json");
 		if (mapsFile.is_open())
 		{
 			try {
 				mapsFile >> (game->mapsConfig);
-				std::cout << "[ASYNC] maps.json loaded successfully.\n";
 
 				int index = 0;
 				int totalMaps = game->mapsConfig.size();
 
 				for (auto& [mapKey, mapData] : game->mapsConfig.items()) {
+					// NOWE: Za?aduj fizyczn? map? z góry do ResourceManagera (koniec z ?adowaniem w PlayingState)
+					if (mapData.contains("texturePath")) {
+						game::core::ResourceManager::get().loadTexture(mapKey + "_map", mapData.value("texturePath", ""));
+					}
+
 					if (mapData.contains("thumbnailPath")) {
 						std::string path = mapData.value("thumbnailPath", "");
 						if (!path.empty()) {
 							sf::Image img;
 							if (img.loadFromFile(path)) {
 								game->mapImageBuffer[mapKey] = std::move(img);
-								std::cout << "[ASYNC] Loaded map thumbnail for: " << mapKey << "\n";
 							}
 						}
 					}
 					index++;
-					// Update progress proportionally from 35% to 65%
 					if (totalMaps > 0) loadProgress = 35 + (30 * index / totalMaps);
 				}
 			}
 			catch (const nlohmann::json::parse_error& e) {
 				std::cerr << "[ASYNC ERROR] maps.json Parse error: " << e.what() << "\n";
 			}
-		}
-		else {
-			std::cerr << "[ASYNC ERROR] Cannot open maps.json!\n";
 		}
 
 		loadProgress = 65;
