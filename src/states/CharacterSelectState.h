@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../core/State.h"
+#include "State.h"
 #include "../entities/EntityTypes.h"
 #include <SFML/Graphics.hpp>
 #include <deque>
@@ -37,7 +37,6 @@ namespace game::states
 		std::optional<sf::Sprite> hpIconSprite, dmgIconSprite, spdIconSprite;
 
 		// --- TYPOGRAPHY ---
-		sf::Font font;
 		std::optional<sf::Text> characterNameText;
 		std::optional<sf::Text> characterTitleText;
 

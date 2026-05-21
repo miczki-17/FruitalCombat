@@ -6,10 +6,17 @@
 #include "../core/Game.h"
 #include "../projectiles/Bullet.h"
 #include "../entities/Entity.h"
-#include "../core/State.h"
+#include "State.h"
 #include <memory>
 #include <vector>
 #include <optional>
+
+#include "../factories/MutantFactory.h"
+#include "../systems/EvolutionManager.h"
+#include "../components/DNAComponent.h"
+#include "../components/ColliderComponent.h"
+#include "../components/StatsComponent.h"
+
 
 namespace game::states
 {
@@ -40,6 +47,13 @@ namespace game::states
         std::optional<sf::Sprite> crosshairSprite;
 
         void renderHUD(sf::RenderWindow& window);
+
+
+        std::vector<std::unique_ptr<game::entities::Entity>> enemies;
+
+        std::unique_ptr<game::factories::MutantFactory> mutantFactory;
+        std::unique_ptr<game::systems::EvolutionManager> evolutionManager;
+
 
     public:
         PlayingState(game::Game* game);

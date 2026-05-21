@@ -26,7 +26,7 @@ add_executable(FruitalCombat
     src/core/StateMachine.h
     src/core/StateMachine.cpp
     src/core/ArenaContext.h
-    src/core/State.h
+    "src/states/State.h"
     src/states/IntroState.h
     src/states/IntroState.cpp
     src/states/MenuState.h
@@ -58,7 +58,7 @@ add_executable(FruitalCombat
     src/states/PauseState.cpp
     src/states/MapSelectState.h
     src/states/MapSelectState.cpp
- "src/abilities/AcidSquirtAbility.h" "src/abilities/AcidSquirtAbility.cpp" "src/abilities/RindRollAbility.h" "src/abilities/RindRollAbility.cpp" "src/effects/AcidSplash.h" "src/effects/AcidSplash.cpp" "src/core/ResourceManager.h" "src/components/Component.h" "src/components/MovementComponent.h" "src/components/ColliderComponent.h" "src/components/SpriteComponent.h" "src/components/AbilityComponent.h" "src/components/StatsComponent.h")
+ "src/abilities/AcidSquirtAbility.h" "src/abilities/AcidSquirtAbility.cpp" "src/abilities/RindRollAbility.h" "src/abilities/RindRollAbility.cpp" "src/effects/AcidSplash.h" "src/effects/AcidSplash.cpp" "src/core/ResourceManager.h" "src/components/Component.h" "src/components/MovementComponent.h" "src/components/ColliderComponent.h" "src/components/SpriteComponent.h" "src/components/AbilityComponent.h" "src/components/StatsComponent.h" "src/genetics/DNA.h" "src/components/DNAComponent.h" "src/components/AiInputComponent.h" "src/factories/MutantFactory.h" "src/factories/MutantFactory.cpp" "src/systems/EvolutionManager.h" "src/systems/EvolutionManager.cpp" "src/effects/FloatingText.h" "src/entities/JuiceDrop.h" "src/states/ShopState.h" "src/states/ShopState.cpp")
 
 
 # --- 3. NAG?ÓWKI I LINKOWANIE ---

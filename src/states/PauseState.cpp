@@ -16,13 +16,8 @@ namespace game::states
         darkOverlay.setFillColor(sf::Color(0, 0, 0, 180));
 
         try {
-            // loading font (SFML 3 = openFromFile)
-            uiFont.emplace();
-            if (!uiFont->openFromFile("../../../assets/fonts/Minecraftia-Regular.ttf")) {
-                throw std::runtime_error("Cannot load font file");
-            }
 
-            confirmText.emplace(*uiFont, "Are you sure you want to exit?", 36);
+            confirmText.emplace(game->mainFont, "Are you sure you want to exit?", 36);
             confirmText->setFillColor(sf::Color::White);
 
             sf::FloatRect textBounds = confirmText->getLocalBounds();
@@ -44,18 +39,16 @@ namespace game::states
         setupButton("empty_button", yesTex, yesBtn, { centerX - 120.0f, centerY }, { 150.0f, 60.0f });
         setupButton("empty_button", noTex, noBtn, { centerX + 120.0f, centerY }, { 150.0f, 60.0f });
 
-        if (uiFont.has_value()) {
-            setupButtonText(resumeText, "RESUME", { centerX, centerY - 80.0f });
-            setupButtonText(settingsText, "SETTINGS", { centerX, centerY });
-            setupButtonText(exitText, "EXIT", { centerX, centerY + 80.0f });
-            setupButtonText(yesText, "YES", { centerX - 120.0f, centerY });
-            setupButtonText(noText, "NO", { centerX + 120.0f, centerY });
-        }
+        setupButtonText(resumeText, "RESUME", { centerX, centerY - 80.0f });
+        setupButtonText(settingsText, "SETTINGS", { centerX, centerY });
+        setupButtonText(exitText, "EXIT", { centerX, centerY + 80.0f });
+        setupButtonText(yesText, "YES", { centerX - 120.0f, centerY });
+        setupButtonText(noText, "NO", { centerX + 120.0f, centerY });
     }
 
     void PauseState::setupButtonText(std::optional<sf::Text>& textObj, const std::string& str, sf::Vector2f pos, int fontSize)
     {
-        textObj.emplace(*uiFont, str, fontSize);
+        textObj.emplace(game->mainFont, str, fontSize);
         textObj->setFillColor(sf::Color::White);
 
         sf::FloatRect bounds = textObj->getLocalBounds();

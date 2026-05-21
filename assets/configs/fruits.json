@@ -8,7 +8,7 @@
     "attackSpeed": 1.0,
     "lobbyTexturePath": "",
     "walkTexturePath": "assets/textures/entities/characters/appleWalk.png",
-    "abilities": [ "Seed Buckshot", "Cider Dash" ]
+    "abilities": [ "Shoot", "Cider Dash" ]
   },
   "Banana": {
     "name": "Peel-Zero",

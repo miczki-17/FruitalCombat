@@ -60,23 +60,18 @@ namespace game::states
 		darkOverlay.setSize(viewSize);
 		darkOverlay.setFillColor(sf::Color(0, 0, 0, 80));
 
-		// Load Fonts (SFML 3 uses openFromFile for resources)
-		if (!font.openFromFile("assets/fonts/Minecraftia-Regular.ttf")) {
-			std::cerr << "[SELECT ERROR] Cannot load font.\n";
-		}
-
 		// Setup typography with SFML 3 specific sf::Text constructor order: (font, string, size)
-		characterNameText.emplace(font, "", 45);
+		characterNameText.emplace(game->mainFont, "", 45);
 		characterNameText->setFillColor(sf::Color(255, 255, 255));
 		characterNameText->setOutlineColor(sf::Color::Black);
 		characterNameText->setOutlineThickness(4.5f);
 
-		characterTitleText.emplace(font, "", 20);
+		characterTitleText.emplace(game->mainFont, "", 20);
 		characterTitleText->setFillColor(sf::Color(255, 210, 120));
 		characterTitleText->setOutlineColor(sf::Color::Black);
 		characterTitleText->setOutlineThickness(3.0f);
 
-		abilitiesTextDisplay.emplace(font, "", 18);
+		abilitiesTextDisplay.emplace(game->mainFont, "", 18);
 		abilitiesTextDisplay->setFillColor(sf::Color(210, 210, 210));
 		abilitiesTextDisplay->setOutlineColor(sf::Color::Black);
 		abilitiesTextDisplay->setOutlineThickness(2.5f);
@@ -90,7 +85,7 @@ namespace game::states
 		setupButton("empty_button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
 
 		// Setup Text for Select Button
-		selectBtnText.emplace(font, "CHOOSE", 27);
+		selectBtnText.emplace(game->mainFont, "CHOOSE", 27);
 		selectBtnText->setFillColor(sf::Color(255, 255, 255));
 		selectBtnText->setOutlineColor(sf::Color::Black);
 		selectBtnText->setOutlineThickness(4.5f);

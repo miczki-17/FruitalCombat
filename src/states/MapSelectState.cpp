@@ -31,21 +31,18 @@ namespace game::states
 		darkOverlay.setSize(viewSize);
 		darkOverlay.setFillColor(sf::Color(0, 0, 0, 80));
 
-		if (!font.openFromFile("assets/fonts/Minecraftia-Regular.ttf")) {
-			std::cerr << "[SELECT ERROR] Cannot load font.\n";
-		}
 
-		mapNameText.emplace(font, "", 35);
+		mapNameText.emplace(game->mainFont, "", 35);
 		mapNameText->setFillColor(sf::Color(255, 255, 255));
 		mapNameText->setOutlineColor(sf::Color::Black);
 		mapNameText->setOutlineThickness(4.5f);
 
-		mapDescText.emplace(font, "", 12);
+		mapDescText.emplace(game->mainFont, "", 12);
 		mapDescText->setFillColor(sf::Color(255, 210, 120));
 		mapDescText->setOutlineColor(sf::Color::Black);
 		mapDescText->setOutlineThickness(2.5f);
 
-		mapStatsText.emplace(font, "", 20);
+		mapStatsText.emplace(game->mainFont, "", 20);
 		mapStatsText->setFillColor(sf::Color(210, 210, 210));
 		mapStatsText->setOutlineColor(sf::Color::Black);
 		mapStatsText->setOutlineThickness(2.5f);
@@ -57,7 +54,7 @@ namespace game::states
 		setupButton("right_arrow", rightArrowTex, rightArrowSprite, { centerX + 550.f, centerY }, { 80.f, 80.f });
 		setupButton("empty_button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
 
-		selectBtnText.emplace(font, "CHOOSE", 27);
+		selectBtnText.emplace(game->mainFont, "CHOOSE", 27);
 		selectBtnText->setFillColor(sf::Color::White);
 		selectBtnText->setOutlineColor(sf::Color::Black);
 		selectBtnText->setOutlineThickness(4.5f);

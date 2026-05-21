@@ -7,6 +7,8 @@
 #include <SFML/Graphics.hpp>
 #include "../projectiles/Bullet.h"
 #include "../effects/AcidSplash.h"
+#include "../effects/FloatingText.h"
+#include "../entities/JuiceDrop.h"
 
 namespace game
 {
@@ -31,5 +33,8 @@ namespace game
 
         // Visual textures preallocated at arena initialization
         std::vector<std::shared_ptr<sf::Texture>> splashTextures;
+
+        std::vector<game::effects::FloatingText> damageTexts;
+        std::vector<game::entities::JuiceDrop> juiceDrops;
     };
 }

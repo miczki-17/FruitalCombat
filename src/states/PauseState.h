@@ -2,7 +2,7 @@
 
 
 #pragma once
-#include "../core/State.h"
+#include "State.h"
 #include "../core/Game.h"
 #include <SFML/Graphics.hpp>
 #include <optional>
@@ -31,7 +31,6 @@ namespace game::states
         std::optional<sf::Text> yesText;
         std::optional<sf::Text> noText;
 
-        std::optional<sf::Font> uiFont;
         std::optional<sf::Text> confirmText;
 
         bool showExitConfirm = false;

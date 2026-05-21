@@ -1,0 +1,22 @@
+{
+	"Tomato": {
+		"r": 220,
+		"g": 40,
+		"b": 40,
+		"behavior": "Charger",
+		"speed": 80.0,
+		"maxHp": 60.0,
+		"sizeScale": 0.9,
+		"abilities": [ "Dash" ]
+	},
+	"Carrot": {
+		"r": 255,
+		"g": 140,
+		"b": 0,
+		"behavior": "Sniper",
+		"speed": 60.0,
+		"maxHp": 80.0,
+		"sizeScale": 1.0,
+		"abilities": [ "AcidSquirt" ]
+	}
+}

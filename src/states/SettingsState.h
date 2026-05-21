@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../core/State.h"
+#include "State.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <string>

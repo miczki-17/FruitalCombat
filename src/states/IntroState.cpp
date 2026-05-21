@@ -135,6 +135,31 @@ namespace game::states
 			}
 		}
 
+
+		// ENEMIES CONFIG & TEXTURES
+		std::cout << "[ASYNC] Enemies config loading...\n";
+		std::ifstream enemiesFile("assets/configs/enemies.json");
+		if (enemiesFile.is_open())
+		{
+			try {
+				enemiesFile >> (game->enemiesConfig);
+				std::cout << "[ASYNC] enemies.json loaded successfully.\n";
+
+				for (auto& [enemyKey, enemyData] : game->enemiesConfig.items()) {
+					if (enemyData.contains("idleTexturePath")) {
+						game::core::ResourceManager::get().loadTexture(enemyKey + "_idle", enemyData.value("idleTexturePath", ""));
+					}
+					if (enemyData.contains("walkTexturePath")) {
+						game::core::ResourceManager::get().loadTexture(enemyKey + "_walk", enemyData.value("walkTexturePath", ""));
+					}
+				}
+			}
+			catch (const nlohmann::json::parse_error& e) {
+				std::cerr << "[ASYNC ERROR] enemies.json Parse error: " << e.what() << "\n";
+			}
+		}
+
+
 		loadProgress = 35;
 
 		std::cout << "[ASYNC] Maps config loading...\n";
@@ -171,6 +196,17 @@ namespace game::states
 			}
 		}
 
+		loadProgress = 60;
+
+		// ==========================================
+		// 3. FONTS
+		// ==========================================
+		if (!game->mainFont.openFromFile("assets/fonts/Minecraftia-Regular.ttf")) {
+			std::cerr << "[ASYNC ERROR] Failed to load main font!\n";
+		}
+		else {
+			std::cout << "[SYSTEM] 'Minecraftia-Regular.ttf' font loaded into RAM!\n";
+		}
 		loadProgress = 65;
 
 		// ==========================================
@@ -213,6 +249,7 @@ namespace game::states
 			uiIndex++;
 			loadProgress = 70 + (25 * uiIndex / uiTotal); // Progress from 70% to 95%
 		}
+
 
 		// ==========================================
 		// 4. UI SOUNDS (final 5%)

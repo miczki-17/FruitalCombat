@@ -13,7 +13,7 @@
 
 #include "Config.h"
 #include "StateMachine.h"
-#include "State.h"
+#include "../states/State.h"
 #include "ArenaContext.h"
 
 #include "../entities/EntityTypes.h"
@@ -62,7 +62,11 @@ namespace game
 		sf::SoundBuffer uiClickBuffer;
 		std::optional<sf::Sound> uiClickSound;
 
+		// ---------- MUSIC ----------
 		sf::Music menuMusic;
+
+		// --------- FONTS ----------
+		sf::Font mainFont;
 
 		// ---------- PLAYER SELECTION ----------
 		game::entities::FruitType selectedFruitType =
@@ -73,8 +77,17 @@ namespace game
 		// ---------- CONFIGS ----------
 		nlohmann::json fruitsConfig;
 		nlohmann::json mapsConfig;
+		nlohmann::json enemiesConfig;
 
 		// ---------- SHARED ARENA CONTEXT ----------
 		ArenaContext arenaContext;
+
+
+		// --- EKONOMIA I ULEPSZENIA (Zmienne globalne) ---
+		int playerJuice = 0;              // Waluta z potworów
+		float upgrade_speedMod = 0.0f;    // Pasywny bonus do szybko?ci
+		int upgrade_maxHpBonus = 0;       // Pasywny bonus do HP
+		float upgrade_atkSpeedMod = 0.0f; // Pasywny bonus do szybkostrzelno?ci
+		int upgrade_uniqueCount = 0;      // Licznik unikalnych umiej?tno?ci
 	};
 }

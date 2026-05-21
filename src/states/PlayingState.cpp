@@ -6,6 +6,7 @@
 #include "../core/ArenaContext.h"
 #include "../core/ResourceManager.h"
 #include "../components/AbilityComponent.h"
+#include "../components/SpriteComponent.h"
 #include <algorithm>
 #include <iostream>
 #include <random> 
@@ -36,10 +37,7 @@ namespace game::states
             std::cerr << "[ERROR] Could not load collision mask from: " << mapMaskPath << '\n';
         }
 
-        if (!uiFont.openFromFile("../../../assets/fonts/Arial.TTF"))
-        {
-            std::cerr << "[WARNING] Missing asset UI Font!\n";
-        }
+        
 
         if (game->menuUiBuffer.contains("crosshair"))
         {
@@ -94,7 +92,6 @@ namespace game::states
         }
 
         // Connect global processing pipelines
-        // Connect global processing pipelines
         game->arenaContext.bullets = &bullets;
 
         game::factories::FruitFactory factory(game->arenaContext, game->fruitsConfig, game, collisionMask, mapScale);
@@ -104,6 +101,25 @@ namespace game::states
         {
             player->position = { mapLimits.x / 2.0f, mapLimits.y / 2.0f };
         }
+
+        mutantFactory = 
+            std::make_unique<game::factories::MutantFactory>(
+                game->arenaContext,
+                game, 
+                collisionMask, 
+                mapScale);
+
+        evolutionManager = 
+            std::make_unique<game::systems::EvolutionManager>(
+                *mutantFactory,
+                enemies,
+                player.get(),
+                game->enemiesConfig,
+                collisionMask,
+                mapScale);
+
+        // Odpalamy pierwsz? fal?
+        evolutionManager->startFirstWave();
 
         cameraView = game->getWindow().getDefaultView();
         cameraView.zoom(1.4f);
@@ -163,14 +179,66 @@ namespace game::states
 
         if (player != nullptr)
         {
-            player->update(dt); // Klasa wywo?a teraz ka?dy komponent sama z siebie!
+            player->update(dt);
+
+            for (int i = static_cast<int>(enemies.size()) - 1; i >= 0; --i)
+            {
+                enemies[i]->update(dt);
+
+                if (enemies[i]->isDead)
+                {
+                    // Harvest DNA before deleting
+                    if (auto* dnaComp = enemies[i]->getComponent<game::components::DNAComponent>()) {
+                        evolutionManager->onEnemyDeath(dnaComp->dna);
+
+                        // Zespawnuj sok, Nagroda zale?y od si?y mutanta (skali jego DNA)
+                        float xpValue = 10.0f * dnaComp->dna.sizeScale;
+                        game->arenaContext.juiceDrops.emplace_back(enemies[i]->position, xpValue);
+                    }
+                    // Remove from arena
+                    enemies.erase(enemies.begin() + i);
+                }
+            }
+
+            // sprawdz czy koniec fali
+            evolutionManager->update(dt);
+
+
+            // --- JUICE COLLECTION LOGIC (Przyci?ganie magnesem) ---
+            for (int i = static_cast<int>(game->arenaContext.juiceDrops.size()) - 1; i >= 0; --i)
+            {
+                sf::Vector2f diff = player->position - game->arenaContext.juiceDrops[i].position;
+                float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+
+                if (dist < 180.0f) // Zasi?g magnesu
+                {
+                    sf::Vector2f pullDir = diff / dist;
+                    game->arenaContext.juiceDrops[i].position += pullDir * 350.0f * dt; // Pr?dko?? lotu kropli
+                    game->arenaContext.juiceDrops[i].shape.setPosition(game->arenaContext.juiceDrops[i].position);
+                }
+
+                if (dist < 30.0f) // Zasi?g zebrania (wch?oni?cia)
+                {
+                    game->playerJuice += static_cast<int>(game->arenaContext.juiceDrops[i].value);
+                    game->arenaContext.juiceDrops.erase(game->arenaContext.juiceDrops.begin() + i);
+                }
+            }
+
+            // --- FLOATING TEXT UPDATE (Aktualizacja czasu ?ycia cyferek) ---
+            for (int i = static_cast<int>(game->arenaContext.damageTexts.size()) - 1; i >= 0; --i) {
+                game->arenaContext.damageTexts[i].update(dt);
+                if (game->arenaContext.damageTexts[i].isDead()) {
+                    game->arenaContext.damageTexts.erase(game->arenaContext.damageTexts.begin() + i);
+                }
+            }
+
 
             if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
             {
                 sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
                 sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
 
-                // U?ycie przez ECS
+                // Uzycie przez ECS
                 if (auto* ab = player->getComponent<game::components::AbilityComponent>()) {
                     ab->useWeapon(mouseWorldPos);
                 }
@@ -245,6 +313,80 @@ namespace game::states
                 puddle.shape.setFillColor(sf::Color::Transparent);
                 puddle.shape.setOutlineColor(sf::Color::Transparent);
             }
+
+
+
+            // --- COMBAT / COLLISION RESOLUTION ---
+            float defaultBulletDamage = 25.0f;
+
+            for (auto& bullet : bullets)
+            {
+                if (!bullet.getIsActive()) continue;
+
+                // Check collision against all enemies
+                for (auto& enemy : enemies)
+                {
+                    if (enemy->isDead) continue;
+
+                    // Simple circular distance collision
+                    sf::Vector2f diff = bullet.getPosition() - enemy->position;
+                    float distSq = diff.x * diff.x + diff.y * diff.y;
+
+                    // We estimate enemy hit radius based on their ColliderComponent or a default 25px
+                    float enemyHitRadius = 25.0f;
+                    if (auto* collider = enemy->getComponent<game::components::ColliderComponent>()) {
+                        enemyHitRadius = 30.0f;
+                    }
+
+                    float combinedRadius = bullet.getRadius() + enemyHitRadius;
+
+                    if (distSq < combinedRadius * combinedRadius)
+                    {
+                        // Hit detected!
+                        bullet.destroy(); // Consumes the bullet
+
+                        // Apply damage
+                        if (auto* stats = enemy->getComponent<game::components::StatsComponent>()) {
+                            stats->takeDamage(defaultBulletDamage);
+
+                            // 1. HIT FLASH TRIGGER! (Zmienia wroga na chwil? na bia?o)
+                            if (auto* sprite = enemy->getComponent<game::components::SpriteComponent>()) {
+                                sprite->triggerHitFlash();
+                            }
+
+							// 2. SPAWN DAMAGE TEXT
+                            game->arenaContext.damageTexts.emplace_back(
+                                game->mainFont,
+                                "-" + std::to_string(static_cast<int>(defaultBulletDamage)),
+                                enemy->position,
+                                sf::Color::Red
+                            );
+                        }
+                        break; // Bullet can only hit one enemy
+                    }
+                }
+            }
+
+            // --- ENEMY UPDATE & GRAVEYARD CLEANUP ---
+            for (int i = static_cast<int>(enemies.size()) - 1; i >= 0; --i)
+            {
+                enemies[i]->update(dt);
+
+                if (enemies[i]->isDead)
+                {
+                    // Harvest DNA before deleting
+                    if (auto* dnaComp = enemies[i]->getComponent<game::components::DNAComponent>()) {
+                        evolutionManager->onEnemyDeath(dnaComp->dna);
+                    }
+                    // Remove from arena
+                    enemies.erase(enemies.begin() + i);
+                }
+            }
+
+            // Evolution Manager checks if wave is complete
+            evolutionManager->update(dt);
+
+
 
             // Camera calculations and clamping restrictions
             sf::Vector2f viewSize = cameraView.getSize();
@@ -325,6 +467,20 @@ namespace game::states
 
         for (auto& splash : game->arenaContext.acidSplashes) {
             splash.render(window);
+        }
+
+        for (auto& enemy : enemies) {
+            enemy->render(window);
+        }
+
+        // Rysowanie soku na ziemi
+        for (auto& drop : game->arenaContext.juiceDrops) {
+            drop.render(window);
+        }
+
+        // Rysowanie cyferek obra?e? (zawsze na samym wierzchu)
+        for (auto& text : game->arenaContext.damageTexts) {
+            text.render(window);
         }
 
         window.setView(window.getDefaultView());

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../core/State.h"
+#include "State.h"
 #include <SFML/Graphics.hpp>
 #include <deque>
 #include <vector>
@@ -29,7 +29,6 @@ namespace game::states
 		// --- NOWY TEKST DLA PRZYCISKU CHOOSE ---
 		std::optional<sf::Text> selectBtnText;
 
-		sf::Font font;
 		std::optional<sf::Text> mapNameText;
 		std::optional<sf::Text> mapDescText;
 		std::optional<sf::Text> mapStatsText;

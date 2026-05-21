@@ -1,0 +1,58 @@
+#pragma once
+#include <vector>
+#include <memory>
+#include <random>
+#include "../genetics/DNA.h"
+#include "../entities/Entity.h"
+#include "../factories/MutantFactory.h"
+#include "../vendor/nlohmann/json.hpp"
+#include <SFML/Graphics/Image.hpp> // Required for sf::Image
+
+namespace game::systems
+{
+    class EvolutionManager
+    {
+    private:
+        game::factories::MutantFactory& mutantFactory;
+        std::vector<std::unique_ptr<game::entities::Entity>>& activeEnemies;
+        game::entities::Entity* targetPlayer;
+        const nlohmann::json& enemiesConfig;
+
+        // --- MASK VALIDATION DEPENDENCIES ---
+        const sf::Image& collisionMask;
+        float mapScale;
+
+        int currentWave = 0;
+        int baseWaveSize = 4;
+        float mutationRate = 0.15f;
+
+        std::vector<game::genetics::DNA> harvestedDNA;
+        std::vector<game::genetics::DNA> spawnQueue;
+        float spawnTimer = 0.0f;
+        float spawnInterval = 1.2f;
+
+        std::mt19937 rng;
+
+        void evolveNextWaveGenomes();
+        void generateBaseWaveGenomes();
+        void spawnNextEnemyFromQueue();
+
+        // --- HELPER METHOD FOR VALID POSITION HUNTING ---
+        // Uses a loop to roll coordinates until a walkable white pixel on the mask is found
+        sf::Vector2f getRandomValidPosition(bool aroundPlayer);
+
+    public:
+        EvolutionManager(game::factories::MutantFactory& factory,
+            std::vector<std::unique_ptr<game::entities::Entity>>& enemiesRef,
+            game::entities::Entity* player,
+            const nlohmann::json& config,
+            const sf::Image& mask, // Added mask
+            float scale);          // Added scale
+
+        void startFirstWave();
+        void update(float dt);
+        void onEnemyDeath(const game::genetics::DNA& fallenDNA);
+        int getCurrentWave() const;
+        bool isSpawningActive() const;
+    };
+}

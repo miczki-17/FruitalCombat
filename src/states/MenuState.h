@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../core/State.h"
+#include "State.h"
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <optional>
@@ -24,7 +24,6 @@ namespace game::states
 		std::optional<sf::Sprite> startBtnSprite;
 
 		// START text
-		sf::Font customFont;
 		std::optional<sf::Text> startText;
 
 		sf::Texture settingsBtnTex;

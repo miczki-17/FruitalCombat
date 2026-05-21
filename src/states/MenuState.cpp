@@ -48,11 +48,7 @@ namespace game::states
 
 		setupButton("empty_button", startBtnTex, startBtnSprite, { centerX, 600.0f }, { 300.0f, 120.0f });
 
-		if (!customFont.openFromFile("assets/fonts/Minecraftia-Regular.ttf")) {
-			std::cerr << "[MENU ERROR] Cannot load font.\n";
-		}
-
-		startText.emplace(customFont, "Start", 60);
+		startText.emplace(game->mainFont, "Start", 60);
 		startText->setFillColor(sf::Color::White);
 		startText->setOutlineColor(sf::Color::Black);
 		startText->setOutlineThickness(7.5f);
