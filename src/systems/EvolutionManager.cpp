@@ -48,7 +48,14 @@ namespace game::systems
 
         if (activeEnemies.empty() && spawnQueue.empty() && currentWave > 0)
         {
-            evolveNextWaveGenomes();
+            if (currentWave % 3 == 0 && !pendingShopBreak)
+            {
+                pendingShopBreak = true;
+            }
+            else if (!pendingShopBreak)
+            {
+                evolveNextWaveGenomes();
+            }
         }
     }
 
@@ -189,6 +196,10 @@ namespace game::systems
                 dna.maxHp = data.value("maxHp", 100.0f);
                 dna.sizeScale = data.value("sizeScale", 1.0f);
 
+                // --- NOWE: Odczytywanie parametrów ekonomii z JSON-a ---
+                dna.dropChance = data.value("dropChance", 1.0f);
+                dna.baseJuice = data.value("baseJuice", 10.0f);
+
                 std::string beh = data.value("behavior", "Charger");
                 if (beh == "Sniper")          dna.behavior = game::genetics::AiBehavior::Sniper;
                 else if (beh == "Skirmisher") dna.behavior = game::genetics::AiBehavior::Skirmisher;
@@ -210,15 +221,19 @@ namespace game::systems
             std::uniform_int_distribution<size_t> dist(0, basePool.size() - 1);
             spawnQueue.push_back(basePool[dist(rng)]);
         }
-
-        // --- FIXED INITIAL POSITIONING ---
-        // We use the validation system to distribute the first wave safely on the map
-        for (size_t i = 0; i < activeEnemies.size(); ++i) {
-            // This code shouldn't execute here since base wave populates spawnQueue, 
-            // but if you ever bypass queue, you can call getRandomValidPosition(false)
-        }
     }
 
     int EvolutionManager::getCurrentWave() const { return currentWave; }
     bool EvolutionManager::isSpawningActive() const { return !spawnQueue.empty(); }
+
+    bool EvolutionManager::requiresShop() const
+    {
+        return pendingShopBreak;
+    }
+
+    void EvolutionManager::resolveShopBreak()
+    {
+        pendingShopBreak = false;
+        evolveNextWaveGenomes();
+    }
 }

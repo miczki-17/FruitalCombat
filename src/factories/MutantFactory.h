@@ -7,7 +7,7 @@
 
 namespace game::factories
 {
-    // A specialized factory dedicated solely to generating genetically modified vegetables (enemies).
+    // A specialized factory dedicated solely to generating genetically modified vegetables.
     // Separating this from FruitFactory ensures strict adherence to the Single Responsibility Principle.
     class MutantFactory
     {

@@ -11,6 +11,8 @@ namespace game::components
         float maxHp;
         float attackSpeed;
 
+        int bonusProjectiles = 0;
+
         StatsComponent(float maxHealth, float atkSpd)
             : hp(maxHealth), maxHp(maxHealth), attackSpeed(atkSpd) {
         }

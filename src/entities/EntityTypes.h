@@ -1,26 +1,23 @@
-// --- EntityTypes.h ---
-
-
 #pragma once
-
 
 namespace game::entities
 {
-	// Fruits
-	enum class FruitType
-	{
-		Apple,
-		Banana,
-		Orange,
-		Cherry,
-		Strawberry,
-		Blackberry
-	};
+    // Fruits (Player)
+    enum class FruitType
+    {
+        Apple,
+        Banana,
+        Orange,
+        Cherry,
+        Strawberry,
+        Blackberry
+    };
 
-	enum class VeggieType
-	{
-		Carrot,		// Sniper
-		Broccoli,	// tank
-		Tomato		// kamikadze
-	};
+    // Veggies (AI Mutanty)
+    enum class VeggieType
+    {
+        Carrot,     // Sniper
+        Broccoli,   // Tank
+        Tomato      // Kamikaze
+    };
 }

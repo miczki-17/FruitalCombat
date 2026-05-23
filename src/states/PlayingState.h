@@ -46,6 +46,16 @@ namespace game::states
         sf::Texture crosshairTex;
         std::optional<sf::Sprite> crosshairSprite;
 
+
+        // --- USER INTERFACE (HUD) ---
+        sf::RectangleShape hpBarBg;
+        sf::RectangleShape hpBarFill;
+        std::optional<sf::Text> hpText;
+        std::optional<sf::Text> waveText;
+
+        sf::CircleShape biomassIcon;
+        std::optional<sf::Text> biomassText;
+
         void renderHUD(sf::RenderWindow& window);
 
 
@@ -53,6 +63,9 @@ namespace game::states
 
         std::unique_ptr<game::factories::MutantFactory> mutantFactory;
         std::unique_ptr<game::systems::EvolutionManager> evolutionManager;
+
+        // walk particles
+        float playerDustSpawnTimer = 0.0f;
 
 
     public:

@@ -14,6 +14,7 @@
 
 #include "../core/ResourceManager.h"
 #include <iostream>
+#include <cstdint>
 
 namespace game::factories
 {
@@ -49,8 +50,14 @@ namespace game::factories
         sf::Texture* walkTex = res.hasTexture(walkKey) ? &res.getTexture(walkKey) : nullptr;
 
         auto spriteComp = std::make_unique<game::components::SpriteComponent>(idleTex, 4, walkTex, 4);
-        spriteComp->setTint(sf::Color(dna.r, dna.g, dna.b)); // Apply genetic RGB mutation
-        spriteComp->setCustomScale(dna.sizeScale);           // Apply genetic size
+
+        // SFML 3 STRICT TYPE CASTING (Zabezpieczenie przed b³êdami kompilacji)
+        spriteComp->setTint(sf::Color(
+            static_cast<std::uint8_t>(dna.r),
+            static_cast<std::uint8_t>(dna.g),
+            static_cast<std::uint8_t>(dna.b)
+        ));
+        spriteComp->setCustomScale(dna.sizeScale);
         entity->addComponent(std::move(spriteComp));
 
         // 6. ABILITIES: Dynamiczne wpinanie skilli z DNA
@@ -61,7 +68,7 @@ namespace game::factories
             if (abName == "AcidSquirt") {
                 abilities->setWeapon(std::make_unique<game::components::AcidSquirtAbility>(
                     *context.bullets, entity.get(), "assets/textures/default_bullet.png"
-                ));
+                    ));
             }
             else if (abName == "Shotgun") {
                 // abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(*context.bullets, entity.get()));

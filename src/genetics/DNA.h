@@ -1,7 +1,9 @@
 #pragma once
 #include <random>
 #include <algorithm>
-#include <SFML/Graphics/Color.hpp>
+#include <vector>
+#include <string>
+#include <cstdint>
 
 namespace game::genetics
 {
@@ -11,8 +13,6 @@ namespace game::genetics
         Sniper,     // Tries to maintain a specific long distance
         Skirmisher  // Erratic movement, hit-and-run tactics
     };
-
-    
 
     struct DNA
     {
@@ -26,8 +26,11 @@ namespace game::genetics
         int r = 255, g = 255, b = 255;
 
         AiBehavior behavior = AiBehavior::Charger;
-
         std::vector<std::string> abilities;
+
+        // --- ECONOMY / LOOT GENETICS ---
+        float dropChance = 1.0f;  // 1.0 = 100% chance
+        float baseJuice = 10.0f;  // Base amount of currency dropped
 
         // --- PHENOTYPE RESULTS ---
         // Fitness score determines how "successful" this mutant was in the arena
@@ -41,7 +44,7 @@ namespace game::genetics
             DNA child;
             std::uniform_int_distribution<int> coinFlip(0, 1);
 
-            child.skinKey = coinFlip(rng) ? this->skinKey : partner.skinKey; // FENOTYPE
+            child.skinKey = coinFlip(rng) ? this->skinKey : partner.skinKey;
             child.speed = coinFlip(rng) ? this->speed : partner.speed;
             child.maxHp = coinFlip(rng) ? this->maxHp : partner.maxHp;
             child.sizeScale = coinFlip(rng) ? this->sizeScale : partner.sizeScale;
@@ -51,6 +54,10 @@ namespace game::genetics
             child.behavior = coinFlip(rng) ? this->behavior : partner.behavior;
             child.abilities = coinFlip(rng) ? this->abilities : partner.abilities;
 
+            // Dziedziczenie statystyk ³upów
+            child.dropChance = coinFlip(rng) ? this->dropChance : partner.dropChance;
+            child.baseJuice = coinFlip(rng) ? this->baseJuice : partner.baseJuice;
+
             return child;
         }
 
@@ -59,11 +66,11 @@ namespace game::genetics
         {
             std::uniform_real_distribution<float> chance(0.0f, 1.0f);
 
-            // Mutate Speed (up to 20% change)
+            // Mutate Speed
             if (chance(rng) < mutationRate) {
                 std::uniform_real_distribution<float> mod(0.8f, 1.2f);
                 speed *= mod(rng);
-                speed = std::clamp(speed, 50.0f, 600.0f); // Keep within sane limits
+                speed = std::clamp(speed, 50.0f, 600.0f);
             }
 
             // Mutate HP
@@ -72,28 +79,33 @@ namespace game::genetics
                 maxHp *= mod(rng);
             }
 
-            // Mutate Size and Color slightly
+            // Mutate Size and Color
             if (chance(rng) < mutationRate) {
                 std::uniform_real_distribution<float> mod(0.9f, 1.15f);
                 sizeScale *= mod(rng);
                 sizeScale = std::clamp(sizeScale, 0.5f, 3.0f);
 
-                // Color mutation shifts hue slightly
                 std::uniform_int_distribution<int> colorShift(-40, 40);
                 r = std::clamp(r + colorShift(rng), 0, 255);
                 g = std::clamp(g + colorShift(rng), 0, 255);
                 b = std::clamp(b + colorShift(rng), 0, 255);
             }
 
+            // Mutate Juice Amount (Przetrwanie najsilniejszych - oddaj¹ mniej soku!)
+            if (chance(rng) < (mutationRate * 0.8f)) {
+                std::uniform_real_distribution<float> mod(0.8f, 1.2f);
+                baseJuice *= mod(rng);
+                baseJuice = std::max(1.0f, baseJuice); // Minimum 1 punkt soku
+            }
+
             // Radical Mutation: Behavior change
-            if (chance(rng) < (mutationRate * 0.5f)) { // Harder to mutate behavior
+            if (chance(rng) < (mutationRate * 0.5f)) {
                 std::uniform_int_distribution<int> behDist(0, 2);
                 behavior = static_cast<AiBehavior>(behDist(rng));
             }
 
-            // Radical Mutation: Abilities change (Wektory Stringów)
+            // Radical Mutation: Abilities change
             if (chance(rng) < (mutationRate * 0.5f)) {
-                // Pula dost?pnych w grze umiej?tno?ci dla mutantów
                 static const std::vector<std::string> possibleAbilities = {
                     "AcidSquirt", "Shotgun", "Dash", "RindRoll"
                 };
@@ -101,15 +113,11 @@ namespace game::genetics
                 std::uniform_int_distribution<size_t> poolDist(0, possibleAbilities.size() - 1);
                 std::string mutatedAbility = possibleAbilities[poolDist(rng)];
 
-                // Sprawdzamy, czy mutant ju? przypadkiem nie ma tej umiej?tno?ci
                 auto it = std::find(abilities.begin(), abilities.end(), mutatedAbility);
                 if (it == abilities.end()) {
-
-                    // Mutacja! Je?li ma mniej ni? 3 umiej?tno?ci, po prostu zyskuje now?.
                     if (abilities.size() < 3) {
                         abilities.push_back(mutatedAbility);
                     }
-                    // Je?li ma ju? 3, jedna z nich mutuje (zamienia si?) w now?
                     else {
                         std::uniform_int_distribution<size_t> replaceDist(0, abilities.size() - 1);
                         abilities[replaceDist(rng)] = mutatedAbility;

@@ -20,6 +20,20 @@ namespace game
         float radius = 55.0f;
     };
 
+    // Gameplay walk particles
+    struct WalkDust {
+        sf::Vector2f position;
+        sf::Vector2f velocity;
+        float lifetime;
+        float maxLifetime;
+        float size;
+        sf::Color color;
+
+        WalkDust(sf::Vector2f pos, sf::Vector2f vel, float life, float s, sf::Color c)
+            : position(pos), velocity(vel), lifetime(life), maxLifetime(life), size(s), color(c) {}
+    };
+
+
     struct ArenaContext
     {
         // Reference container allocated inside PlayingState
@@ -36,5 +50,9 @@ namespace game
 
         std::vector<game::effects::FloatingText> damageTexts;
         std::vector<game::entities::JuiceDrop> juiceDrops;
+
+        // walk particles
+        std::vector<WalkDust> walkParticles;
+        sf::Color currentMapDustColor = sf::Color(200, 200, 200, 150);
     };
 }

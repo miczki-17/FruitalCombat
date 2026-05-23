@@ -12,12 +12,19 @@
       "friction": 1.0,
       "speedMultiplier": 1.0
     },
+
     "playableBounds": {
       "left": 120,
       "top": 100,
       "right": 1800,
       "bottom": 980
     },
+
+    "dustR": 71,
+    "dustG": 89,
+    "dustB": 52,
+    "dustA": 180,
+
     "spawnPoints": [
       {
         "x": 300,
@@ -43,12 +50,19 @@
       "friction": 0.8,
       "speedMultiplier": 1.0
     },
+
     "playableBounds": {
       "left": 50,
       "top": 50,
       "right": 1870,
       "bottom": 1030
     },
+
+    "dustR": 79,
+    "dustG": 44,
+    "dustB": 39,
+    "dustA": 225,
+
     "spawnPoints": [
       {
         "x": 200,
@@ -74,12 +88,19 @@
       "friction": 0.2,
       "speedMultiplier": 1.3
     },
+
     "playableBounds": {
       "left": 100,
       "top": 150,
       "right": 1820,
       "bottom": 930
     },
+
+    "dustR": 37,
+    "dustG": 117,
+    "dustB": 166,
+    "dustA": 190,
+
     "spawnPoints": [
       {
         "x": 250,

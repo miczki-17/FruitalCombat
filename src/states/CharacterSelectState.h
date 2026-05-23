@@ -115,7 +115,7 @@ namespace game::states
 		// --- HELPER METHODS ---
 		void setupButton(const std::string& key, sf::Texture& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize);
 		void loadRoster();
-		void drawStatBar(sf::RenderWindow& window, std::optional<sf::Sprite>& icon, int value, float gameMaxValue, sf::Vector2f pos, sf::Color color, sf::Vector2f iconOffset, const std::string& labelText);
+		void drawStatBar(sf::RenderWindow& window, std::optional<sf::Sprite>& icon, int value, float gameMaxValue, sf::Vector2f pos, sf::Color barColor, const std::string& labelText);
 
 	public:
 		CharacterSelectState(game::Game* game);

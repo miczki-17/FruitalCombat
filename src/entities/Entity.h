@@ -1,7 +1,8 @@
 #pragma once
 #include <vector>
 #include <memory>
-#include <SFML/Graphics.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/System/Vector2.hpp>
 #include "../components/Component.h"
 
 namespace game::entities
@@ -12,7 +13,7 @@ namespace game::entities
         std::vector<std::unique_ptr<game::components::Component>> components;
 
     public:
-        // Wspóldzielony stan encji - dostepny dla kazdego komponentu
+        // Wspó³dzielony stan encji - dostêpny dla ka¿dego komponentu
         sf::Vector2f position;
         sf::Vector2f velocity;
 

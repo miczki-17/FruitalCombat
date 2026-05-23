@@ -38,6 +38,50 @@ namespace game::states
         }
 
         
+        // --- HUD INIT ---
+        // bar bg
+        hpBarBg.setSize({ 200.f, 20.f });
+        hpBarBg.setPosition({ 20.f, 20.f });
+        hpBarBg.setFillColor(sf::Color(40, 40, 40, 200));
+        hpBarBg.setOutlineThickness(2.f);
+        hpBarBg.setOutlineColor(sf::Color::Black);
+
+        // bar infill
+        hpBarFill.setSize({ 200.f, 20.f });
+        hpBarFill.setPosition({ 20.f, 20.f });
+        hpBarFill.setFillColor(sf::Color(220, 30, 30));
+
+        // bar text
+        hpText.emplace(game->mainFont);
+        hpText->setCharacterSize(16);
+        hpText->setFillColor(sf::Color::Black);
+
+
+        // waves ctr
+        waveText.emplace(game->mainFont);
+        waveText->setCharacterSize(28);
+        waveText->setFillColor(sf::Color(237, 224, 221));
+        waveText->setOutlineThickness(7.5f);
+        waveText->setOutlineColor(sf::Color::Black);
+        waveText->setStyle(sf::Text::Bold);
+
+
+        // --- BIOMASS HUD ---
+        biomassIcon.setRadius(8.0f);
+        biomassIcon.setOrigin({ 8.0f, 8.0f });
+        biomassIcon.setFillColor(sf::Color(10, 230, 255, 220));
+        biomassIcon.setOutlineThickness(1.5f);
+        biomassIcon.setOutlineColor(sf::Color::White);
+        biomassIcon.setPosition({ 30.f, 65.f });
+
+        biomassText.emplace(game->mainFont);
+        biomassText->setCharacterSize(18);
+        biomassText->setFillColor(sf::Color(10, 230, 255));
+        biomassText->setOutlineThickness(1.5f);
+        biomassText->setOutlineColor(sf::Color::Black);
+        biomassText->setPosition({ 45.f, 53.f });
+
+
 
         if (game->menuUiBuffer.contains("crosshair"))
         {
@@ -90,6 +134,21 @@ namespace game::states
             sf::FloatRect bounds = (*settingsBtnSprite).getGlobalBounds();
             (*settingsBtnSprite).setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f), margin + (bounds.size.y / 2.0f) });
         }
+
+
+        // walk particles
+        int dr = mapData.value("dustR", 150);
+        int dg = mapData.value("dustG", 150);
+        int db = mapData.value("dustB", 150);
+        int da = mapData.value("dustA", 150);
+
+        game->arenaContext.currentMapDustColor = sf::Color(
+            static_cast<std::uint8_t>(dr),
+            static_cast<std::uint8_t>(dg),
+            static_cast<std::uint8_t>(db),
+            static_cast<std::uint8_t>(da)
+        );
+
 
         // Connect global processing pipelines
         game->arenaContext.bullets = &bullets;
@@ -181,28 +240,6 @@ namespace game::states
         {
             player->update(dt);
 
-            for (int i = static_cast<int>(enemies.size()) - 1; i >= 0; --i)
-            {
-                enemies[i]->update(dt);
-
-                if (enemies[i]->isDead)
-                {
-                    // Harvest DNA before deleting
-                    if (auto* dnaComp = enemies[i]->getComponent<game::components::DNAComponent>()) {
-                        evolutionManager->onEnemyDeath(dnaComp->dna);
-
-                        // Zespawnuj sok, Nagroda zale?y od si?y mutanta (skali jego DNA)
-                        float xpValue = 10.0f * dnaComp->dna.sizeScale;
-                        game->arenaContext.juiceDrops.emplace_back(enemies[i]->position, xpValue);
-                    }
-                    // Remove from arena
-                    enemies.erase(enemies.begin() + i);
-                }
-            }
-
-            // sprawdz czy koniec fali
-            evolutionManager->update(dt);
-
 
             // --- JUICE COLLECTION LOGIC (Przyci?ganie magnesem) ---
             for (int i = static_cast<int>(game->arenaContext.juiceDrops.size()) - 1; i >= 0; --i)
@@ -213,7 +250,7 @@ namespace game::states
                 if (dist < 180.0f) // Zasi?g magnesu
                 {
                     sf::Vector2f pullDir = diff / dist;
-                    game->arenaContext.juiceDrops[i].position += pullDir * 350.0f * dt; // Pr?dko?? lotu kropli
+                    game->arenaContext.juiceDrops[i].position += pullDir * 350.0f * dt;
                     game->arenaContext.juiceDrops[i].shape.setPosition(game->arenaContext.juiceDrops[i].position);
                 }
 
@@ -316,6 +353,48 @@ namespace game::states
 
 
 
+            // --- HUD update ---
+            // player hp bar
+            if (auto* stats = player->getComponent<game::components::StatsComponent>())
+            {
+                float currentHp = std::max(0.0f, stats->hp);
+                float hpRatio = currentHp / stats->maxHp;
+
+                hpBarFill.setSize({ 200.f * hpRatio, 20.f });
+
+                hpText->setString(std::to_string(static_cast<int>(currentHp)) + " / " + std::to_string(static_cast<int>(stats->maxHp)));
+
+                sf::FloatRect hpBounds = hpText->getLocalBounds();
+
+                hpText->setOrigin({
+                    hpBounds.position.x + (hpBounds.size.x / 2.0f),
+                    hpBounds.position.y + (hpBounds.size.y / 2.0f)
+                    });
+
+                float yOffset = 5.0f;
+
+                hpText->setPosition({
+                    hpBarBg.getPosition().x + (hpBarBg.getSize().x / 2.0f),
+                    hpBarBg.getPosition().y + (hpBarBg.getSize().y / 2.0f) + yOffset
+                    });
+            }
+
+            const int currentWave = evolutionManager->getCurrentWave();
+
+            waveText->setString("Wave " + std::to_string(currentWave));
+            sf::FloatRect waveBounds = waveText->getLocalBounds();
+            waveText->setOrigin({ waveBounds.size.x / 2.0f, waveBounds.size.y / 2.0f });
+
+            // top px
+            float windowCenterX = game->getWindow().getView().getSize().x / 2.0f;
+            waveText->setPosition({ windowCenterX, 60.f });
+
+            if (biomassText.has_value()) {
+                biomassText->setString(std::to_string(static_cast<int>(game->playerJuice)));
+            }
+
+
+
             // --- COMBAT / COLLISION RESOLUTION ---
             float defaultBulletDamage = 25.0f;
 
@@ -367,6 +446,59 @@ namespace game::states
                 }
             }
 
+
+
+            // --- AKTUALIZACJA ISTNIEJ¥CYCH CZ¥STECZEK KURZU ---
+            for (int i = static_cast<int>(game->arenaContext.walkParticles.size()) - 1; i >= 0; --i) {
+                game->arenaContext.walkParticles[i].lifetime -= dt;
+
+                if (game->arenaContext.walkParticles[i].lifetime <= 0.0f) {
+                    game->arenaContext.walkParticles.erase(game->arenaContext.walkParticles.begin() + i);
+                }
+                else {
+                    game->arenaContext.walkParticles[i].position += game->arenaContext.walkParticles[i].velocity * dt;
+                    game->arenaContext.walkParticles[i].velocity *= 0.95f;
+                }
+            }
+
+            // --- GENEROWANIE KURZU GDY GRACZ BIEGNIE ---
+            static sf::Vector2f lastPlayerPos = player->position;
+            sf::Vector2f moveDelta = player->position - lastPlayerPos;
+
+            // Jeœli gracz przesun¹³ siê o wiêcej ni¿ u³amek piksela, to znaczy, ¿e siê rusza!
+            bool isActuallyMoving = (moveDelta.x * moveDelta.x + moveDelta.y * moveDelta.y) > 0.1f;
+            lastPlayerPos = player->position; // Zapisujemy pozycjê na kolejn¹ klatkê
+
+            if (isActuallyMoving) {
+                playerDustSpawnTimer -= dt;
+                if (playerDustSpawnTimer <= 0.0f) {
+                    playerDustSpawnTimer = 0.06f;
+
+                    std::random_device rd;
+                    std::mt19937 gen(rd());
+                    std::uniform_real_distribution<float> offsetDist(-12.0f, 12.0f);
+                    std::uniform_real_distribution<float> velXDist(-25.0f, 25.0f);
+                    std::uniform_real_distribution<float> velYDist(-15.0f, 5.0f);
+                    std::uniform_real_distribution<float> sizeDist(4.0f, 8.0f);
+                    std::uniform_real_distribution<float> lifeDist(0.3f, 0.6f);
+
+                    sf::Vector2f feetPos = player->position + sf::Vector2f(0.0f, 18.0f);
+
+                    game->arenaContext.walkParticles.emplace_back(
+                        feetPos + sf::Vector2f(offsetDist(gen), offsetDist(gen)),
+                        sf::Vector2f(velXDist(gen), velYDist(gen)),
+                        lifeDist(gen),
+                        sizeDist(gen),
+                        game->arenaContext.currentMapDustColor
+                    );
+                }
+            }
+            else {
+                playerDustSpawnTimer = 0.0f;
+            }
+
+
+
             // --- ENEMY UPDATE & GRAVEYARD CLEANUP ---
             for (int i = static_cast<int>(enemies.size()) - 1; i >= 0; --i)
             {
@@ -374,9 +506,20 @@ namespace game::states
 
                 if (enemies[i]->isDead)
                 {
-                    // Harvest DNA before deleting
+                    // Harvest DNA
                     if (auto* dnaComp = enemies[i]->getComponent<game::components::DNAComponent>()) {
                         evolutionManager->onEnemyDeath(dnaComp->dna);
+
+                        // Rzut na drop (losuje liczbê od 0.00 do 1.00)
+                        float randomRoll = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+                        // Sprawdzamy, czy wylosowana liczba mieœci siê w szansie na drop z JSON-a
+                        if (randomRoll <= dnaComp->dna.dropChance)
+                        {
+                            // U¿ywamy zmutowanej bazy z DNA pomno¿onej przez wielkoœæ mutanta!
+                            float xpValue = dnaComp->dna.baseJuice * dnaComp->dna.sizeScale;
+                            game->arenaContext.juiceDrops.emplace_back(enemies[i]->position, xpValue);
+                        }
                     }
                     // Remove from arena
                     enemies.erase(enemies.begin() + i);
@@ -385,6 +528,14 @@ namespace game::states
 
             // Evolution Manager checks if wave is complete
             evolutionManager->update(dt);
+
+            // --- PRZEJŒCIE DO SKLEPU CO 3 FALE ---
+            if (evolutionManager->requiresShop())
+            {
+                evolutionManager->resolveShopBreak();
+                game->getWindow().setMouseCursorVisible(true);
+                game->getStateMachine().pushState(StateType::Shop);
+            }
 
 
 
@@ -445,7 +596,16 @@ namespace game::states
         }
     }
 
-    void PlayingState::renderHUD(sf::RenderWindow& window) {}
+
+    void PlayingState::renderHUD(sf::RenderWindow& window) 
+    {
+        // HUD render
+        window.draw(hpBarBg);
+        window.draw(hpBarFill);
+        if (hpText.has_value()) window.draw(*hpText);
+        if (waveText.has_value()) window.draw(*waveText);
+    }
+
 
     void PlayingState::render(sf::RenderWindow& window)
     {
@@ -461,6 +621,23 @@ namespace game::states
             bullet.render(window);
         }
 
+
+        // --- WALKING PARTICLES ---
+        for (const auto& p : game->arenaContext.walkParticles) {
+            sf::RectangleShape dustShape({ p.size * 2.0f, p.size * 2.0f });
+
+            dustShape.setOrigin({ p.size, p.size });
+            dustShape.setPosition(p.position);
+
+            float lifeRatio = p.lifetime / p.maxLifetime;
+            sf::Color c = p.color;
+            c.a = static_cast<std::uint8_t>(c.a * lifeRatio);
+
+            dustShape.setFillColor(c);
+            window.draw(dustShape);
+        }
+
+
         if (player != nullptr) {
             player->render(window);
         }
@@ -473,12 +650,10 @@ namespace game::states
             enemy->render(window);
         }
 
-        // Rysowanie soku na ziemi
         for (auto& drop : game->arenaContext.juiceDrops) {
             drop.render(window);
         }
 
-        // Rysowanie cyferek obra?e? (zawsze na samym wierzchu)
         for (auto& text : game->arenaContext.damageTexts) {
             text.render(window);
         }
@@ -500,5 +675,11 @@ namespace game::states
                 window.setView(oldView);
             }
         }
+
+
+        renderHUD(window);
+
+        window.draw(biomassIcon);
+        if (biomassText.has_value()) window.draw(*biomassText);
     }
 }

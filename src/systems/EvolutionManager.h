@@ -22,6 +22,9 @@ namespace game::systems
         const sf::Image& collisionMask;
         float mapScale;
 
+        // shop request
+        bool pendingShopBreak = false;
+
         int currentWave = 0;
         int baseWaveSize = 4;
         float mutationRate = 0.15f;
@@ -54,5 +57,9 @@ namespace game::systems
         void onEnemyDeath(const game::genetics::DNA& fallenDNA);
         int getCurrentWave() const;
         bool isSpawningActive() const;
+
+        // shop request
+        bool requiresShop() const;
+        void resolveShopBreak();
     };
 }
