@@ -28,14 +28,15 @@ namespace game::states
 			}
 		}
 
+		// dark overlay
 		darkOverlay.setSize(viewSize);
-		darkOverlay.setFillColor(sf::Color(0, 0, 0, 80));
+		darkOverlay.setFillColor(sf::Color(0, 0, 0, 0));
 
 
 		mapNameText.emplace(game->mainFont, "", 35);
 		mapNameText->setFillColor(sf::Color(255, 255, 255));
 		mapNameText->setOutlineColor(sf::Color::Black);
-		mapNameText->setOutlineThickness(4.5f);
+		mapNameText->setOutlineThickness(5.5f);
 
 		mapDescText.emplace(game->mainFont, "", 12);
 		mapDescText->setFillColor(sf::Color(255, 210, 120));
@@ -54,7 +55,7 @@ namespace game::states
 		setupButton("right_arrow", rightArrowTex, rightArrowSprite, { centerX + 550.f, centerY }, { 80.f, 80.f });
 		setupButton("empty_button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
 
-		selectBtnText.emplace(game->mainFont, "CHOOSE", 27);
+		selectBtnText.emplace(game->mainFont, "PLAY", 27);
 		selectBtnText->setFillColor(sf::Color::White);
 		selectBtnText->setOutlineColor(sf::Color::Black);
 		selectBtnText->setOutlineThickness(4.5f);

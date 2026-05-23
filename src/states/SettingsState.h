@@ -21,8 +21,7 @@ namespace game::states
 		sf::Texture bgTexture;
 		std::optional<sf::Sprite> bgSprite;
 
-		// --- FONT ---
-		sf::Font font;
+		std::optional<sf::Text> settingsText;
 
 		// --- AUDIO SLIDER ---
 		std::optional<sf::Text> audioTitle;
@@ -44,8 +43,7 @@ namespace game::states
 
 		RebindTarget currentRebind = RebindTarget::None;
 
-		// --- NAVIGATE ---
-		//std::optional<sf::Text> backBtnText;
+
 
 		//backbutton
 		sf::Texture backBtnTex;

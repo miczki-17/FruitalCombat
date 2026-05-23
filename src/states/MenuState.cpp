@@ -12,6 +12,7 @@ namespace game::states
 	MenuState::MenuState(game::Game* game)
 		: State(game), currentFrame(1), totalFrames(6), elapsedTime(0.f)
 	{
+		// bg can animate
 		frameDuration = 1.0f / 10.0f;
 
 		for (const auto& img : game->menuImageBuffer)

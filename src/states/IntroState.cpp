@@ -212,7 +212,7 @@ namespace game::states
 		// ==========================================
 		// 3. UI & BACKGROUND TEXTURES (approx. 30% progress)
 		// ==========================================
-		for (int i = 1; i <= 6; ++i)
+		for (int i = 1; i <= 1; ++i)
 		{
 			std::string filename = std::format("assets/textures/ui/bg_{:01}.png", i);
 			sf::Image img;
@@ -229,7 +229,7 @@ namespace game::states
 			{"right_arrow", "assets/textures/ui/right_arrow.png"},
 			{"back", "assets/textures/ui/back_button.png"},
 			{"log_platform", "assets/textures/ui/log_platform.png"},
-			{"settings_bg", "assets/textures/ui/settings_bg.png" },
+			//{"settings_bg", "assets/textures/ui/settings_bg.png" },
 			{"select_bg", "assets/textures/ui/select_bg.png"},
 			{"hp_icon", "assets/textures/ui/hp_icon.png"},
 			{"spd_icon", "assets/textures/ui/spd_icon.png"},

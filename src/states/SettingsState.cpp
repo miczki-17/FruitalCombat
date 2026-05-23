@@ -15,9 +15,9 @@ namespace game::states
 	{
 		sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
 
-		if (game->menuUiBuffer.contains("settings_bg"))
+		if (game->menuUiBuffer.contains("select_bg"))
 		{
-			if (bgTexture.loadFromImage(game->menuUiBuffer["settings_bg"]))
+			if (bgTexture.loadFromImage(game->menuUiBuffer["select_bg"]))
 			{
 				bgSprite = sf::Sprite(bgTexture);
 				sf::Vector2f texSize(bgTexture.getSize());
@@ -25,13 +25,18 @@ namespace game::states
 			}
 		}
 
-		// Font load
-		if (!font.openFromFile("../../../assets/fonts/Minecraftia-Regular.ttf"))
-		{
-			std::cerr << "[SETTINGS ERROR] can not load font\n";
-		}
-		//std::cout << "FONT LOADED\n";
 
+		// --- SETTINGS NAME ---
+		settingsText.emplace(game->mainFont, "SETTINGS", 55);
+		settingsText->setFillColor(sf::Color(255, 255, 255));
+		settingsText->setOutlineColor(sf::Color::Black);
+		settingsText->setOutlineThickness(7.5f);
+
+		float textWidth = settingsText->getGlobalBounds().size.x;
+		float windowCenterX = viewSize.x / 2.f;
+		settingsText->setOrigin({ textWidth / 2.f, 0.f });
+		settingsText->setPosition({ windowCenterX, 60.f });
+		
 		// --- LEFT SECTION: AUDIO ---
 		float leftColX = viewSize.x * 0.25f;
 
@@ -44,7 +49,7 @@ namespace game::states
 		sliderHandle.setOrigin({ 7.5f, 8.f });
 		sliderHandle.setPosition({ leftColX + 95.f, 360.f });
 
-		volumeValueText = sf::Text(font, "100%", 20);
+		volumeValueText = sf::Text(game->mainFont, "100%", 20);
 		(*volumeValueText).setPosition({ leftColX + 45.f, 390.f });
 
 		// --- RIGHT SECTION BINDS ---
@@ -52,10 +57,10 @@ namespace game::states
 
 		auto setupBindRow = [&](std::optional<sf::Text>& label, std::optional<sf::Text>& btn, const std::string& labelStr, float yPos)
 		{
-			label = sf::Text(font, labelStr, 20);
+			label = sf::Text(game->mainFont, labelStr, 20);
 			(*label).setPosition({ rightColX - 150.f, yPos });
 
-			btn = sf::Text(font, "", 20);
+			btn = sf::Text(game->mainFont, "", 20);
 			(*btn).setPosition({ rightColX + 50.f, yPos });
 		};
 
@@ -82,8 +87,6 @@ namespace game::states
 		}
 
 		currentVolume = sf::Listener::getGlobalVolume();
-
-		//std::cout << "TEXT CREATED\n";
 	}
 
 	StateType SettingsState::getType() const
@@ -215,6 +218,8 @@ namespace game::states
 		window.setView(uiView);
 
 		if (bgSprite.has_value())	window.draw(*bgSprite);
+
+		if (settingsText.has_value())	window.draw(*settingsText);
 
 		if (audioTitle.has_value())       window.draw(*audioTitle);
 		if (volumeLabel.has_value())      window.draw(*volumeLabel);

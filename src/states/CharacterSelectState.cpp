@@ -57,14 +57,15 @@ namespace game::states
 			}
 		}
 
+		// dark overlay
 		darkOverlay.setSize(viewSize);
-		darkOverlay.setFillColor(sf::Color(0, 0, 0, 80));
+		darkOverlay.setFillColor(sf::Color(0, 0, 0, 0));
 
 		// Setup typography with SFML 3 specific sf::Text constructor order: (font, string, size)
 		characterNameText.emplace(game->mainFont, "", 45);
 		characterNameText->setFillColor(sf::Color(255, 255, 255));
 		characterNameText->setOutlineColor(sf::Color::Black);
-		characterNameText->setOutlineThickness(4.5f);
+		characterNameText->setOutlineThickness(5.5f);
 
 		characterTitleText.emplace(game->mainFont, "", 20);
 		characterTitleText->setFillColor(sf::Color(255, 210, 120));
@@ -85,7 +86,7 @@ namespace game::states
 		setupButton("empty_button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
 
 		// Setup Text for Select Button
-		selectBtnText.emplace(game->mainFont, "CHOOSE", 27);
+		selectBtnText.emplace(game->mainFont, "SELECT", 27);
 		selectBtnText->setFillColor(sf::Color(255, 255, 255));
 		selectBtnText->setOutlineColor(sf::Color::Black);
 		selectBtnText->setOutlineThickness(4.5f);
