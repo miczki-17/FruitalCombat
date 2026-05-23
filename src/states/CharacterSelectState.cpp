@@ -1,6 +1,5 @@
 // --- CharacterSelectState.cpp --- 
 
-
 #include "CharacterSelectState.h"
 #include "../core/Game.h"
 #include <iostream>
@@ -10,32 +9,10 @@
 
 namespace
 {
-	sf::ConvexShape createRoundedRect(float width, float height, float radius) {
-		sf::ConvexShape shape;
-		const int pointsPerCorner = 8;
-		shape.setPointCount(pointsPerCorner * 4);
-
-		radius = std::min(radius, std::min(width / 2.0f, height / 2.0f));
-
-		sf::Vector2f tr(width - radius, radius);
-		sf::Vector2f br(width - radius, height - radius);
-		sf::Vector2f bl(radius, height - radius);
-		sf::Vector2f tl(radius, radius);
-
-		auto addCorner = [&](int startIdx, sf::Vector2f center, float startAngle) {
-			for (int i = 0; i < pointsPerCorner; ++i) {
-				float angle = startAngle + (3.141592654f / 2.0f) * i / (pointsPerCorner - 1);
-				shape.setPoint(startIdx + i, center + sf::Vector2f(std::cos(angle) * radius, std::sin(angle) * radius));
-			}
-			};
-
-		addCorner(0, tr, -3.141592654f / 2.0f);
-		addCorner(pointsPerCorner, br, 0.0f);
-		addCorner(pointsPerCorner * 2, bl, 3.141592654f / 2.0f);
-		addCorner(pointsPerCorner * 3, tl, 3.141592654f);
-
-		return shape;
-	}
+	//stałe do pasków statystyk
+	constexpr float GAME_MAX_HP = 20.0f;
+	constexpr float GAME_MAX_DAMAGE = 25.0f;
+	constexpr float GAME_MAX_SPEED = 600.0f;
 }
 
 namespace game::states
@@ -55,6 +32,7 @@ namespace game::states
 				sf::Vector2u bgSize(bgTex.getSize());
 				bgSprite->setScale({ viewSize.x / bgSize.x, viewSize.y / bgSize.y });
 			}
+
 		}
 
 		// dark overlay
@@ -99,9 +77,24 @@ namespace game::states
 
 		// Additional UI
 		setupButton("back", backBtnTex, backBtnSprite, { 50.f, 50.f }, { 60.f, 60.f });
-		setupButton("hp_icon", hpIconTex, hpIconSprite, { 0.f, 0.f }, { 28.f, 24.f });
-		setupButton("dmg_icon", dmgIconTex, dmgIconSprite, { 0.f, 0.f }, { 28.f, 24.f });
-		setupButton("spd_icon", spdIconTex, spdIconSprite, { 0.f, 0.f }, { 28.f, 24.f });
+		setupButton("hp_icon", hpIconTex, hpIconSprite, { 0.f, 0.f }, { 168.f, 147.f });
+		setupButton("dmg_icon", dmgIconTex, dmgIconSprite, { 0.f, 0.f }, { 168.f, 147.f });
+		setupButton("spd_icon", spdIconTex, spdIconSprite, { 0.f, 0.f }, { 168.f, 147.f });
+
+		// --- PASKI STATYSTYK ---
+		if (game->menuUiBuffer.contains("stat_bar_frame") && statBarFrameTex.loadFromImage(game->menuUiBuffer["stat_bar_frame"]))
+		{
+			statBarFrameSprite.emplace(statBarFrameTex);
+			statBarFrameSprite->setScale({ 2.5f, 2.5f });
+			statBarFrameSprite->setOrigin({ 0.0f, static_cast<float>(statBarFrameTex.getSize().y) / 2.0f });
+		}
+
+		if (game->menuUiBuffer.contains("stat_bar_fill") && statBarFillTex.loadFromImage(game->menuUiBuffer["stat_bar_fill"]))
+		{
+			statBarFillSprite.emplace(statBarFillTex);
+			statBarFillSprite->setScale({ 2.5f, 2.5f });
+			statBarFillSprite->setOrigin({ 0.0f, static_cast<float>(statBarFillTex.getSize().y) / 2.0f });
+		}
 	}
 
 	void CharacterSelectState::initFireflies()
@@ -477,39 +470,60 @@ namespace game::states
 		}
 	}
 
-	void CharacterSelectState::drawStatBar(sf::RenderWindow& window, std::optional<sf::Sprite>& icon, int value, int maxValue, sf::Vector2f pos, sf::Color color)
+	// Zauważ nowy, 8. argument na końcu: labelText
+	void CharacterSelectState::drawStatBar(sf::RenderWindow& window, std::optional<sf::Sprite>& icon, int value, float gameMaxValue, sf::Vector2f pos, sf::Color barColor, sf::Vector2f iconOffset, const std::string& labelText)
 	{
+		// 1. Rysowanie tła / ramki paska
+		if (statBarFrameSprite) {
+			statBarFrameSprite->setPosition(pos);
+			window.draw(*statBarFrameSprite);
+		}
+
+		// 2. Cięcie i renderowanie wypełnienia paska
+		if (statBarFillSprite) {
+			float fillFactor = std::clamp(static_cast<float>(value) / gameMaxValue, 0.0f, 1.0f);
+			sf::Vector2u texSize = statBarFillSprite->getTexture().getSize();
+
+			int visibleWidth = static_cast<int>(texSize.x * fillFactor);
+
+			statBarFillSprite->setTextureRect(sf::IntRect({ 0, 0 }, { visibleWidth, static_cast<int>(texSize.y) }));
+			statBarFillSprite->setPosition(pos);
+			statBarFillSprite->setColor(barColor);
+
+			window.draw(*statBarFillSprite);
+		}
+
+		// 3. Rysowanie ikony NA WIERZCHU paska (z użyciem indywidualnego offsetu)
 		if (icon) {
-			icon->setPosition({ std::round(pos.x - 35.f), std::round(pos.y + 5.f) });
+			// Zamiast sztywnego + 12.f dodajemy iconOffset.x oraz iconOffset.y
+			icon->setPosition({ std::round(pos.x + iconOffset.x), std::round(pos.y + iconOffset.y) });
 			window.draw(*icon);
 		}
 
-		float barWidth = 140.f;
-		float barHeight = 10.f;
-		float radius = barHeight / 2.0f;
+		if (!labelText.empty()) {
+			sf::Text titleText(game->mainFont, labelText, 16); 
+			titleText.setFillColor(sf::Color(220, 220, 220)); 
+			titleText.setOutlineColor(sf::Color::Black);
+			titleText.setOutlineThickness(2.0f);
 
-		sf::Color bgColor(
-			std::min<std::uint8_t>(255, color.r + 190),
-			std::min<std::uint8_t>(255, color.g + 190),
-			std::min<std::uint8_t>(255, color.b + 190),
-			200
-		);
+			sf::FloatRect titleBounds = titleText.getLocalBounds();
+			titleText.setOrigin({ 0.f, titleBounds.size.y });
 
-		sf::ConvexShape bgBar = createRoundedRect(barWidth, barHeight, radius);
-		bgBar.setPosition(pos);
-		bgBar.setFillColor(bgColor);
-		window.draw(bgBar);
-
-		float fillPercentage = std::min(1.0f, static_cast<float>(value) / static_cast<float>(maxValue));
-		float currentWidth = barWidth * fillPercentage;
-
-		if (currentWidth > 0)
-		{
-			sf::ConvexShape fillBar = createRoundedRect(currentWidth, barHeight, radius);
-			fillBar.setPosition(pos);
-			fillBar.setFillColor(color);
-			window.draw(fillBar);
+			titleText.setPosition({ std::round(pos.x + 100.f), std::round(pos.y) });
+			window.draw(titleText);
 		}
+
+		sf::Text valueText(game->mainFont, std::to_string(value), 22);
+		valueText.setFillColor(sf::Color::White);
+		valueText.setOutlineColor(sf::Color::Black);
+		valueText.setOutlineThickness(2.0f);
+
+		float barDisplayWidth = statBarFrameSprite ? statBarFrameSprite->getGlobalBounds().size.x : 150.0f;
+		sf::FloatRect textBounds = valueText.getLocalBounds();
+		valueText.setOrigin({ 0.f, textBounds.size.y / 2.0f });
+
+		valueText.setPosition({ std::round(pos.x + barDisplayWidth + 15.f), std::round(pos.y - 4.f) });
+		window.draw(valueText);
 	}
 
 	void CharacterSelectState::render(sf::RenderWindow& window)
@@ -565,24 +579,30 @@ namespace game::states
 		if (!roster.empty()) {
 			int actualIndex = (targetIndex % N + N) % N;
 			sf::Vector2f viewSize = game->getWindow().getView().getSize();
-			float centerX = viewSize.x / 2.0f;
 
-			float mainPlatformY = (viewSize.y / 2.0f - 50.f) + (20.0f * 3.5f);
-			float baseBarY = mainPlatformY + 62.0f;
-			float barStartX = centerX - 60.f;
+			float barStartX = 80.f;
 
-			drawStatBar(window, hpIconSprite, roster[actualIndex].hp, 20,
-				{ barStartX, baseBarY }, sf::Color(255, 110, 110));
+			float baseBarY = viewSize.y - 250.f;
 
-			drawStatBar(window, dmgIconSprite, roster[actualIndex].damage, 20,
-				{ barStartX, baseBarY + 30.f }, sf::Color(255, 180, 80));
+			drawStatBar(window, hpIconSprite, roster[actualIndex].hp, GAME_MAX_HP,
+				{ barStartX, baseBarY }, sf::Color(240, 50, 75), sf::Vector2f(60.f, -20.f), "HEALTH POINTS");
 
-			drawStatBar(window, spdIconSprite, roster[actualIndex].speed, 500,
-				{ barStartX, baseBarY + 60.f }, sf::Color(100, 200, 255));
+			drawStatBar(window, dmgIconSprite, roster[actualIndex].damage, GAME_MAX_DAMAGE,
+				{ barStartX, baseBarY + 80.f }, sf::Color(255, 175, 0), sf::Vector2f(60.f, 0.f), "DAMAGE");
+
+			drawStatBar(window, spdIconSprite, roster[actualIndex].speed, GAME_MAX_SPEED,
+				{ barStartX, baseBarY + 160.f }, sf::Color(40, 200, 255), sf::Vector2f(65.f, 3.f), "SPEED");
 
 			if (abilitiesTextDisplay) {
 				abilitiesTextDisplay->setString(roster[actualIndex].abilitiesText);
-				abilitiesTextDisplay->setPosition({ barStartX - 45.f, baseBarY + 100.f });
+
+				sf::FloatRect textBounds = abilitiesTextDisplay->getLocalBounds();
+
+				abilitiesTextDisplay->setOrigin({ textBounds.position.x + textBounds.size.x,
+												  textBounds.position.y + textBounds.size.y });
+
+				abilitiesTextDisplay->setPosition({ viewSize.x - 80.f, viewSize.y - 80.f });
+
 				window.draw(*abilitiesTextDisplay);
 			}
 		}

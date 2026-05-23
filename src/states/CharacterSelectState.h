@@ -36,6 +36,13 @@ namespace game::states
 		sf::Texture hpIconTex, dmgIconTex, spdIconTex;
 		std::optional<sf::Sprite> hpIconSprite, dmgIconSprite, spdIconSprite;
 
+		// --- STAT BARS ---
+		sf::Texture statBarFrameTex;
+		std::optional<sf::Sprite> statBarFrameSprite;
+
+		sf::Texture statBarFillTex;
+		std::optional<sf::Sprite> statBarFillSprite;
+
 		// --- TYPOGRAPHY ---
 		std::optional<sf::Text> characterNameText;
 		std::optional<sf::Text> characterTitleText;
@@ -108,7 +115,7 @@ namespace game::states
 		// --- HELPER METHODS ---
 		void setupButton(const std::string& key, sf::Texture& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize);
 		void loadRoster();
-		void drawStatBar(sf::RenderWindow& window, std::optional<sf::Sprite>& icon, int value, int maxValue, sf::Vector2f pos, sf::Color color);
+		void drawStatBar(sf::RenderWindow& window, std::optional<sf::Sprite>& icon, int value, float gameMaxValue, sf::Vector2f pos, sf::Color color, sf::Vector2f iconOffset, const std::string& labelText);
 
 	public:
 		CharacterSelectState(game::Game* game);

@@ -231,13 +231,15 @@ namespace game::states
 			{"log_platform", "assets/textures/ui/log_platform.png"},
 			//{"settings_bg", "assets/textures/ui/settings_bg.png" },
 			{"select_bg", "assets/textures/ui/select_bg.png"},
-			{"hp_icon", "assets/textures/ui/hp_icon.png"},
-			{"spd_icon", "assets/textures/ui/spd_icon.png"},
-			{"dmg_icon", "assets/textures/ui/dmg_icon.png"},
+			{"hp_icon", "assets/textures/ui/health_icon.png"},
+			{"spd_icon", "assets/textures/ui/speed_icon.png"},
+			{"dmg_icon", "assets/textures/ui/damage_icon.png"},
 			{"star_full_icon", "assets/textures/ui/star_full_icon.png"},
 			{"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
 			{"cursor", "assets/textures/ui/cursor.png" },
-			{"crosshair", "assets/textures/ui/crosshairV3.png"}
+			{"crosshair", "assets/textures/ui/crosshairV3.png"},
+			{"stat_bar_frame", "assets/textures/ui/stat_bar_frame.png"},
+			{"stat_bar_fill", "assets/textures/ui/stat_bar_fill.png"}
 		};
 
 		int uiIndex = 0;
