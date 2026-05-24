@@ -1,47 +1,96 @@
-// --- ShootAbility.cpp ---
-
-
-
 #include "ShootAbility.h"
+
 #include <cmath>
 
 namespace game::components
 {
-	// constructor
-	ShootAbility::ShootAbility(std::vector<game::components::Bullet>& bulletsRef)
-		: bullets(bulletsRef)
-	{
-	}
+    namespace
+    {
+        constexpr float MIN_AIM_LENGTH = 0.001f;
+    }
 
-	// UPDATE
-	void ShootAbility::update(float dt)
-	{
-		if (currentTimer > 0.0f)
-		{
-			currentTimer -= dt;
-		}
-	}
+    ShootAbility::ShootAbility(
+        std::vector<Bullet>& bulletContainer)
+        : bullets_(bulletContainer)
+    {
+    }
 
-	// EXECUTE
-	void ShootAbility::execute(sf::Vector2f startPos, sf::Vector2f targetWorldPos, sf::Vector2f shooterVelocity)
-	{
-		if (currentTimer <= 0.0f)
-		{
-			// aim direction calculation
-			sf::Vector2f aimDir = targetWorldPos - startPos;
-			float length = std::sqrt(aimDir.x * aimDir.x + aimDir.y * aimDir.y);
+    void ShootAbility::update(float deltaTime)
+    {
+        if (cooldownTimer_ > 0.0f)
+        {
+            cooldownTimer_ -= deltaTime;
+        }
+    }
 
-			if (length > 0.001f)
-			{
-				aimDir /= length;
+    void ShootAbility::execute(
+        const sf::Vector2f& origin,
+        const sf::Vector2f& targetPosition,
+        const sf::Vector2f& ownerVelocity)
+    {
+        if (isOnCooldown())
+        {
+            return;
+        }
 
-				bullets.emplace_back(startPos, aimDir);
+        const sf::Vector2f direction =
+            calculateDirection(
+                origin,
+                targetPosition);
 
-				bullets.back().addVelocity(shooterVelocity);
+        if (direction == sf::Vector2f(0.f, 0.f))
+        {
+            return;
+        }
 
-				// reset cooldown
-				currentTimer = cooldown;
-			}
-		}
-	}
+        spawnProjectile(
+            origin,
+            direction,
+            ownerVelocity);
+
+        resetCooldown();
+    }
+
+    sf::Vector2f ShootAbility::calculateDirection(
+        const sf::Vector2f& origin,
+        const sf::Vector2f& targetPosition) const
+    {
+        sf::Vector2f direction =
+            targetPosition - origin;
+
+        const float length =
+            std::sqrt(
+                direction.x * direction.x +
+                direction.y * direction.y);
+
+        if (length <= MIN_AIM_LENGTH)
+        {
+            return { 0.f, 0.f };
+        }
+
+        return direction / length;
+    }
+
+    void ShootAbility::spawnProjectile(
+        const sf::Vector2f& origin,
+        const sf::Vector2f& direction,
+        const sf::Vector2f& ownerVelocity)
+    {
+        bullets_.emplace_back(
+            origin,
+            direction);
+
+        bullets_.back()
+            .addVelocity(ownerVelocity);
+    }
+
+    bool ShootAbility::isOnCooldown() const
+    {
+        return cooldownTimer_ > 0.0f;
+    }
+
+    void ShootAbility::resetCooldown()
+    {
+        cooldownTimer_ = cooldown_;
+    }
 }

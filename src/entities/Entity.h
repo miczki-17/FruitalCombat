@@ -13,7 +13,6 @@ namespace game::entities
         std::vector<std::unique_ptr<game::components::Component>> components;
 
     public:
-        // Wspó³dzielony stan encji - dostêpny dla ka¿dego komponentu
         sf::Vector2f position;
         sf::Vector2f velocity;
 
@@ -22,7 +21,7 @@ namespace game::entities
 
         float overrideSpeedLimit = 0.0f;
         bool isRolling = false;
-        float actionTimer = 0.0f; // Np. czas trwania dasha
+        float actionTimer = 0.0f;
 
         bool isDead = false;
 

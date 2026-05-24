@@ -1,37 +1,32 @@
 #pragma once
+
 #include "Component.h"
 #include "../abilities/Ability.h"
-#include "../entities/Entity.h"
+
 #include <memory>
 
 namespace game::components
 {
-    class AbilityComponent : public Component
+    class AbilityComponent final : public Component
     {
-    private:
-        std::unique_ptr<Ability> primaryWeapon;
-        std::unique_ptr<Ability> specialSkill;
-
     public:
-        AbilityComponent() = default;
+        void setWeapon(std::unique_ptr<Ability> weapon);
+        void setSkill(std::unique_ptr<Ability> skill);
+        void setUltimate(std::unique_ptr<Ability> ultimate);
 
-        void setWeapon(std::unique_ptr<Ability> weapon) { primaryWeapon = std::move(weapon); }
-        void setSkill(std::unique_ptr<Ability> skill) { specialSkill = std::move(skill); }
+        void update(float deltaTime) override;
 
-        void useWeapon(sf::Vector2f targetWorldPos)
-        {
-            if (primaryWeapon) primaryWeapon->execute(owner->position, targetWorldPos, owner->velocity);
-        }
+        void useWeapon(sf::Vector2f targetWorldPos);
+        void useSkill(sf::Vector2f targetWorldPos);
+        void useUltimate(sf::Vector2f targetWorldPos);
 
-        void useSkill(sf::Vector2f targetWorldPos)
-        {
-            if (specialSkill) specialSkill->execute(owner->position, targetWorldPos, owner->velocity);
-        }
+    private:
+        std::unique_ptr<Ability> weapon_;
+        std::unique_ptr<Ability> skill_;
+        std::unique_ptr<Ability> ultimate_;
 
-        void update(float dt) override
-        {
-            if (primaryWeapon) primaryWeapon->update(dt);
-            if (specialSkill) specialSkill->update(dt);
-        }
+        void executeAbility(
+            const std::unique_ptr<Ability>& ability,
+            sf::Vector2f targetWorldPos) const;
     };
 }

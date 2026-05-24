@@ -1,6 +1,3 @@
-// --- Bullet.h ---
-
-
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <memory>
@@ -15,12 +12,14 @@ namespace game::components
     private:
         sf::Vector2f position;
         sf::Vector2f velocity;
+
         float speed = 800.0f;
         float speedMultiplier = 1.0f;
         bool isActive = true;
 
         bool useTexture = false;
         bool renderFallbackShape = true;
+
         sf::CircleShape shape;
         std::optional<sf::Sprite> sprite;
         std::shared_ptr<sf::Texture> texture;
@@ -33,11 +32,13 @@ namespace game::components
 
         float bulletRadius = 4.0f;
         sf::Color bulletColor = sf::Color(210, 180, 70);
+
         StatusEffect payloadStatus = StatusEffect::None;
 
         bool isWobbly = false;
-        float lifetime = 0.0f;
         bool isFake3DRoll = false;
+
+        float lifetime = 0.0f;
         float wobbleSpeed = 5.0f;
         float wobbleIntensity = 0.4f;
         float rollSpeed = 0.0f;
@@ -51,6 +52,7 @@ namespace game::components
         float minArcHeight = 20.0f;
 
         sf::CircleShape shadowShape;
+
         bool spawnSplash = false;
 
     public:

@@ -1,48 +1,191 @@
 #include "AcidSquirtAbility.h"
-#include "../entities/Entity.h"
+
 #include "../components/StatsComponent.h"
+#include "../entities/Entity.h"
+
 #include <cmath>
 #include <iostream>
 
 namespace game::components
 {
-    AcidSquirtAbility::AcidSquirtAbility(std::vector<game::components::Bullet>& bulletsRef, game::entities::Entity* e, std::string texturePath)
-        : bullets(&bulletsRef), entity(e)
+    namespace
     {
-        projTexture = std::make_shared<sf::Texture>();
-        if (!projTexture->loadFromFile(texturePath)) {
-            std::cerr << "[ERROR] Could not load texture from: " << texturePath << "\n";
+        constexpr float PROJECTILE_SPREAD_ANGLE = 0.35f;
+        constexpr float PROJECTILE_SPEED = 380.0f;
+
+        constexpr float PROJECTILE_RADIUS = 14.0f;
+
+        constexpr int ANIMATION_FRAMES = 4;
+        constexpr float ANIMATION_FRAME_DURATION = 0.1f;
+
+        const sf::Color PROJECTILE_COLOR(100, 255, 0, 240);
+        const sf::Vector2i ANIMATION_FRAME_SIZE(32, 32);
+    }
+
+    AcidSquirtAbility::AcidSquirtAbility(
+        std::vector<Bullet>& bulletContainer,
+        game::entities::Entity* owner,
+        const std::string& texturePath)
+        : bullets_(&bulletContainer),
+        owner_(owner),
+        projectileTexture_(std::make_shared<sf::Texture>())
+    {
+        if (!projectileTexture_->loadFromFile(texturePath))
+        {
+            std::cerr
+                << "[ERROR] Could not load texture: "
+                << texturePath
+                << '\n';
         }
     }
 
-    void AcidSquirtAbility::update(float dt)
+    void AcidSquirtAbility::update(float deltaTime)
     {
-        if (currentTimer > 0.0f) currentTimer -= dt;
+        if (cooldownTimer_ > 0.0f)
+        {
+            cooldownTimer_ -= deltaTime;
+        }
     }
 
-    void AcidSquirtAbility::execute(sf::Vector2f startPos, sf::Vector2f targetWorldPos, sf::Vector2f shooterVelocity)
+    void AcidSquirtAbility::execute(
+        const sf::Vector2f& origin,
+        const sf::Vector2f& targetPosition,
+        const sf::Vector2f& ownerVelocity)
     {
-        if (currentTimer > 0.0f || bullets == nullptr) return;
-
-        bullets->emplace_back(startPos, sf::Vector2f(0.f, 0.f));
-        auto& b = bullets->back();
-
-        b.setAppearance(14.0f, sf::Color(255, 120, 0, 240));
-        b.setStatusEffect(StatusEffect::Poison);
-        b.setWobble(false, false);
-        b.setupParabolic(startPos, targetWorldPos, 380.0f);
-
-        if (projTexture->getSize().x > 0) {
-            b.setAnimation(projTexture, 4, 0.1f, { 32, 32 });
+        if (bullets_ == nullptr || isOnCooldown())
+        {
+            return;
         }
 
-        // --- Czysty odczyt statystyki poprzez ECS ---
-        float speedMod = 1.0f;
-        if (entity != nullptr) {
-            auto* stats = entity->getComponent<StatsComponent>();
-            if (stats) speedMod = stats->attackSpeed;
+        const float attackSpeedModifier =
+            getAttackSpeedModifier();
+
+        const int projectileCount =
+            1 + getBonusProjectileCount();
+
+        const sf::Vector2f aimDirection =
+            targetPosition - origin;
+
+        const float distanceToTarget =
+            std::sqrt(
+                aimDirection.x * aimDirection.x +
+                aimDirection.y * aimDirection.y);
+
+        const float baseAngle =
+            std::atan2(aimDirection.y, aimDirection.x);
+
+        const float startAngle =
+            baseAngle -
+            (
+                PROJECTILE_SPREAD_ANGLE *
+                (projectileCount - 1) /
+                2.0f
+                );
+
+        for (int projectileIndex = 0;
+            projectileIndex < projectileCount;
+            ++projectileIndex)
+        {
+            const float currentAngle =
+                startAngle +
+                (projectileIndex *
+                    PROJECTILE_SPREAD_ANGLE);
+
+            const sf::Vector2f direction(
+                std::cos(currentAngle),
+                std::sin(currentAngle));
+
+            const sf::Vector2f projectileTarget =
+                origin +
+                (direction * distanceToTarget);
+
+            spawnProjectile(
+                origin,
+                projectileTarget);
         }
 
-        currentTimer = baseCooldown / speedMod;
+        resetCooldown(attackSpeedModifier);
+    }
+
+    void AcidSquirtAbility::spawnProjectile(
+        const sf::Vector2f& origin,
+        const sf::Vector2f& targetPosition)
+    {
+        bullets_->emplace_back(
+            origin,
+            sf::Vector2f(0.f, 0.f));
+
+        auto& projectile = bullets_->back();
+
+        projectile.setAppearance(
+            PROJECTILE_RADIUS,
+            PROJECTILE_COLOR);
+
+        projectile.setStatusEffect(
+            StatusEffect::Poison);
+
+        projectile.setWobble(false, false);
+
+        projectile.setupParabolic(
+            origin,
+            targetPosition,
+            PROJECTILE_SPEED);
+
+        if (projectileTexture_->getSize().x > 0)
+        {
+            projectile.setAnimation(
+                projectileTexture_,
+                ANIMATION_FRAMES,
+                ANIMATION_FRAME_DURATION,
+                ANIMATION_FRAME_SIZE);
+        }
+    }
+
+    float AcidSquirtAbility::getAttackSpeedModifier() const
+    {
+        if (!owner_)
+        {
+            return 1.0f;
+        }
+
+        auto* stats =
+            owner_->getComponent<StatsComponent>();
+
+        if (!stats)
+        {
+            return 1.0f;
+        }
+
+        return stats->getAttackSpeed();
+    }
+
+    int AcidSquirtAbility::getBonusProjectileCount() const
+    {
+        if (!owner_)
+        {
+            return 0;
+        }
+
+        auto* stats =
+            owner_->getComponent<StatsComponent>();
+
+        if (!stats)
+        {
+            return 0;
+        }
+
+        return stats->getBonusProjectiles();
+    }
+
+    bool AcidSquirtAbility::isOnCooldown() const
+    {
+        return cooldownTimer_ > 0.0f;
+    }
+
+    void AcidSquirtAbility::resetCooldown(
+        float attackSpeedModifier)
+    {
+        cooldownTimer_ =
+            baseCooldown_ / attackSpeedModifier;
     }
 }

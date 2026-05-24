@@ -1,98 +1,150 @@
 #include "FruitFactory.h"
 
-// ECS Components
+// Abilities
 #include "../abilities/ShootAbility.h"
 #include "../abilities/ShotgunAbility.h"
 #include "../abilities/DashAbility.h"
 #include "../abilities/AcidSquirtAbility.h"
 #include "../abilities/RindRollAbility.h"
+#include "../abilities/AcidPoolUltimate.h"
+
+// Components
 #include "../components/MovementComponent.h"
 #include "../components/ColliderComponent.h"
 #include "../components/SpriteComponent.h"
 #include "../components/AbilityComponent.h"
 #include "../components/StatsComponent.h"
 
+// Core
 #include "../core/ResourceManager.h"
-#include <iostream>
 
 namespace game::factories
 {
-    FruitFactory::FruitFactory(game::ArenaContext& arenaContext, const nlohmann::json& jsonConfig, game::Game* gameRef, const sf::Image& mask, float scale)
-        : context(arenaContext), config(jsonConfig), game(gameRef), collisionMask(mask), mapScale(scale)
+    FruitFactory::FruitFactory(
+        game::ArenaContext& arenaContext,
+        const nlohmann::json& jsonConfig,
+        const sf::Image& mask,
+        float scale,
+        std::vector<std::unique_ptr<game::entities::Entity>>& enemiesRef)
+        : context(arenaContext),
+        config(jsonConfig),
+        collisionMask(mask),
+        mapScale(scale),
+        enemies(enemiesRef)
     {
     }
 
-    std::unique_ptr<game::entities::Entity> FruitFactory::createFruit(game::entities::FruitType type)
+    std::string FruitFactory::fruitTypeToString(game::entities::FruitType type)
     {
-        auto entity = std::make_unique<game::entities::Entity>();
-        std::string fruitKey;
-
-        switch (type) {
-        case game::entities::FruitType::Apple:      fruitKey = "Apple"; break;
-        case game::entities::FruitType::Banana:     fruitKey = "Banana"; break;
-        case game::entities::FruitType::Orange:     fruitKey = "Orange"; break;
-        case game::entities::FruitType::Cherry:     fruitKey = "Cherry"; break;
-        case game::entities::FruitType::Strawberry: fruitKey = "Strawberry"; break;
-        case game::entities::FruitType::Blackberry: fruitKey = "Blackberry"; break;
-        default: std::cerr << "[FACTORY ERROR] Unknown fruit type!\n"; return nullptr;
-        }
-
-        if (config.contains(fruitKey))
+        switch (type)
         {
-            const auto& data = config[fruitKey];
-
-            int hp = data.value("hp", 100);
-            float speed = data.value("maxSpeed", 400.0f);
-            float attackSpeed = data.value("attackSpeed", 1.0f);
-            int idleFrames = data.value("idleFrames", 4);
-            int walkFrames = data.value("walkFrames", 4);
-
-            // 1. STATYSTYKI
-            entity->addComponent(std::make_unique<game::components::StatsComponent>(hp, attackSpeed));
-
-            // 2. RUCH I FIZYKA
-            entity->addComponent(std::make_unique<game::components::MovementComponent>(game, speed));
-            entity->addComponent(std::make_unique<game::components::ColliderComponent>(collisionMask, mapScale));
-
-            // 3. GRAFIKA (Odczytana z czystego ResourceManagera!)
-            auto& res = game::core::ResourceManager::get();
-            sf::Texture* idleTex = res.hasTexture(fruitKey + "_idle") ? &res.getTexture(fruitKey + "_idle") : nullptr;
-            sf::Texture* walkTex = res.hasTexture(fruitKey + "_walk") ? &res.getTexture(fruitKey + "_walk") : nullptr;
-            entity->addComponent(std::make_unique<game::components::SpriteComponent>(
-                idleTex, idleFrames, walkTex, walkFrames
-            ));
-
-            // 4. UMIEJ?TNO?CI
-            auto abilities = std::make_unique<game::components::AbilityComponent>();
-            if (data.contains("abilities"))
-            {
-                for (const auto& abName : data["abilities"])
-                {
-                    std::string abilityName = abName.get<std::string>();
-
-                    if (abilityName == "Shoot") {
-                        abilities->setWeapon(std::make_unique<game::components::ShootAbility>(*context.bullets));
-                    }
-                    else if (abilityName == "Shotgun") {
-                        abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(*context.bullets));
-                    }
-                    else if (abilityName == "Dash") {
-                        abilities->setSkill(std::make_unique<game::components::DashAbility>(entity.get()));
-                    }
-                    else if (abilityName == "AcidSquirt") {
-                        std::string texPath = data.value("projectileTexture", "assets/textures/default_bullet.png");
-                        abilities->setWeapon(std::make_unique<game::components::AcidSquirtAbility>(*context.bullets, entity.get(), texPath));
-                    }
-                    else if (abilityName == "RindRoll") {
-                        float rDur = data.value("rollDuration", 1.5f);
-                        float rSpd = data.value("rollSpeed", 80.0f);
-                        abilities->setSkill(std::make_unique<game::components::RindRollAbility>(entity.get(), rDur, rSpd));
-                    }
-                }
-            }
-            entity->addComponent(std::move(abilities));
+        case game::entities::FruitType::Apple:      return "Apple";
+        case game::entities::FruitType::Banana:     return "Banana";
+        case game::entities::FruitType::Orange:     return "Orange";
+        case game::entities::FruitType::Cherry:     return "Cherry";
+        case game::entities::FruitType::Strawberry: return "Strawberry";
+        case game::entities::FruitType::Blackberry: return "Blackberry";
         }
+
+        return "";
+    }
+
+    std::unique_ptr<game::entities::Entity> FruitFactory::createFruit(
+        game::entities::FruitType type)
+    {
+        const std::string key = fruitTypeToString(type);
+
+        if (!config.contains(key))
+            return nullptr;
+
+        const auto& data = config.at(key);
+
+        auto entity = std::make_unique<game::entities::Entity>();
+
+        // ---------------- STATS ----------------
+        const int hp = data.value("hp", 100);
+        const float attackSpeed = data.value("attackSpeed", 1.0f);
+        const float speed = data.value("maxSpeed", 400.0f);
+
+        entity->addComponent(
+            std::make_unique<game::components::StatsComponent>(
+                hp, attackSpeed));
+
+        // ---------------- MOVEMENT ----------------
+        entity->addComponent(
+            std::make_unique<game::components::MovementComponent>(
+                nullptr, speed));
+
+        // ---------------- COLLIDER ----------------
+        entity->addComponent(
+            std::make_unique<game::components::ColliderComponent>(
+                collisionMask, mapScale));
+
+        // ---------------- SPRITE ----------------
+        auto& res = game::core::ResourceManager::get();
+
+        const std::string idleKey = key + "_idle";
+        const std::string walkKey = key + "_walk";
+
+        sf::Texture* idleTex = res.hasTexture(idleKey)
+            ? res.getTexture(idleKey)
+            : nullptr;
+
+        sf::Texture* walkTex = res.hasTexture(walkKey)
+            ? res.getTexture(walkKey)
+            : nullptr;
+
+        const int idleFrames = data.value("idleFrames", 4);
+        const int walkFrames = data.value("walkFrames", 4);
+
+        entity->addComponent(
+            std::make_unique<game::components::SpriteComponent>(
+                idleTex, idleFrames, walkTex, walkFrames));
+
+        // ---------------- ABILITIES ----------------
+        auto abilities = std::make_unique<game::components::AbilityComponent>();
+
+        if (data.contains("abilities"))
+        {
+            for (const auto& a : data["abilities"])
+            {
+                attachAbility(abilities.get(), a.get<std::string>(), entity.get());
+            }
+        }
+
+        entity->addComponent(std::move(abilities));
 
         return entity;
+    }
+
+    void FruitFactory::attachAbility(
+        game::components::AbilityComponent* abilities,
+        const std::string& name,
+        game::entities::Entity* entity)
+    {
+        if (!abilities) return; // Safety check
+
+        if (name == "Shoot") {
+            abilities->setWeapon(std::make_unique<game::components::ShootAbility>(context.bullets));
+        }
+        else if (name == "Shotgun") {
+            abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(context.bullets));
+        }
+        else if (name == "Dash") {
+            abilities->setSkill(std::make_unique<game::components::DashAbility>(entity));
+        }
+        else if (name == "AcidSquirt") {
+            const std::string texPath = "assets/textures/default_bullet.png";
+            abilities->setWeapon(std::make_unique<game::components::AcidSquirtAbility>(context.bullets, entity, texPath));
+        }
+        else if (name == "RindRoll") {
+            const float kRadius = 130.0f;
+            const float kForce = 400.0f;
+            abilities->setSkill(std::make_unique<game::components::RindRollAbility>(
+                entity, &context, &enemies, kRadius, kForce));
+        }
+        else if (name == "AcidPoolUlt") {
+            abilities->setUltimate(std::make_unique<game::components::AcidPoolUltimate>(entity, &context));
+        }
     }
 }

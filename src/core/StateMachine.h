@@ -1,48 +1,60 @@
-// --- StateMachine.h --- 
-
-
 #pragma once
+
 #include <memory>
 #include <vector>
-#include <SFML/Graphics.hpp>
 
-namespace game::states { class State; enum class StateType; }
+#include <SFML/Graphics.hpp>
 
 namespace game
 {
-	class Game;
+    class Game;
+}
 
-	class StateMachine
-	{
-	private:
-		Game* game;
-		std::vector<std::unique_ptr<states::State>> stateStack;
+namespace game::states
+{
+    class State;
+    enum class StateType;
+}
 
-		// safty fsm change
-		enum class Action { None, Push, Pop, Change };
-		Action pendingAction = Action::None;
-		states::StateType pendingStateType;
+namespace game
+{
+    class StateMachine final
+    {
+    public:
+        explicit StateMachine(Game* game);
+        ~StateMachine();
 
-		std::unique_ptr<states::State> createState(states::StateType type);
+        void changeState(states::StateType type);
+        void pushState(states::StateType type);
+        void popState();
 
-	public:
-		// constructor
-		StateMachine(Game* game);
+        void processStateChanges();
 
-		// destructor
-		~StateMachine();
+        void handleEvent(const sf::Event& event);
+        void update(float dt);
+        void render(sf::RenderWindow& window);
 
-		void changeState(states::StateType type);
-		void pushState(states::StateType type);
-		void popState();
+        states::StateType getCurrentStateType() const;
 
-		void handleEvent(const sf::Event& event);
-		void update(float dt);
-		void render(sf::RenderWindow& window);
+    private:
+        enum class Action
+        {
+            None,
+            Change,
+            Push,
+            Pop
+        };
 
-		states::StateType getCurrentStateType() const;
+        Game* game_;
 
-		
-		void processStateChanges();
-	};
+        std::vector<std::unique_ptr<states::State>> stack_;
+
+        Action pendingAction_ = Action::None;
+        states::StateType pendingStateType_{};
+
+        std::unique_ptr<states::State> createState(
+            states::StateType type);
+
+        void applyChange();
+    };
 }

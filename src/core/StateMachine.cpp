@@ -1,7 +1,5 @@
-// --- StateMachine.cpp ---
-
-
 #include "StateMachine.h"
+
 #include "../states/IntroState.h"
 #include "../states/MenuState.h"
 #include "../states/PlayingState.h"
@@ -13,96 +11,137 @@
 
 namespace game
 {
-	StateMachine::StateMachine(game::Game* game) : game(game) {}
+    StateMachine::StateMachine(Game* game)
+        : game_(game)
+    {
+    }
 
-	StateMachine::~StateMachine() = default;
+    StateMachine::~StateMachine() = default;
 
-	std::unique_ptr<states::State> StateMachine::createState(states::StateType type)
-	{
-		switch (type)
-		{
-		case states::StateType::Intro:				return std::make_unique<states::IntroState>(game);
-		case states::StateType::Menu:				return std::make_unique<states::MenuState>(game);
-		case states::StateType::CharacterSelect:	return std::make_unique<states::CharacterSelectState>(game);
-		case states::StateType::Playing:			return std::make_unique<states::PlayingState>(game);
-		case states::StateType::Settings:			return std::make_unique<states::SettingsState>(game);
-		case states::StateType::MapSelect:			return std::make_unique<states::MapSelectState>(game);
-		case states::StateType::Pause:				return std::make_unique<states::PauseState>(game);	
-		case states::StateType::Shop:				return std::make_unique<states::ShopState>(game);
-		default: return nullptr;
-		}
-	}
+    void StateMachine::changeState(states::StateType type)
+    {
+        pendingAction_ = Action::Change;
+        pendingStateType_ = type;
+    }
 
-	// buff
-	void StateMachine::changeState(states::StateType type)
-	{
-		pendingAction = Action::Change;
-		pendingStateType = type;
-	}
+    void StateMachine::pushState(states::StateType type)
+    {
+        pendingAction_ = Action::Push;
+        pendingStateType_ = type;
+    }
 
-	void StateMachine::pushState(states::StateType type)
-	{
-		pendingAction = Action::Push;
-		pendingStateType = type;
-	}
+    void StateMachine::popState()
+    {
+        pendingAction_ = Action::Pop;
+    }
 
-	void StateMachine::popState()
-	{
-		pendingAction = Action::Pop;
-	}
+    void StateMachine::processStateChanges()
+    {
+        if (pendingAction_ == Action::None)
+        {
+            return;
+        }
 
-	// MEMORY CHANGE
-	void StateMachine::processStateChanges()
-	{
-		if (pendingAction == Action::None) return;
+        applyChange();
+        pendingAction_ = Action::None;
+    }
 
-		switch (pendingAction)
-		{
-		case Action::Change:
-			stateStack.clear();
-			stateStack.push_back(createState(pendingStateType));
-			break;
+    void StateMachine::applyChange()
+    {
+        switch (pendingAction_)
+        {
+        case Action::Change:
+            stack_.clear();
+            stack_.push_back(createState(pendingStateType_));
+            break;
 
-		case Action::Push:
-			stateStack.push_back(createState(pendingStateType));
-			break;
+        case Action::Push:
+            stack_.push_back(createState(pendingStateType_));
+            break;
 
-		case Action::Pop:
-			if (!stateStack.empty()) stateStack.pop_back();
-			break;
+        case Action::Pop:
+            if (!stack_.empty())
+            {
+                stack_.pop_back();
+            }
+            break;
 
-		default: break;
-		}
+        default:
+            break;
+        }
+    }
 
-		pendingAction = Action::None;
-	}
+    void StateMachine::handleEvent(
+        const sf::Event& event)
+    {
+        if (!stack_.empty() && stack_.back())
+        {
+            stack_.back()->handleEvent(event);
+        }
+    }
 
-	// EVENTS
-	void StateMachine::handleEvent(const sf::Event& event)
-	{
-		if (!stateStack.empty()) stateStack.back()->handleEvent(event);
-	}
+    void StateMachine::update(float dt)
+    {
+        if (!stack_.empty() && stack_.back())
+        {
+            stack_.back()->update(dt);
+        }
+    }
 
-	// UPDATE
-	void StateMachine::update(float dt)
-	{
-		if (!stateStack.empty()) stateStack.back()->update(dt);
-	}
+    void StateMachine::render(
+        sf::RenderWindow& window)
+    {
+        for (auto& state : stack_)
+        {
+            if (state)
+            {
+                state->render(window);
+            }
+        }
+    }
 
-	// RENDER
-	void StateMachine::render(sf::RenderWindow& window)
-	{
-		for (size_t i = 0; i < stateStack.size(); ++i)
-		{
-			if (stateStack[i]) stateStack[i]->render(window);
-		}
-	}
+    states::StateType
+        StateMachine::getCurrentStateType() const
+    {
+        if (stack_.empty())
+        {
+            return states::StateType::Intro;
+        }
 
+        return stack_.back()->getType();
+    }
 
-	// get last state
-	states::StateType StateMachine::getCurrentStateType() const
-	{
-		if (stateStack.empty()) return states::StateType::Intro; // Default state
-		return stateStack.back()->getType();
-	}	
+    std::unique_ptr<states::State>
+        StateMachine::createState(
+            states::StateType type)
+    {
+        switch (type)
+        {
+        case states::StateType::Intro:
+            return std::make_unique<states::IntroState>(game_);
+
+        case states::StateType::Menu:
+            return std::make_unique<states::MenuState>(game_);
+
+        case states::StateType::CharacterSelect:
+            return std::make_unique<states::CharacterSelectState>(game_);
+
+        case states::StateType::Playing:
+            return std::make_unique<states::PlayingState>(game_);
+
+        case states::StateType::Settings:
+            return std::make_unique<states::SettingsState>(game_);
+
+        case states::StateType::MapSelect:
+            return std::make_unique<states::MapSelectState>(game_);
+
+        case states::StateType::Pause:
+            return std::make_unique<states::PauseState>(game_);
+
+        case states::StateType::Shop:
+            return std::make_unique<states::ShopState>(game_);
+        }
+
+        return nullptr;
+    }
 }

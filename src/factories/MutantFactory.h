@@ -7,8 +7,6 @@
 
 namespace game::factories
 {
-    // A specialized factory dedicated solely to generating genetically modified vegetables.
-    // Separating this from FruitFactory ensures strict adherence to the Single Responsibility Principle.
     class MutantFactory
     {
     private:
@@ -18,9 +16,13 @@ namespace game::factories
         float mapScale;
 
     public:
-        MutantFactory(game::ArenaContext& arenaContext, game::Game* gameRef, const sf::Image& mask, float scale);
+        MutantFactory(game::ArenaContext& arenaContext,
+            game::Game* gameRef,
+            const sf::Image& mask,
+            float scale);
 
-        // Generates an enemy entity based entirely on its genetic code
-        std::unique_ptr<game::entities::Entity> createMutant(const game::genetics::DNA& dna, game::entities::Entity* targetPlayer);
+        std::unique_ptr<game::entities::Entity>
+            createMutant(const game::genetics::DNA& dna,
+                game::entities::Entity* targetPlayer);
     };
 }

@@ -1,37 +1,116 @@
 #pragma once
+
 #include "Component.h"
-#include "../entities/Entity.h"
+
+#include <vector>
 
 namespace game::components
 {
-    class StatsComponent : public Component
+    enum class StatusType
+    {
+        Poison,
+        Slow,
+        SpeedBuff
+    };
+
+    struct ActiveEffect
+    {
+        StatusType type;
+        float duration;
+        float value;
+        float tickTimer = 0.0f;
+    };
+
+    class StatsComponent final : public Component
     {
     public:
-        float hp;
-        float maxHp;
-        float attackSpeed;
+        StatsComponent(
+            float maxHealth,
+            float attackSpeed,
+            float baseMovementSpeed = 200.0f);
 
-        int bonusProjectiles = 0;
+        void update(float deltaTime) override;
 
-        StatsComponent(float maxHealth, float atkSpd)
-            : hp(maxHealth), maxHp(maxHealth), attackSpeed(atkSpd) {
-        }
+        void takeDamage(
+            float amount);
 
-        // Decreases HP and marks the entity as dead if it drops to 0
-        void takeDamage(float amount)
-        {
-            hp -= amount;
-            if (hp <= 0.0f) {
-                hp = 0.0f;
-                if (owner) owner->isDead = true;
-            }
-        }
+        void addEffect(
+            StatusType type,
+            float duration,
+            float value);
 
-        // Helper to get HP percentage (0.0 to 1.0) for health bars
-        float getHpPercentage() const
-        {
-            if (maxHp <= 0.0f) return 0.0f;
-            return hp / maxHp;
-        }
+        void addUltCharge(
+            float amount);
+
+        bool isUltReady() const;
+
+        void resetUlt();
+
+        float getHpPercentage() const;
+
+        float getHealth() const;
+        float getMaxHealth() const;
+
+        float getAttackSpeed() const;
+        int getBonusProjectiles() const;
+
+        float getCurrentSpeed() const;
+        float getBaseSpeed() const;
+
+        void setBonusProjectiles(
+            int count);
+
+
+        void increaseMaxHealth(
+            float amount);
+
+        void heal(
+            float amount);
+
+        void multiplyBaseSpeed(
+            float multiplier);
+
+        void multiplyAttackSpeed(
+            float multiplier);
+
+        void increaseUltChargeRate(
+            float amount);
+
+    private:
+        float maxHealth_;
+        float currentHealth_;
+
+        float attackSpeed_;
+        int bonusProjectiles_ = 0;
+
+        float ultimateCharge_ = 0.0f;
+        float maxUltimateCharge_ = 100.0f;
+        float ultimateChargeRate_ = 1.0f;
+
+        float baseMovementSpeed_;
+        float currentMovementSpeed_;
+
+        std::vector<ActiveEffect>
+            activeEffects_;
+
+        void processEffects(
+            float deltaTime);
+
+        void processEffect(
+            ActiveEffect& effect,
+            float deltaTime);
+
+        void processPoison(
+            ActiveEffect& effect,
+            float deltaTime);
+
+        void processSlow(
+            const ActiveEffect& effect);
+
+        void processSpeedBuff(
+            const ActiveEffect& effect);
+
+        bool shouldRemoveEffect(
+            const ActiveEffect& effect) const;
     };
 }

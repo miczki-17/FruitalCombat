@@ -1,11 +1,15 @@
 #pragma once
+
 #include <memory>
 #include <string>
+#include <vector>
+#include <SFML/Graphics.hpp>
 #include "../entities/Entity.h"
 #include "../entities/EntityTypes.h"
 #include "../core/ArenaContext.h"
 #include "../vendor/nlohmann/json.hpp"
-#include "../core/Game.h"
+
+namespace game::components { class AbilityComponent; }
 
 namespace game::factories
 {
@@ -15,13 +19,29 @@ namespace game::factories
         game::ArenaContext& context;
         const nlohmann::json& config;
 
-        // Pointers for physics component initialization
-        game::Game* game;
         const sf::Image& collisionMask;
         float mapScale;
 
+        std::vector<std::unique_ptr<game::entities::Entity>>& enemies;
+
+    private:
+        std::string fruitTypeToString(game::entities::FruitType type);
+
+        void attachAbility(
+            game::components::AbilityComponent* abilities,
+            const std::string& abilityName,
+            game::entities::Entity* entity);
+
     public:
-        FruitFactory(game::ArenaContext& arenaContext, const nlohmann::json& jsonConfig, game::Game* gameRef, const sf::Image& mask, float scale);
-        std::unique_ptr<game::entities::Entity> createFruit(game::entities::FruitType type);
+        FruitFactory(
+            game::ArenaContext& arenaContext,
+            const nlohmann::json& jsonConfig,
+            const sf::Image& mask,
+            float scale,
+            std::vector<std::unique_ptr<game::entities::Entity>>& enemiesRef
+        );
+
+        std::unique_ptr<game::entities::Entity> createFruit(
+            game::entities::FruitType type);
     };
 }

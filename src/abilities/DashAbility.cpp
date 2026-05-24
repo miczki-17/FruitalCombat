@@ -1,35 +1,110 @@
 #include "DashAbility.h"
+
 #include "../entities/Entity.h"
+
 #include <cmath>
 
 namespace game::components
 {
-    DashAbility::DashAbility(game::entities::Entity* targetEntity) : entity(targetEntity) {}
-
-    void DashAbility::update(float dt)
+    namespace
     {
-        if (currentTimer > 0.0f) currentTimer -= dt;
+        constexpr float MIN_MOVEMENT_SPEED = 10.0f;
+        constexpr float MIN_VECTOR_LENGTH = 0.001f;
+        constexpr float ACTION_UNLOCK_DURATION = 0.15f;
+
+        const sf::Vector2f DEFAULT_DASH_DIRECTION(
+            1.0f,
+            0.0f);
     }
 
-    void DashAbility::execute(sf::Vector2f startPos, sf::Vector2f targetWorldPos, sf::Vector2f shooterVelocity)
+    DashAbility::DashAbility(
+        game::entities::Entity* owner)
+        : owner_(owner)
     {
-        if (currentTimer <= 0.0f && entity != nullptr)
+    }
+
+    void DashAbility::update(float deltaTime)
+    {
+        if (cooldownTimer_ > 0.0f)
         {
-            sf::Vector2f dashDir = shooterVelocity;
-            float currentSpeed = std::sqrt(dashDir.x * dashDir.x + dashDir.y * dashDir.y);
-
-            if (currentSpeed > 10.0f) dashDir /= currentSpeed;
-            else
-            {
-                dashDir = targetWorldPos - startPos;
-                float aimLength = std::sqrt(dashDir.x * dashDir.x + dashDir.y * dashDir.y);
-                if (aimLength > 0.001f) dashDir /= aimLength;
-                else dashDir = { 1.0f, 0.0f };
-            }
-
-            entity->velocity += (dashDir * dashForce);
-            entity->actionTimer = 0.15f; // Uncap velocity czasowo
-            currentTimer = cooldown;
+            cooldownTimer_ -= deltaTime;
         }
+    }
+
+    void DashAbility::execute(
+        const sf::Vector2f& origin,
+        const sf::Vector2f& targetPosition,
+        const sf::Vector2f& ownerVelocity)
+    {
+        if (!owner_ || isOnCooldown())
+        {
+            return;
+        }
+
+        const sf::Vector2f dashDirection =
+            calculateDashDirection(
+                origin,
+                targetPosition,
+                ownerVelocity);
+
+        owner_->velocity +=
+            (dashDirection * dashForce_);
+
+        owner_->actionTimer =
+            ACTION_UNLOCK_DURATION;
+
+        cooldownTimer_ = cooldown_;
+    }
+
+    bool DashAbility::isOnCooldown() const
+    {
+        return cooldownTimer_ > 0.0f;
+    }
+
+    sf::Vector2f DashAbility::calculateDashDirection(
+        const sf::Vector2f& origin,
+        const sf::Vector2f& targetPosition,
+        const sf::Vector2f& ownerVelocity) const
+    {
+        const float movementSpeed =
+            std::sqrt(
+                ownerVelocity.x * ownerVelocity.x +
+                ownerVelocity.y * ownerVelocity.y);
+
+        if (movementSpeed > MIN_MOVEMENT_SPEED)
+        {
+            return normalize(ownerVelocity);
+        }
+
+        const sf::Vector2f aimDirection =
+            targetPosition - origin;
+
+        const float aimLength =
+            std::sqrt(
+                aimDirection.x * aimDirection.x +
+                aimDirection.y * aimDirection.y);
+
+        if (aimLength > MIN_VECTOR_LENGTH)
+        {
+            return normalize(aimDirection);
+        }
+
+        return DEFAULT_DASH_DIRECTION;
+    }
+
+    sf::Vector2f DashAbility::normalize(
+        const sf::Vector2f& vector) const
+    {
+        const float length =
+            std::sqrt(
+                vector.x * vector.x +
+                vector.y * vector.y);
+
+        if (length <= MIN_VECTOR_LENGTH)
+        {
+            return DEFAULT_DASH_DIRECTION;
+        }
+
+        return vector / length;
     }
 }

@@ -1,66 +1,56 @@
 #pragma once
-
 #include "State.h"
-#include <SFML/Graphics/Text.hpp>
-#include <SFML/Graphics/Font.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Window/Event.hpp>
-
 #include <vector>
-#include <optional>
 #include <string>
+#include <SFML/Graphics.hpp>
 
 namespace game::states
 {
+    struct ShopItem {
+        std::string id;
+        std::string name;
+        std::string desc;
+        int cost = 0;
+        std::string targetStat;
+        float value = 0.0f;
+    };
+
+    // ZMIANA: Dodano konstruktor, aby usatysfakcjonowaæ rygorystyczne wymogi SFML 3!
+    struct UIItem {
+        sf::RectangleShape bg;
+        sf::Text name;
+        sf::Text desc;
+        sf::Text cost;
+        ShopItem data;
+        bool soldOut = false;
+
+        // W SFML 3 musimy od razu wstrzykn¹æ czcionkê:
+        UIItem(const sf::Font& font) : name(font), desc(font), cost(font) {}
+    };
+
     class ShopState : public State
     {
     private:
-        // --- TOP BAR ---
-        std::optional<sf::Text> titleText;
-        std::optional<sf::Text> currencyText;
-        sf::CircleShape currencyIcon; // Ma³a ¿ó³ta/zielona kulka obok tekstu
+        sf::Text titleText;
+        sf::Text biomassText;
+        sf::Text rerollText;
 
-        // --- STATS PANEL (Right side) ---
-        sf::RectangleShape statsPanelBg;
-        std::optional<sf::Text> statsTitleText;
-        std::vector<std::optional<sf::Text>> statsLines;
+        sf::RectangleShape rerollButton;
+        int rerollCost = 30;
 
-        // --- BOTTOM BAR ---
-        sf::RectangleShape nextWaveBtn;
-        std::optional<sf::Text> nextWaveText;
+        std::vector<ShopItem> allPossibleUpgrades;
+        std::vector<ShopItem> currentDisplay;
+        std::vector<UIItem> uiSlots;
 
-        // --- UPGRADE CARDS ---
-        struct UpgradeOption
-        {
-            sf::RectangleShape cardBg;
-            sf::RectangleShape buyBtnBg;
-
-            std::optional<sf::Text> titleText;
-            std::optional<sf::Text> descText;
-            std::optional<sf::Text> costText;
-
-            int cost = 0;
-            int typeId = 0;
-            bool isPurchased = false;
-
-            UpgradeOption() = default;
-        };
-
-        std::vector<UpgradeOption> options;
-
-        void setupUpgrades();
-        void setupStatsPanel();
-        void applyUpgrade(int typeId);
-        void updateCurrencyDisplay();
+        void loadPool();
+        void rollItems();
+        void applyUpgrade(const ShopItem& item);
 
     public:
         ShopState(game::Game* game);
-
+        StateType getType() const override;
         void handleEvent(const sf::Event& event) override;
         void update(float dt) override;
         void render(sf::RenderWindow& window) override;
-
-        StateType getType() const override;
     };
 }

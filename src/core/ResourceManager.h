@@ -1,111 +1,64 @@
 #pragma once
+
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
-#include <map>
+
+#include <unordered_map>
 #include <string>
-#include <memory>
+#include <optional>
 #include <iostream>
-#include <stdexcept>
 
 namespace game::core
 {
-    class ResourceManager
+    class ResourceManager final
     {
-    private:
-        std::map<std::string, sf::Texture> textures;
-        std::map<std::string, sf::Image> images;
-        std::map<std::string, sf::Font> fonts;
-        std::map<std::string, sf::SoundBuffer> soundBuffers;
-
-        ResourceManager() = default;
-
     public:
-        // Singleton - gwarancja jednej instancji menedzera w calej grze
-        static ResourceManager& get()
-        {
-            static ResourceManager instance;
-            return instance;
-        }
+        static ResourceManager& get();
 
         ResourceManager(const ResourceManager&) = delete;
         ResourceManager& operator=(const ResourceManager&) = delete;
 
-        // --- TEKSTURY ---
-        bool loadTexture(const std::string& id, const std::string& filepath)
-        {
-            sf::Texture tex;
-            if (tex.loadFromFile(filepath)) {
-                textures[id] = std::move(tex);
-                return true;
-            }
-            std::cerr << "[RES ERROR] Cannot load texture: " << filepath << "\n";
-            return false;
-        }
+        bool loadTexture(
+            const std::string& id,
+            const std::string& filepath);
 
-        sf::Texture& getTexture(const std::string& id)
-        {
-            return textures.at(id);
-        }
+        bool loadImage(
+            const std::string& id,
+            const std::string& filepath);
 
-        bool hasTexture(const std::string& id) const { return textures.contains(id); }
+        bool loadFont(
+            const std::string& id,
+            const std::string& filepath);
 
-        // --- OBRAZY (np. dla masek kolizji) ---
-        bool loadImage(const std::string& id, const std::string& filepath)
-        {
-            sf::Image img;
-            if (img.loadFromFile(filepath)) {
-                images[id] = std::move(img);
-                return true;
-            }
-            std::cerr << "[RES ERROR] Cannot load image: " << filepath << "\n";
-            return false;
-        }
+        bool loadSound(
+            const std::string& id,
+            const std::string& filepath);
 
-        const sf::Image& getImage(const std::string& id) const
-        {
-            return images.at(id);
-        }
+        sf::Texture* getTexture(
+            const std::string& id);
 
-        // --- CZCIONKI (SFML 3) ---
-        bool loadFont(const std::string& id, const std::string& filepath)
-        {
-            sf::Font f;
-            if (f.openFromFile(filepath)) {
-                fonts[id] = std::move(f);
-                return true;
-            }
-            std::cerr << "[RES ERROR] Cannot load font: " << filepath << "\n";
-            return false;
-        }
+        sf::Image* getImage(
+            const std::string& id) const;
 
-        sf::Font& getFont(const std::string& id)
-        {
-            return fonts.at(id);
-        }
+        sf::Font* getFont(
+            const std::string& id);
 
-        // --- DZWIEKI ---
-        bool loadSoundBuffer(const std::string& id, const std::string& filepath)
-        {
-            sf::SoundBuffer buffer;
-            if (buffer.loadFromFile(filepath)) {
-                soundBuffers[id] = std::move(buffer);
-                return true;
-            }
-            std::cerr << "[RES ERROR] Cannot load sound: " << filepath << "\n";
-            return false;
-        }
+        sf::SoundBuffer* getSound(
+            const std::string& id);
 
-        sf::SoundBuffer& getSoundBuffer(const std::string& id)
-        {
-            return soundBuffers.at(id);
-        }
+        bool hasTexture(const std::string& id) const;
 
-        void clearAll()
-        {
-            textures.clear();
-            images.clear();
-            fonts.clear();
-            soundBuffers.clear();
-        }
+        void clear();
+
+    private:
+        ResourceManager() = default;
+
+    private:
+        std::unordered_map<std::string, sf::Texture> textures_;
+        std::unordered_map<std::string, sf::Image> images_;
+        std::unordered_map<std::string, sf::Font> fonts_;
+        std::unordered_map<std::string, sf::SoundBuffer> sounds_;
+
+        void logError(const std::string& msg) const;
     };
 }

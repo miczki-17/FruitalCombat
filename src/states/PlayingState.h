@@ -33,9 +33,6 @@ namespace game::states
         sf::View cameraView;
         std::unique_ptr<game::entities::Entity> player;
 
-        // Bullets container owned cleanly by the arena environment state
-        std::vector<game::components::Bullet> bullets;
-
         sf::Font uiFont;
         sf::Texture coinIconTexture;
         std::optional<sf::Sprite> coinIconSprite;
@@ -56,16 +53,28 @@ namespace game::states
         sf::CircleShape biomassIcon;
         std::optional<sf::Text> biomassText;
 
-        void renderHUD(sf::RenderWindow& window);
-
 
         std::vector<std::unique_ptr<game::entities::Entity>> enemies;
 
         std::unique_ptr<game::factories::MutantFactory> mutantFactory;
         std::unique_ptr<game::systems::EvolutionManager> evolutionManager;
 
-        // walk particles
+
+        // HELPERS
+        void renderHUD(sf::RenderWindow& window);
+        void initHUD();
+        void updateJuiceDrops(float dt);
+        void updateCombat(float dt);
+        void updateEffects(float dt);
+        void updateParticles(float dt);
+        void updateEnemies(float dt);
+        void updateHUD();
+        void updateCamera(float dt);
+        void handleUIHover();
+
+        float shakeIntensity = 0.0f;
         float playerDustSpawnTimer = 0.0f;
+        sf::Vector2f lastPlayerPos;
 
 
     public:

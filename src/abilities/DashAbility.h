@@ -1,21 +1,41 @@
 #pragma once
+
 #include "Ability.h"
 
-namespace game::entities { class Entity; }
+namespace game::entities
+{
+    class Entity;
+}
 
 namespace game::components
 {
-    class DashAbility : public Ability
+    class DashAbility final : public Ability
     {
-    private:
-        game::entities::Entity* entity;
-        float cooldown = 2.0f;
-        float currentTimer = 0.0f;
-        float dashForce = 1200.0f;
-
     public:
-        DashAbility(game::entities::Entity* targetEntity);
-        void update(float dt) override;
-        void execute(sf::Vector2f startPos, sf::Vector2f targetWorldPos, sf::Vector2f shooterVelocity) override;
+        explicit DashAbility(game::entities::Entity* owner);
+
+        void update(float deltaTime) override;
+
+        void execute(
+            const sf::Vector2f& origin,
+            const sf::Vector2f& targetPosition,
+            const sf::Vector2f& ownerVelocity) override;
+
+    private:
+        game::entities::Entity* owner_;
+
+        float cooldown_ = 2.0f;
+        float cooldownTimer_ = 0.0f;
+        float dashForce_ = 1200.0f;
+
+        bool isOnCooldown() const;
+
+        sf::Vector2f calculateDashDirection(
+            const sf::Vector2f& origin,
+            const sf::Vector2f& targetPosition,
+            const sf::Vector2f& ownerVelocity) const;
+
+        sf::Vector2f normalize(
+            const sf::Vector2f& vector) const;
     };
 }

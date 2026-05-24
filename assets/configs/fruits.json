@@ -64,12 +64,32 @@
     "rollDuration": 1.8,
     "rollSpeed": 305.0,
     "initTexturePath": "assets/textures/entities/characters/citrus_maximus/citrus_init_animation.png",
-    "initFrames":  8,
+    "initFrames": 8,
     "idleTexturePath": "assets/textures/entities/characters/citrus_maximus/citrus_idle_animation.png",
-    "idleFrames":  3,
+    "idleFrames": 3,
     "walkTexturePath": "",
-    "walkFrames":  4,
+    "walkFrames": 4,
     "projectileTexture": "assets/textures/entities/characters/citrus_maximus/acid_blob.png",
-    "abilities": [ "AcidSquirt", "RindRoll" ]
+    "abilities": [ "AcidSquirt", "RindRoll", "AcidPoolUlt" ],
+    "upgrades": [
+      {
+        "id": "toxin",
+        "name": "Potent Toxins",
+        "desc": "Ult charges 30% faster",
+        "cost": 150,
+        "target": "ultRate",
+        "value": 0.3
+      },
+      {
+        "id": "multi_acid",
+        "name": "Acid Cluster",
+        "desc": "+1 Acid Projectile",
+        "cost": 200,
+        "target": "bonusProjectiles",
+        "value": 1
+      }
+    ],
+    "knockbackRadius": 220.0,
+    "knockbackForce": 500.0
   }
 }

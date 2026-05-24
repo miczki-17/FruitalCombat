@@ -1,34 +1,44 @@
-// --- ShootAbility.h ---
-
-
 #pragma once
 
-// includes
 #include "Ability.h"
 #include "../projectiles/Bullet.h"
+
 #include <vector>
 
 namespace game::components
 {
-	// CLASS
-	class ShotgunAbility : public Ability
-	{
-	private:
-		// bullets vector
-		std::vector<game::components::Bullet>& bullets;
+    class ShotgunAbility final : public Ability
+    {
+    public:
+        explicit ShotgunAbility(
+            std::vector<Bullet>& bulletContainer);
 
-		// shotgun params
-		float cooldown = 0.75f;
-		float currentTimer = 0.0f;
+        void update(float deltaTime) override;
 
-		int pelletCount = 2;
-		float spreadAngle = 7.5f;
+        void execute(
+            const sf::Vector2f& origin,
+            const sf::Vector2f& targetPosition,
+            const sf::Vector2f& ownerVelocity) override;
 
-	public:
-		// abilty constructor
-		ShotgunAbility(std::vector<game::components::Bullet>& bulletsRef);
+    private:
+        std::vector<Bullet>& bullets_;
 
-		void update(float dt) override;
-		void execute(sf::Vector2f startPos, sf::Vector2f targetWorldPos, sf::Vector2f shooterVelocity) override;
-	};
+        float cooldown_ = 0.75f;
+        float cooldownTimer_ = 0.0f;
+
+        int pelletCount_ = 2;
+        float spreadAngleDegrees_ = 7.5f;
+
+        bool isOnCooldown() const;
+        void resetCooldown();
+
+        sf::Vector2f calculateDirection(
+            const sf::Vector2f& origin,
+            const sf::Vector2f& targetPosition) const;
+
+        void spawnPellets(
+            const sf::Vector2f& origin,
+            const sf::Vector2f& direction,
+            const sf::Vector2f& ownerVelocity);
+    };
 }

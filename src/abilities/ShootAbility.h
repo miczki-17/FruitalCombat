@@ -1,31 +1,41 @@
-// --- ShootAbility.h --- 
-
-
 #pragma once
 
-// includes
 #include "Ability.h"
 #include "../projectiles/Bullet.h"
+
 #include <vector>
 
 namespace game::components
 {
-	// CLASS
-	class ShootAbility : public Ability
-	{
-	private:
-		// bullets vector
-		std::vector<game::components::Bullet>& bullets;
+    class ShootAbility final : public Ability
+    {
+    public:
+        explicit ShootAbility(
+            std::vector<Bullet>& bulletContainer);
 
-		// bullet params
-		float cooldown = 0.2f;
-		float currentTimer = 0.0f;
+        void update(float deltaTime) override;
 
-	public:
-		// constructor
-		ShootAbility(std::vector<game::components::Bullet>& bulletsRef);
+        void execute(
+            const sf::Vector2f& origin,
+            const sf::Vector2f& targetPosition,
+            const sf::Vector2f& ownerVelocity) override;
 
-		void update(float dt) override;
-		void execute(sf::Vector2f startPos, sf::Vector2f targetWorldPos, sf::Vector2f shooterVelocity) override;
-	};
+    private:
+        std::vector<Bullet>& bullets_;
+
+        float cooldown_ = 0.2f;
+        float cooldownTimer_ = 0.0f;
+
+        bool isOnCooldown() const;
+        void resetCooldown();
+
+        sf::Vector2f calculateDirection(
+            const sf::Vector2f& origin,
+            const sf::Vector2f& targetPosition) const;
+
+        void spawnProjectile(
+            const sf::Vector2f& origin,
+            const sf::Vector2f& direction,
+            const sf::Vector2f& ownerVelocity);
+    };
 }
