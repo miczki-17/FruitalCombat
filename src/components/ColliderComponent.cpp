@@ -1,3 +1,5 @@
+// --- ColliderComponent.cpp --- 
+
 #include "ColliderComponent.h"
 #include "../entities/Entity.h"
 

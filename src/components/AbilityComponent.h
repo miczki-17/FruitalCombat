@@ -1,3 +1,5 @@
+// --- AbilityComponent.h ---
+
 #pragma once
 
 #include "Component.h"

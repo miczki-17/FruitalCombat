@@ -1,3 +1,5 @@
+// --- ShotgunAbility.cpp ---
+
 #include "ShotgunAbility.h"
 
 #include <cmath>

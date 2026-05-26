@@ -1,3 +1,5 @@
+// --- AcidSquirtAbility.h ---
+
 #pragma once
 
 #include "Ability.h"

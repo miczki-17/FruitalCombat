@@ -1,3 +1,5 @@
+// --- StateMacjine.h ---
+
 #pragma once
 
 #include <memory>

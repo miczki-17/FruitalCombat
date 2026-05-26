@@ -1,3 +1,5 @@
+// --- EvolutionManager.cpp ---
+
 #include "EvolutionManager.h"
 #include <iostream>
 #include <algorithm>
@@ -196,7 +198,6 @@ namespace game::systems
                 dna.maxHp = data.value("maxHp", 100.0f);
                 dna.sizeScale = data.value("sizeScale", 1.0f);
 
-                // --- NOWE: Odczytywanie parametrów ekonomii z JSON-a ---
                 dna.dropChance = data.value("dropChance", 1.0f);
                 dna.baseJuice = data.value("baseJuice", 10.0f);
 

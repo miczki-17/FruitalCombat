@@ -1,6 +1,6 @@
-// --- PlayingState.h ---
-
-
+// ==========================================
+// states/PlayingState.h
+// ==========================================
 #pragma once
 #include "../abilities/Ability.h"
 #include "../core/Game.h"
@@ -17,6 +17,11 @@
 #include "../components/ColliderComponent.h"
 #include "../components/StatsComponent.h"
 
+// Includy nowych systemów
+#include "../systems/CollisionSystem.h"
+#include "../systems/CombatSystem.h"
+#include "../systems/ParticleSystem.h"
+#include "../systems/RenderSystem.h"
 
 namespace game::states
 {
@@ -43,7 +48,6 @@ namespace game::states
         sf::Texture crosshairTex;
         std::optional<sf::Sprite> crosshairSprite;
 
-
         // --- USER INTERFACE (HUD) ---
         sf::RectangleShape hpBarBg;
         sf::RectangleShape hpBarFill;
@@ -53,21 +57,20 @@ namespace game::states
         sf::CircleShape biomassIcon;
         std::optional<sf::Text> biomassText;
 
-
         std::vector<std::unique_ptr<game::entities::Entity>> enemies;
 
         std::unique_ptr<game::factories::MutantFactory> mutantFactory;
         std::unique_ptr<game::systems::EvolutionManager> evolutionManager;
 
+        // --- INSTANCJE NOWYCH SYSTEMÓW ---
+        std::unique_ptr<game::systems::CollisionSystem> collisionSystem;
+        std::unique_ptr<game::systems::CombatSystem> combatSystem;
+        std::unique_ptr<game::systems::ParticleSystem> particleSystem;
+        std::unique_ptr<game::systems::RenderSystem> renderSystem;
 
         // HELPERS
         void renderHUD(sf::RenderWindow& window);
         void initHUD();
-        void updateJuiceDrops(float dt);
-        void updateCombat(float dt);
-        void updateEffects(float dt);
-        void updateParticles(float dt);
-        void updateEnemies(float dt);
         void updateHUD();
         void updateCamera(float dt);
         void handleUIHover();
@@ -75,7 +78,6 @@ namespace game::states
         float shakeIntensity = 0.0f;
         float playerDustSpawnTimer = 0.0f;
         sf::Vector2f lastPlayerPos;
-
 
     public:
         PlayingState(game::Game* game);

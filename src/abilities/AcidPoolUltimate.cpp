@@ -1,3 +1,5 @@
+// --- AcidPoolUltimate.cpp ---
+
 #include "AcidPoolUltimate.h"
 
 #include "../components/StatsComponent.h"

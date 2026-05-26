@@ -1,3 +1,5 @@
+// --- SpriteComponent.h ---
+
 #pragma once
 
 #include "Component.h"

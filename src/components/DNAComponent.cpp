@@ -1,3 +1,5 @@
+// --- DNAComponent.cpp ---
+
 #include "DNAComponent.h"
 #include "../entities/Entity.h"
 

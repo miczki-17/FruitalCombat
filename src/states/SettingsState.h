@@ -10,7 +10,6 @@
 
 namespace game::states
 {
-	// Pomocniczy enum do œledzenia, który klawisz w³aœnie przypisujemy
 	enum class RebindTarget { None, Up, Left, Down, Right };
 
 	class SettingsState : public State

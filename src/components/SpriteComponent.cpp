@@ -1,3 +1,5 @@
+// --- SpriteComponent.cpp ---
+
 #include "SpriteComponent.h"
 #include "../entities/Entity.h"
 

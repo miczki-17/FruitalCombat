@@ -1,3 +1,5 @@
+// --- ShopState.cpp ---
+
 #include "ShopState.h"
 #include "../components/StatsComponent.h"
 #include "../core/ArenaContext.h"
@@ -7,7 +9,6 @@
 
 namespace game::states
 {
-    // ZMIANA: Przekazujemy czcionkê od razu do tekstów (wymóg SFML 3)
     ShopState::ShopState(game::Game* game)
         : State(game),
         titleText(game->mainFont),
@@ -66,12 +67,10 @@ namespace game::states
         for (int i = 0; i < numItems; ++i) {
             currentDisplay.push_back(tempPool[i]);
 
-            // ZMIANA: Tworzymy UIItem podaj¹c mu czcionkê
             UIItem ui(game->mainFont);
             ui.data = tempPool[i];
             ui.bg.setSize({ 300.f, 100.f });
 
-            // ZMIANA: Rzutujemy na float, aby wyciszyæ ¿ó³te ostrze¿enie z kompilatora C4244
             ui.bg.setPosition({ 50.f, 150.f + (static_cast<float>(i) * 110.f) });
             ui.bg.setFillColor(sf::Color(50, 50, 50));
             ui.bg.setOutlineThickness(2.f);
@@ -108,7 +107,6 @@ namespace game::states
             playerStats->multiplyAttackSpeed(item.value);
         }
         else if (item.targetStat == "bonusProjectiles") {
-            // Pobieramy star¹ wartoœæ, dodajemy now¹ i ustawiamy
             playerStats->setBonusProjectiles(playerStats->getBonusProjectiles() + static_cast<int>(item.value));
         }
         else if (item.targetStat == "ultRate") {
@@ -125,19 +123,19 @@ namespace game::states
                 sf::Vector2i mousePos = sf::Mouse::getPosition(game->getWindow());
                 sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(mousePos);
 
-                // Obs³uga Reroll
+                // reroll
                 if (rerollButton.getGlobalBounds().contains(worldPos)) {
-                    if (game->playerJuice >= rerollCost) {
-                        game->playerJuice -= rerollCost;
+                    if (game->profile.biomassJuice >= rerollCost) {
+                        game->profile.addJuice(-rerollCost);
                         rollItems();
                     }
                 }
 
-                // Obs³uga Kupowania
+				// buying items
                 for (auto& slot : uiSlots) {
                     if (!slot.soldOut && slot.bg.getGlobalBounds().contains(worldPos)) {
-                        if (game->playerJuice >= slot.data.cost) {
-                            game->playerJuice -= slot.data.cost;
+                        if (game->profile.biomassJuice >= slot.data.cost) {
+                            game->profile.spendJuice(slot.data.cost);
                             applyUpgrade(slot.data);
                             slot.soldOut = true;
                             slot.bg.setFillColor(sf::Color(30, 30, 30));
@@ -151,7 +149,7 @@ namespace game::states
         }
 
         if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
-            // Zamkniêcie sklepu
+			// close shop on Escape or Space
             if (key->code == sf::Keyboard::Key::Escape || key->code == sf::Keyboard::Key::Space) {
                 game->getStateMachine().popState();
             }
@@ -159,7 +157,7 @@ namespace game::states
     }
 
     void ShopState::update(float dt) {
-        biomassText.setString("Juice Available: " + std::to_string(game->playerJuice));
+        biomassText.setString("Juice Available: " + std::to_string(game->profile.biomassJuice));
     }
 
     void ShopState::render(sf::RenderWindow& window) {

@@ -1,3 +1,5 @@
+// --- AnimationController.cpp ---
+
 #include "AnimationController.h"
 #include <iostream>
 

@@ -1,3 +1,5 @@
+// --- AcidSquirtAbility.cpp ---
+
 #include "AcidSquirtAbility.h"
 
 #include "../components/StatsComponent.h"

@@ -47,7 +47,7 @@ add_executable(FruitalCombat
     "src/abilities/ShootAbility.h"
     "src/abilities/ShootAbility.cpp"
     "src/projectiles/Bullet.h"
-    "src/projectiles/Bullet.cpp"
+    
     "src/abilities/ShotgunAbility.cpp"
     src/utils/VideoPlayer.h
     "src/utils/AnimationController.h"
@@ -58,7 +58,9 @@ add_executable(FruitalCombat
     src/states/PauseState.cpp
     src/states/MapSelectState.h
     src/states/MapSelectState.cpp
- "src/abilities/AcidSquirtAbility.h" "src/abilities/AcidSquirtAbility.cpp" "src/abilities/RindRollAbility.h" "src/abilities/RindRollAbility.cpp" "src/effects/AcidSplash.h" "src/effects/AcidSplash.cpp" "src/core/ResourceManager.h" "src/components/Component.h" "src/components/MovementComponent.h" "src/components/ColliderComponent.h" "src/components/SpriteComponent.h" "src/components/AbilityComponent.h" "src/components/StatsComponent.h" "src/genetics/DNA.h" "src/components/DNAComponent.h" "src/components/AiInputComponent.h" "src/factories/MutantFactory.h" "src/factories/MutantFactory.cpp" "src/systems/EvolutionManager.h" "src/systems/EvolutionManager.cpp" "src/effects/FloatingText.h" "src/entities/JuiceDrop.h" "src/states/ShopState.h" "src/states/ShopState.cpp" "src/components/StatsComponent.cpp" "src/abilities/AcidPoolUltimate.h" "src/abilities/AcidPoolUltimate.cpp" "src/components/AbilityComponent.cpp" "src/components/MovementComponent.cpp" "src/components/AiInputComponent.cpp" "src/components/ColliderComponent.cpp" "src/components/SpriteComponent.cpp" "src/components/DNAComponent.cpp" "src/core/ResourceManager.cpp")
+    src/components/ProjectileComponent.h
+    src/components/ProjectileComponent.cpp
+ "src/abilities/AcidSquirtAbility.h" "src/abilities/AcidSquirtAbility.cpp" "src/abilities/RindRollAbility.h" "src/abilities/RindRollAbility.cpp" "src/effects/AcidSplash.h" "src/effects/AcidSplash.cpp" "src/core/ResourceManager.h" "src/components/Component.h" "src/components/MovementComponent.h" "src/components/ColliderComponent.h" "src/components/SpriteComponent.h" "src/components/AbilityComponent.h" "src/components/StatsComponent.h" "src/genetics/DNA.h" "src/components/DNAComponent.h" "src/components/AiInputComponent.h" "src/factories/MutantFactory.h" "src/factories/MutantFactory.cpp" "src/systems/EvolutionManager.h" "src/systems/EvolutionManager.cpp" "src/effects/FloatingText.h" "src/entities/JuiceDrop.h" "src/states/ShopState.h" "src/states/ShopState.cpp" "src/components/StatsComponent.cpp" "src/abilities/AcidPoolUltimate.h" "src/abilities/AcidPoolUltimate.cpp" "src/components/AbilityComponent.cpp" "src/components/MovementComponent.cpp" "src/components/AiInputComponent.cpp" "src/components/ColliderComponent.cpp" "src/components/SpriteComponent.cpp" "src/components/DNAComponent.cpp" "src/core/ResourceManager.cpp" "src/utils/MathUtils.h" "src/components/PlayerInputComponent.h" "src/components/PlayerInputComponent.cpp" "src/components/ProjectileComponent.h" "src/components/ProjectileComponent.cpp" "src/systems/CollisionSystem.h" "src/systems/CollisionSystem.cpp" "src/systems/CombatSystem.h" "src/systems/CombatSystem.cpp" "src/systems/ParticleSystem.h" "src/systems/ParticleSystem.cpp" "src/systems/RenderSystem.h" "src/systems/RenderSystem.cpp" "src/core/PlayerProfile.h")
 
 
 # --- 3. NAG?ÓWKI I LINKOWANIE ---

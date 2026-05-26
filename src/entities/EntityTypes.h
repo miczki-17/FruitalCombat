@@ -1,3 +1,5 @@
+// --- EntityTypes.h ---
+
 #pragma once
 
 namespace game::entities

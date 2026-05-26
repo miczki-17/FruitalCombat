@@ -1,3 +1,5 @@
+// --- ShopState.h --- 
+
 #pragma once
 #include "State.h"
 #include <vector>
@@ -15,7 +17,6 @@ namespace game::states
         float value = 0.0f;
     };
 
-    // ZMIANA: Dodano konstruktor, aby usatysfakcjonowaæ rygorystyczne wymogi SFML 3!
     struct UIItem {
         sf::RectangleShape bg;
         sf::Text name;
@@ -24,7 +25,6 @@ namespace game::states
         ShopItem data;
         bool soldOut = false;
 
-        // W SFML 3 musimy od razu wstrzykn¹æ czcionkê:
         UIItem(const sf::Font& font) : name(font), desc(font), cost(font) {}
     };
 

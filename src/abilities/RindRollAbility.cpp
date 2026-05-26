@@ -1,3 +1,5 @@
+// --- RindRollAbility.cpp ---
+
 #include "RindRollAbility.h"
 #include "../entities/Entity.h"
 #include "../components/StatsComponent.h"

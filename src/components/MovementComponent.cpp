@@ -1,318 +1,115 @@
+// --- MovementComponent.cpp ---
+
 #include "MovementComponent.h"
-
 #include "../entities/Entity.h"
-
+#include "PlayerInputComponent.h"
 #include <cmath>
 
 namespace game::components
 {
     namespace
     {
-        constexpr float
-            MIN_VECTOR_LENGTH =
-            0.001f;
-
-        constexpr float
-            STOP_THRESHOLD =
-            10.0f;
-
-        constexpr float
-            LOOK_THRESHOLD =
-            0.1f;
-
-        constexpr float
-            INPUT_THRESHOLD =
-            0.05f;
+        constexpr float STOP_THRESHOLD = 10.0f;
+        constexpr float LOOK_THRESHOLD = 0.1f;
+        constexpr float INPUT_THRESHOLD = 0.05f;
     }
 
-    MovementComponent::
-        MovementComponent(
-            game::Game* game,
-            float maxSpeed)
-        : game_(game),
-        maxSpeed_(
-            maxSpeed)
+    MovementComponent::MovementComponent(game::Game* game, float maxSpeed)
+        : maxSpeed_(maxSpeed)
     {
+        // game_ nie jest ju? polem tej klasy. Fizyka nie potrzebuje klawiatury!
     }
 
-    void MovementComponent::
-        update(
-            float deltaTime)
+    void MovementComponent::setGamePointer(game::Game* game)
     {
-        if (!owner)
+        // Sprytny punkt wstrzykni?cia: gdy PlayingState wywo?a t? funkcj? na graczu,
+        // automatycznie dodamy mu komponent wej?ciowy obs?uguj?cy klawiatur?.
+        if (game && owner && !owner->getComponent<PlayerInputComponent>())
         {
-            return;
+            owner->addComponent(std::make_unique<PlayerInputComponent>(game));
         }
+    }
 
-        sf::Vector2f
-            movementInput =
-            readMovementInput();
+    void MovementComponent::setDesiredDirection(const sf::Vector2f& dir)
+    {
+        desiredDirection_ = dir;
+    }
 
-        updateFacingDirection(
-            movementInput);
+    void MovementComponent::update(float deltaTime)
+    {
+        if (!owner) return;
 
-        owner->isMoving =
-            movementInput !=
-            sf::Vector2f(
-                0.f,
-                0.f);
+        updateFacingDirection(desiredDirection_);
 
-        movementInput =
-            normalize(
-                movementInput);
+        owner->isMoving = (desiredDirection_ != sf::Vector2f(0.f, 0.f));
 
-        smoothedInput_ +=
-            (
-                movementInput -
-                smoothedInput_
-                ) *
-            turnSpeed_ *
-            deltaTime;
+        // P?ynne wyg?adzanie wektora ruchu (wyg?adza zwroty postaci)
+        smoothedInput_ += (desiredDirection_ - smoothedInput_) * turnSpeed_ * deltaTime;
 
-        const float
-            smoothedLength =
-            vectorLength(
-                smoothedInput_);
+        // NOWO?? SFML 3: Bezpo?rednie pobranie d?ugo?ci wektora
+        float smoothedLength = smoothedInput_.length();
 
-        if (
-            smoothedLength >
-            INPUT_THRESHOLD)
+        if (smoothedLength > INPUT_THRESHOLD)
         {
-            applyMovement(
-                smoothedInput_,
-                deltaTime);
+            applyMovement(smoothedInput_, deltaTime);
         }
         else
         {
-            applyStopping(
-                deltaTime);
+            applyStopping(deltaTime);
         }
 
-        updateRollingState(
-            deltaTime);
+        updateRollingState(deltaTime);
+
+        // Bardzo wa?ne: Czy?cimy intencj? na koniec klatki. 
+        // W nast?pnej klatce Input (gracz lub AI) musi znowu ustawi? kierunek.
+        desiredDirection_ = { 0.f, 0.f };
     }
 
-    sf::Vector2f
-        MovementComponent::
-        readMovementInput() const
+    void MovementComponent::updateFacingDirection(const sf::Vector2f& direction)
     {
-        sf::Vector2f
-            input(
-                0.f,
-                0.f);
-
-        // --- ADD THIS SAFETY CHECK ---
-        if (!game_)
-        {
-            // If there's no game pointer (e.g., this is an enemy), 
-            // return zero input. AI will handle movement elsewhere.
-            return input;
-        }
-
-        if (
-            sf::Keyboard
-            ::isKeyPressed(
-                game_->keyUp))
-        {
-            input.y -=
-                1.f;
-        }
-
-        if (
-            sf::Keyboard
-            ::isKeyPressed(
-                game_
-                ->keyDown))
-        {
-            input.y +=
-                1.f;
-        }
-
-        if (
-            sf::Keyboard
-            ::isKeyPressed(
-                game_
-                ->keyLeft))
-        {
-            input.x -=
-                1.f;
-        }
-
-        if (
-            sf::Keyboard
-            ::isKeyPressed(
-                game_
-                ->keyRight))
-        {
-            input.x +=
-                1.f;
-        }
-
-        return input;
+        if (direction.x > LOOK_THRESHOLD)       owner->facingRight = true;
+        else if (direction.x < -LOOK_THRESHOLD) owner->facingRight = false;
     }
 
-    void MovementComponent::
-        updateFacingDirection(
-            const sf::Vector2f&
-            direction)
+    void MovementComponent::applyMovement(const sf::Vector2f& direction, float deltaTime)
     {
-        if (
-            direction.x >
-            LOOK_THRESHOLD)
+        owner->velocity += direction * acceleration_ * deltaTime;
+        owner->velocity -= owner->velocity * activeDrag_ * deltaTime;
+    }
+
+    void MovementComponent::applyStopping(float deltaTime)
+    {
+        owner->velocity -= owner->velocity * stopDrag_ * deltaTime;
+
+        // NOWO?? SFML 3: .length() zamiast r?cznego sqrt
+        if (owner->velocity.length() < STOP_THRESHOLD)
         {
-            owner
-                ->facingRight =
-                true;
-        }
-        else if (
-            direction.x <
-            -LOOK_THRESHOLD)
-        {
-            owner
-                ->facingRight =
-                false;
+            owner->velocity = { 0.f, 0.f };
         }
     }
 
-    void MovementComponent::
-        applyMovement(
-            const sf::Vector2f&
-            direction,
-            float deltaTime)
+    void MovementComponent::updateRollingState(float deltaTime)
     {
-        owner->velocity +=
-            direction *
-            acceleration_ *
-            deltaTime;
-
-        owner->velocity -=
-            owner->velocity *
-            activeDrag_ *
-            deltaTime;
-    }
-
-    void MovementComponent::
-        applyStopping(
-            float deltaTime)
-    {
-        owner->velocity -=
-            owner->velocity *
-            stopDrag_ *
-            deltaTime;
-
-        const float speed =
-            vectorLength(
-                owner
-                ->velocity);
-
-        if (
-            speed <
-            STOP_THRESHOLD)
+        if (owner->actionTimer > 0.0f)
         {
-            owner->velocity =
+            owner->actionTimer -= deltaTime;
+            if (owner->isRolling)
             {
-                0.f,
-                0.f
-            };
-        }
-    }
-
-    void MovementComponent::
-        updateRollingState(
-            float deltaTime)
-    {
-        if (
-            owner
-            ->actionTimer >
-            0.0f)
-        {
-            owner
-                ->actionTimer -=
-                deltaTime;
-
-            if (
-                owner
-                ->isRolling)
-            {
-                limitSpeed(
-                    owner
-                    ->overrideSpeedLimit);
+                limitSpeed(owner->overrideSpeedLimit);
             }
-
             return;
         }
 
-        owner
-            ->isRolling =
-            false;
-
-        limitSpeed(
-            maxSpeed_);
+        owner->isRolling = false;
+        limitSpeed(maxSpeed_);
     }
 
-    void MovementComponent::
-        limitSpeed(
-            float maxSpeed)
+    void MovementComponent::limitSpeed(float maxSpeed)
     {
-        const float
-            speed =
-            vectorLength(
-                owner
-                ->velocity);
+        float speed = owner->velocity.length(); // SFML 3
+        if (speed <= maxSpeed || speed <= 0.001f) return;
 
-        if (
-            speed <=
-            maxSpeed ||
-            speed <=
-            MIN_VECTOR_LENGTH)
-        {
-            return;
-        }
-
-        owner->velocity =
-            (
-                owner
-                ->velocity /
-                speed
-                ) *
-            maxSpeed;
-    }
-
-    float MovementComponent::
-        vectorLength(
-            const sf::Vector2f&
-            vector) const
-    {
-        return std::sqrt(
-            vector.x *
-            vector.x +
-            vector.y *
-            vector.y);
-    }
-
-    sf::Vector2f
-        MovementComponent::
-        normalize(
-            const sf::Vector2f&
-            vector) const
-    {
-        const float
-            length =
-            vectorLength(
-                vector);
-
-        if (
-            length <=
-            MIN_VECTOR_LENGTH)
-        {
-            return {
-                0.f,
-                0.f
-            };
-        }
-
-        return
-            vector /
-            length;
+        // NOWO?? SFML 3: .normalized() produkuje czysty wektor jednostkowy bez modyfikacji orygina?u
+        owner->velocity = owner->velocity.normalized() * maxSpeed;
     }
 }

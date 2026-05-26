@@ -1,3 +1,5 @@
+// --- AbilityComponent.cpp ---
+
 #include "AbilityComponent.h"
 #include "../entities/Entity.h"
 

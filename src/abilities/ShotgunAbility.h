@@ -1,3 +1,5 @@
+// --- ShotgunAbility.h ---
+
 #pragma once
 
 #include "Ability.h"

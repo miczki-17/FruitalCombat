@@ -1,3 +1,5 @@
+// --- AnimationController.h ---
+
 #pragma once
 #include <SFML/Graphics.hpp>
 
@@ -23,7 +25,6 @@ namespace game::components
     public:
         AnimationController() = default;
 
-        // Nie ładujemy z pliku, lecz wstrzykujemy gotową referencję z ResourceManagera
         void setTextures(sf::Texture& idle, int idleFrames, sf::Texture& walk, int walkFrames);
 
         const sf::Texture& getDefaultTexture() const;

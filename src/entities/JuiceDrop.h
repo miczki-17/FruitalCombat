@@ -1,3 +1,5 @@
+// --- JuiceDrop.h ---
+
 #pragma once
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>

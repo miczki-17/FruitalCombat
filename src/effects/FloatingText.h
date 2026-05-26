@@ -1,3 +1,5 @@
+// --- FloatingText.h ---
+
 #pragma once
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>

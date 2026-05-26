@@ -1,3 +1,5 @@
+// --- StatsComponent.cpp ---
+
 #include "StatsComponent.h"
 
 #include <algorithm>

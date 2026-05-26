@@ -1,3 +1,5 @@
+// --- ResourceManager.cpp ---
+
 #include "ResourceManager.h"
 
 namespace game::core

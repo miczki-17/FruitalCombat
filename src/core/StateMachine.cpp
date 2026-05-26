@@ -1,3 +1,5 @@
+// --- StateMachine.cpp ---
+
 #include "StateMachine.h"
 
 #include "../states/IntroState.h"
