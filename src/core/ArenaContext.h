@@ -1,17 +1,14 @@
-// ==========================================
-// core/ArenaContext.h
-// ==========================================
+// --- ArenaContext.h ---
+
 #pragma once
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
 #include <SFML/Graphics.hpp>
 
-// KLUCZOWE: Pe?na definicja Entity potrzebna dla wektora unique_ptr!
 #include "../entities/Entity.h"
-
-// KLUCZOWE: Includy starych efektów (tymczasowe dla kompatybilno?ci)
-#include "../projectiles/Bullet.h" // Tu znajduje si? nasz nowy alias!
+#include "../projectiles/Bullet.h"
 #include "../effects/AcidSplash.h"
 #include "../effects/FloatingText.h"
 #include "../entities/JuiceDrop.h"
@@ -49,10 +46,10 @@ namespace game
 
     struct ArenaContext final
     {
-        // --- NOWA, DOCELOWA PULA ECS ---
+        // --- DOCELOWA PULA ECS ---
         std::vector<std::unique_ptr<game::entities::Entity>> entities;
 
-        // --- LEGACY WEKTORY (Utrzymuj? PlayingState przy ?yciu, znikn? w Etapie 4) ---
+        // --- LEGACY WEKTORY ---
         std::vector<game::components::Bullet> bullets;
         std::vector<game::effects::AcidSplash> acidSplashes;
         std::vector<AoEZone> zones;
@@ -60,7 +57,6 @@ namespace game
         std::vector<game::effects::FloatingText> floatingTexts;
         std::vector<game::entities::JuiceDrop> juiceDrops;
         std::vector<WalkDust> walkParticles;
-        // -----------------------------------------------------------------------------
 
         sf::Color mapDustColor = sf::Color(200, 200, 200, 150);
         game::components::StatsComponent* playerStats = nullptr;

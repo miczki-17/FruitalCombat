@@ -1,8 +1,7 @@
 // --- IntroState.cpp ---
 
-
-#include "../core/ResourceManager.h"
 #include "IntroState.h"
+#include "../core/ResourceManager.h"
 #include "../core/Game.h"
 #include <format>
 #include "../vendor/nlohmann/json.hpp"
@@ -11,315 +10,264 @@
 
 namespace game::states
 {
-	IntroState::IntroState(game::Game* game)
-		: State(game)
-	{
-		std::cout << "[INTRO] Initializing static intro and progress bar...\n";
+    IntroState::IntroState(game::Game* game)
+        : State(game)
+    {
+        std::cout << "[INTRO] Initializing static intro and progress bar...\n";
 
-		std::string imagePath = "assets/textures/ui/bg_1.png";
-		if (!introTexture.loadFromFile(imagePath)) {
-			std::cerr << "[INTRO ERROR] Failed to load intro image!\n";
-		}
-		else {
-			introTexture.setSmooth(true);
+        
+        std::string imagePath = "assets/textures/ui/bg_1.png";
+        if (!introTexture.loadFromFile(imagePath)) {
+            std::cerr << "[INTRO ERROR] Failed to load intro image!\n";
+        }
+        else {
+            introTexture.setSmooth(true);
+            introSprite.emplace(introTexture);
+        }
 
-			introSprite.emplace(introTexture);
-		}
+        sf::Vector2f viewSize = game->getWindow().getView().getSize();
+        if (introSprite.has_value() && introTexture.getSize().x > 0 && introTexture.getSize().y > 0) {
+            introSprite->setScale({
+                viewSize.x / static_cast<float>(introTexture.getSize().x),
+                viewSize.y / static_cast<float>(introTexture.getSize().y)
+                });
+        }
 
-		sf::Vector2f viewSize = game->getWindow().getView().getSize();
-		if (introSprite.has_value() && introTexture.getSize().x > 0 && introTexture.getSize().y > 0) {
-			introSprite->setScale({
-				viewSize.x / static_cast<float>(introTexture.getSize().x),
-				viewSize.y / static_cast<float>(introTexture.getSize().y)
-				});
-		}
+        // 2. Configure progress bar
+        float barWidth = viewSize.x * 0.8f;
+        float barHeight = 20.f;
+        float barX = (viewSize.x - barWidth) / 2.f;
+        float barY = viewSize.y * 0.9f;
 
-		// 2. Configure progress bar
-		float barWidth = viewSize.x * 0.8f;
-		float barHeight = 20.f;
-		float barX = (viewSize.x - barWidth) / 2.f; // Centered
-		float barY = viewSize.y * 0.9f;             // Near the bottom
+        progressBarBg.setSize({ barWidth, barHeight });
+        progressBarBg.setPosition({ barX, barY });
+        progressBarBg.setFillColor(sf::Color(50, 50, 50, 200));
+        progressBarBg.setOutlineColor(sf::Color(0, 0, 0));
+        progressBarBg.setOutlineThickness(2.f);
 
-		progressBarBg.setSize({ barWidth, barHeight });
-		progressBarBg.setPosition({ barX, barY });
-		progressBarBg.setFillColor(sf::Color(50, 50, 50, 200));
-		progressBarBg.setOutlineColor(sf::Color(0, 0, 0)); // Black outline
-		progressBarBg.setOutlineThickness(2.f);
+        progressBarFill.setSize({ 0.f, barHeight });
+        progressBarFill.setPosition({ barX, barY });
+        progressBarFill.setFillColor(sf::Color(0, 200, 0, 255));
 
-		progressBarFill.setSize({ 0.f, barHeight }); // Start with 0 width
-		progressBarFill.setPosition({ barX, barY });
-		progressBarFill.setFillColor(sf::Color(0, 200, 0, 255)); // Green fill
+        // 3. Start the background asset loading thread
+        workerThread = std::make_unique<std::thread>(&IntroState::loadAssetsInBg, this);
+    }
 
-		// 3. Load and play intro music
-		//if (introMusic.openFromFile("assets/audio/intro/intro.mp3")) {
-		//	introMusic.play();
-		//}
-		//else {
-		//	std::cerr << "[INTRO ERROR] Cannot load intro music.\n";
-		//}
+    IntroState::~IntroState()
+    {
+        if (workerThread && workerThread->joinable()) {
+            workerThread->join();
+        }
+    }
 
-		// 4. Start the background asset loading thread
-		workerThread = std::make_unique<std::thread>(&IntroState::loadAssetsInBg, this);
-	}
+    void IntroState::loadAssetsInBg()
+    {
+        std::cout << "[ASYNC] Assets loading started...\n";
+        auto& rm = game::core::ResourceManager::get();
 
-	IntroState::~IntroState()
-	{
-		// Ensure the thread finishes before destroying the state
-		if (workerThread && workerThread->joinable()) {
-			workerThread->join();
-		}
-	}
+        rm.clear();
 
-	void IntroState::loadAssetsInBg()
-	{
-		std::cout << "[ASYNC] Assets loading started...\n";
+        loadProgress = 5;
 
-		game->menuImageBuffer.clear();
-		game->menuUiBuffer.clear();
-		game->characterImageBuffer.clear();
-		game->mapImageBuffer.clear();
+		// 1. LOADING CONFIGURATION AND TEXTURES FOR CHARACTERS
+        std::cout << "[ASYNC] Characters config loading...\n";
+        std::ifstream configFile("assets/configs/fruits.json");
+        if (configFile.is_open())
+        {
+            try {
+                configFile >> (game->fruitsConfig);
+                std::cout << "[ASYNC] fruits.json loaded successfully.\n";
 
-		loadProgress = 5;
+                int index = 0;
+                int totalItems = game->fruitsConfig.size();
 
-		std::cout << "[ASYNC] Characters config loading...\n";
-		std::ifstream configFile("assets/configs/fruits.json");
-		if (configFile.is_open())
-		{
-			try {
-				configFile >> (game->fruitsConfig);
-				std::cout << "[ASYNC] fruits.json loaded successfully.\n";
+                for (auto& [characterKey, characterData] : game->fruitsConfig.items()) {
 
-				int index = 0;
-				int totalItems = game->fruitsConfig.size();
+                    if (characterData.contains("idleTexturePath")) {
+                        std::string path = characterData.value("idleTexturePath", "");
+                        if (!path.empty()) rm.loadTexture(characterKey + "_idle", path);
+                    }
 
-				for (auto& [characterKey, characterData] : game->fruitsConfig.items()) {
-					// Wczytywanie tekstury IDLE
-					if (characterData.contains("idleTexturePath")) {
-						std::string path = characterData.value("idleTexturePath", "");
-						if (!path.empty()) {
-							// NOWE: ?adujemy dla ECS!
-							game::core::ResourceManager::get().loadTexture(characterKey + "_idle", path);
+                    if (characterData.contains("walkTexturePath")) {
+                        std::string path = characterData.value("walkTexturePath", "");
+                        if (!path.empty()) rm.loadTexture(characterKey + "_walk", path);
+                    }
 
-							// STARE: Legacy dla CharacterSelectState
-							sf::Image img;
-							if (img.loadFromFile(path)) {
-								game->characterImageBuffer[characterKey] = std::move(img);
-							}
-						}
-					}
+                    
+                    if (characterData.contains("initTexturePath")) {
+                        std::string path = characterData.value("initTexturePath", "");
+                        if (!path.empty()) rm.loadTexture(characterKey + "_start", path);
+                    }
 
-					// Wczytywanie tekstury WALK do ResourceManager
-					if (characterData.contains("walkTexturePath")) {
-						std::string path = characterData.value("walkTexturePath", "");
-						if (!path.empty()) {
-							game::core::ResourceManager::get().loadTexture(characterKey + "_walk", path);
-						}
-					}
+                    index++;
+                    if (totalItems > 0) loadProgress = 5 + (30 * index / totalItems);
+                }
+            }
+            catch (const nlohmann::json::parse_error& e) {
+                std::cerr << "[ASYNC ERROR] fruits.json Parse error: " << e.what() << "\n";
+            }
+        }
 
-					// Wczytywanie tekstury START (Legacy)
-					if (characterData.contains("initTexturePath")) {
-						std::string path = characterData.value("initTexturePath", "");
-						if (!path.empty()) {
-							sf::Image img;
-							if (img.loadFromFile(path)) {
-								game->characterImageBuffer[characterKey + "_start"] = std::move(img);
-							}
-						}
-					}
-					index++;
-					if (totalItems > 0) loadProgress = 5 + (30 * index / totalItems);
-				}
-			}
-			catch (const nlohmann::json::parse_error& e) {
-				std::cerr << "[ASYNC ERROR] fruits.json Parse error: " << e.what() << "\n";
-			}
-		}
+		// 2. LOADING CONFIGURATION AND TEXTURES FOR ENEMIES
+        std::cout << "[ASYNC] Enemies config loading...\n";
+        std::ifstream enemiesFile("assets/configs/enemies.json");
+        if (enemiesFile.is_open())
+        {
+            try {
+                enemiesFile >> (game->enemiesConfig);
+                std::cout << "[ASYNC] enemies.json loaded successfully.\n";
 
+                for (auto& [enemyKey, enemyData] : game->enemiesConfig.items()) {
+                    if (enemyData.contains("idleTexturePath")) {
+                        rm.loadTexture(enemyKey + "_idle", enemyData.value("idleTexturePath", ""));
+                    }
+                    if (enemyData.contains("walkTexturePath")) {
+                        rm.loadTexture(enemyKey + "_walk", enemyData.value("walkTexturePath", ""));
+                    }
+                }
+            }
+            catch (const nlohmann::json::parse_error& e) {
+                std::cerr << "[ASYNC ERROR] enemies.json Parse error: " << e.what() << "\n";
+            }
+        }
 
-		// ENEMIES CONFIG & TEXTURES
-		std::cout << "[ASYNC] Enemies config loading...\n";
-		std::ifstream enemiesFile("assets/configs/enemies.json");
-		if (enemiesFile.is_open())
-		{
-			try {
-				enemiesFile >> (game->enemiesConfig);
-				std::cout << "[ASYNC] enemies.json loaded successfully.\n";
+        loadProgress = 35;
 
-				for (auto& [enemyKey, enemyData] : game->enemiesConfig.items()) {
-					if (enemyData.contains("idleTexturePath")) {
-						game::core::ResourceManager::get().loadTexture(enemyKey + "_idle", enemyData.value("idleTexturePath", ""));
-					}
-					if (enemyData.contains("walkTexturePath")) {
-						game::core::ResourceManager::get().loadTexture(enemyKey + "_walk", enemyData.value("walkTexturePath", ""));
-					}
-				}
-			}
-			catch (const nlohmann::json::parse_error& e) {
-				std::cerr << "[ASYNC ERROR] enemies.json Parse error: " << e.what() << "\n";
-			}
-		}
+		// 3. LOADING CONFIGURATION AND TEXTURES FOR MAPS
+        std::cout << "[ASYNC] Maps config loading...\n";
+        std::ifstream mapsFile("assets/configs/maps.json");
+        if (mapsFile.is_open())
+        {
+            try {
+                mapsFile >> (game->mapsConfig);
 
+                int index = 0;
+                int totalMaps = game->mapsConfig.size();
 
-		loadProgress = 35;
+                for (auto& [mapKey, mapData] : game->mapsConfig.items()) {
 
-		std::cout << "[ASYNC] Maps config loading...\n";
-		std::ifstream mapsFile("assets/configs/maps.json");
-		if (mapsFile.is_open())
-		{
-			try {
-				mapsFile >> (game->mapsConfig);
+                    // arena backgrounds
+                    if (mapData.contains("texturePath")) {
+                        rm.loadTexture(mapKey + "_map", mapData.value("texturePath", ""));
+                    }
 
-				int index = 0;
-				int totalMaps = game->mapsConfig.size();
+                    // miniatures
+                    if (mapData.contains("thumbnailPath")) {
+                        std::string path = mapData.value("thumbnailPath", "");
+                        if (!path.empty()) rm.loadTexture(mapKey + "_thumb", path);
+                    }
+                    index++;
+                    if (totalMaps > 0) loadProgress = 35 + (30 * index / totalMaps);
+                }
+            }
+            catch (const nlohmann::json::parse_error& e) {
+                std::cerr << "[ASYNC ERROR] maps.json Parse error: " << e.what() << "\n";
+            }
+        }
 
-				for (auto& [mapKey, mapData] : game->mapsConfig.items()) {
-					// NOWE: Za?aduj fizyczn? map? z góry do ResourceManagera (koniec z ?adowaniem w PlayingState)
-					if (mapData.contains("texturePath")) {
-						game::core::ResourceManager::get().loadTexture(mapKey + "_map", mapData.value("texturePath", ""));
-					}
+        loadProgress = 60;
 
-					if (mapData.contains("thumbnailPath")) {
-						std::string path = mapData.value("thumbnailPath", "");
-						if (!path.empty()) {
-							sf::Image img;
-							if (img.loadFromFile(path)) {
-								game->mapImageBuffer[mapKey] = std::move(img);
-							}
-						}
-					}
-					index++;
-					if (totalMaps > 0) loadProgress = 35 + (30 * index / totalMaps);
-				}
-			}
-			catch (const nlohmann::json::parse_error& e) {
-				std::cerr << "[ASYNC ERROR] maps.json Parse error: " << e.what() << "\n";
-			}
-		}
+		// 4. GLOBAF FONT AND MISC TEXTURES
+        rm.loadFont("main_font", "assets/fonts/Minecraftia-Regular.ttf");
 
-		loadProgress = 60;
+        // ?????????????
+        rm.loadTexture("drop_biomass", "assets/textures/entities/drops/biomass_juice.png");
 
-		// ==========================================
-		// 3. FONTS
-		// ==========================================
-		if (!game->mainFont.openFromFile("assets/fonts/Minecraftia-Regular.ttf")) {
-			std::cerr << "[ASYNC ERROR] Failed to load main font!\n";
-		}
-		else {
-			std::cout << "[SYSTEM] 'Minecraftia-Regular.ttf' font loaded into RAM!\n";
-		}
-		loadProgress = 65;
+        //??????????????
 
-		// ==========================================
-		// 3. UI & BACKGROUND TEXTURES (approx. 30% progress)
-		// ==========================================
-		for (int i = 1; i <= 1; ++i)
-		{
-			std::string filename = std::format("assets/textures/ui/bg_{:01}.png", i);
-			sf::Image img;
-			if (img.loadFromFile(filename)) game->menuImageBuffer.push_back(std::move(img));
-			loadProgress = 65 + (5 * i / 6); // Progress from 65% to 70%
-		}
+        if (sf::Font* fontPtr = rm.getFont("main_font")) {
+            game->mainFont = *fontPtr;
+        }
 
-		std::map<std::string, std::string> uiPaths = {
-			{"empty_button", "assets/textures/ui/empty_button.png"},
-			{"settings", "assets/textures/ui/settings_button.png"},
-			{"shop", "assets/textures/ui/shop.png"},
-			{"achievements", "assets/textures/ui/achievements.png"},
-			{"left_arrow", "assets/textures/ui/left_arrow.png"},
-			{"right_arrow", "assets/textures/ui/right_arrow.png"},
-			{"back", "assets/textures/ui/back_button.png"},
-			{"log_platform", "assets/textures/ui/log_platform.png"},
-			//{"settings_bg", "assets/textures/ui/settings_bg.png" },
-			{"select_bg", "assets/textures/ui/select_bg.png"},
-			{"hp_icon", "assets/textures/ui/health_icon.png"},
-			{"spd_icon", "assets/textures/ui/speed_icon.png"},
-			{"dmg_icon", "assets/textures/ui/damage_icon.png"},
-			{"star_full_icon", "assets/textures/ui/star_full_icon.png"},
-			{"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
-			{"cursor", "assets/textures/ui/cursor.png" },
-			{"crosshair", "assets/textures/ui/crosshairV3.png"},
-			{"stat_bar_frame", "assets/textures/ui/stat_bar_frame.png"},
-			{"stat_bar_fill", "assets/textures/ui/stat_bar_fill.png"}
-		};
+        loadProgress = 65;
 
-		int uiIndex = 0;
-		int uiTotal = uiPaths.size();
-		for (const auto& [key, path] : uiPaths) {
-			sf::Image img;
-			if (img.loadFromFile(path)) game->menuUiBuffer[key] = std::move(img);
+        // 5. UI ELEMENTS
+        for (int i = 1; i <= 1; ++i)
+        {
+            std::string filename = std::format("assets/textures/ui/bg_{:01}.png", i);
+            rm.loadTexture("bg_" + std::to_string(i), filename);
+        }
 
-			uiIndex++;
-			loadProgress = 70 + (25 * uiIndex / uiTotal); // Progress from 70% to 95%
-		}
+        std::map<std::string, std::string> uiPaths = {
+            {"empty_button", "assets/textures/ui/empty_button.png"},
+            {"settings", "assets/textures/ui/settings_button.png"},
+            {"shop", "assets/textures/ui/shop.png"},
+            {"achievements", "assets/textures/ui/achievements.png"},
+            {"left_arrow", "assets/textures/ui/left_arrow.png"},
+            {"right_arrow", "assets/textures/ui/right_arrow.png"},
+            {"back", "assets/textures/ui/back_button.png"},
+            {"log_platform", "assets/textures/ui/log_platform.png"},
+            {"select_bg", "assets/textures/ui/select_bg.png"},
+            {"hp_icon", "assets/textures/ui/health_icon.png"},
+            {"spd_icon", "assets/textures/ui/speed_icon.png"},
+            {"dmg_icon", "assets/textures/ui/damage_icon.png"},
+            {"star_full_icon", "assets/textures/ui/star_full_icon.png"},
+            {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
+            {"cursor", "assets/textures/ui/cursor.png" },
+            {"crosshair", "assets/textures/ui/crosshairV3.png"},
+            {"stat_bar_frame", "assets/textures/ui/stat_bar_frame.png"},
+            {"stat_bar_fill", "assets/textures/ui/stat_bar_fill.png"}
+        };
 
+        int uiIndex = 0;
+        int uiTotal = uiPaths.size();
+        
+        // ResourceManager loading
+        for (const auto& [key, path] : uiPaths) {
+            rm.loadTexture("ui_" + key, path);
 
-		// ==========================================
-		// 4. UI SOUNDS (final 5%)
-		// ==========================================
-		if (!game->uiClickBuffer.loadFromFile("../../../assets/audio/ui/click.mp3"))
-		{
-			std::cerr << "[ASYNC ERROR] Cannot load uiClickBuffer\n";
-		}
-		else
-		{
-			// Emplace creates the sound instance directly in the std::optional
-			game->uiClickSound.emplace(game->uiClickBuffer);
-		}
+            uiIndex++;
+            loadProgress = 70 + (25 * uiIndex / uiTotal);
+        }
 
-		std::cout << "[ASYNC] UI sounds loaded successfully.\n";
+        // 6. UI SOUNDS (final 5%)
+        if (game->uiClickBuffer.loadFromFile("../../../assets/audio/ui/click.mp3")) {
+            game->uiClickSound.emplace(game->uiClickBuffer);
+        }
+        else if (game->uiClickBuffer.loadFromFile("assets/audio/ui/click.mp3")) {
+            game->uiClickSound.emplace(game->uiClickBuffer);
+        }
 
-		// Finalize loading
-		loadProgress = 100;
-		isFinished = true;
-		std::cout << "[ASYNC] All assets safely loaded to RAM.\n";
-	}
+        loadProgress = 100;
+        isFinished = true;
+        std::cout << "[ASYNC] All assets safely loaded to RAM.\n";
+    }
 
-	StateType IntroState::getType() const { return StateType::Intro; }
+    StateType IntroState::getType() const { return StateType::Intro; }
 
-	void IntroState::handleEvent(const sf::Event& event)
-	{
-		// SFML 3: Checking event type using getIf returns std::optional-like pointer
-		if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>())
-		{
-			// Allow skipping the intro by pressing Space or Enter, 
-			// but ONLY if the background loading is completely finished.
-			if (keyEvent->code == sf::Keyboard::Key::Space || keyEvent->code == sf::Keyboard::Key::Enter)
-			{
-				if (isFinished) {
-					//introMusic.stop();
-					game->getStateMachine().changeState(StateType::Menu);
-				}
-			}
-		}
-	}
+    void IntroState::handleEvent(const sf::Event& event)
+    {
+        if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>())
+        {
+            if (keyEvent->code == sf::Keyboard::Key::Space || keyEvent->code == sf::Keyboard::Key::Enter)
+            {
+                if (isFinished) {
+                    game->getStateMachine().changeState(StateType::Menu);
+                }
+            }
+        }
+    }
 
-	void IntroState::update(float dt)
-	{
-		elapsedTime += dt;
+    void IntroState::update(float dt)
+    {
+        elapsedTime += dt;
+        int currentProgress = loadProgress.load();
 
-		// Safely retrieve the current progress from the atomic variable
-		int currentProgress = loadProgress.load();
+        float maxWidth = progressBarBg.getSize().x;
+        float newWidth = maxWidth * (static_cast<float>(currentProgress) / 100.f);
+        progressBarFill.setSize({ newWidth, progressBarFill.getSize().y });
 
-		// Update the width of the progress bar fill
-		float maxWidth = progressBarBg.getSize().x;
-		float newWidth = maxWidth * (static_cast<float>(currentProgress) / 100.f);
-		progressBarFill.setSize({ newWidth, progressBarFill.getSize().y });
+        if (isFinished && elapsedTime >= minDisplayTime) {
+            game->getStateMachine().changeState(StateType::Menu);
+        }
+    }
 
-		// Automatically transition to the Menu state when loading is done 
-		// AND the minimum display time has passed (to avoid instant flashes)
-		if (isFinished && elapsedTime >= minDisplayTime) {
-			//introMusic.stop();
-			game->getStateMachine().changeState(StateType::Menu);
-		}
-	}
-
-	void IntroState::render(sf::RenderWindow& window)
-	{
-		// Draw the static intro frame and the progress bar layers
-		if (introSprite.has_value()) {
-			window.draw(*introSprite);
-		}
-		window.draw(progressBarBg);
-		window.draw(progressBarFill);
-	}
+    void IntroState::render(sf::RenderWindow& window)
+    {
+        if (introSprite.has_value()) {
+            window.draw(*introSprite);
+        }
+        window.draw(progressBarBg);
+        window.draw(progressBarFill);
+    }
 }

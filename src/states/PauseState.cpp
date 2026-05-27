@@ -2,6 +2,8 @@
 
 
 #include "PauseState.h"
+#include "../core/ResourceManager.h"
+#include "../core/Game.h"
 #include <iostream>
 #include <cmath> // Do std::round
 
@@ -10,34 +12,26 @@ namespace game::states
     PauseState::PauseState(game::Game* game) : State(game)
     {
         sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
-
-        // 1. dark overlay
         darkOverlay.setSize(viewSize);
         darkOverlay.setFillColor(sf::Color(0, 0, 0, 180));
 
-        try {
-
-            confirmText.emplace(game->mainFont, "Are you sure you want to exit?", 36);
-            confirmText->setFillColor(sf::Color::White);
-
-            sf::FloatRect textBounds = confirmText->getLocalBounds();
-            confirmText->setOrigin({ textBounds.position.x + textBounds.size.x / 2.0f,
-                                     textBounds.position.y + textBounds.size.y / 2.0f });
-            confirmText->setPosition({ viewSize.x / 2.0f, viewSize.y / 2.0f - 100.0f });
-        }
-        catch (const std::exception& e) {
-            std::cerr << "[UI ERROR] Nie mozna zaladowac czcionki: " << e.what() << '\n';
-        }
+        confirmText.emplace(game->mainFont, "Are you sure you want to exit?", 36);
+        confirmText->setFillColor(sf::Color::White);
+        sf::FloatRect textBounds = confirmText->getLocalBounds();
+        confirmText->setOrigin({ textBounds.position.x + textBounds.size.x / 2.0f,
+                                 textBounds.position.y + textBounds.size.y / 2.0f });
+        confirmText->setPosition({ viewSize.x / 2.0f, viewSize.y / 2.0f - 100.0f });
 
         float centerX = viewSize.x / 2.0f;
         float centerY = viewSize.y / 2.0f;
 
-        setupButton("empty_button", resumeTex, resumeBtn, { centerX, centerY - 80.0f }, { 200.0f, 60.0f });
-        setupButton("empty_button", settingsTex, settingsBtn, { centerX, centerY }, { 200.0f, 60.0f });
-        setupButton("empty_button", exitTex, exitBtn, { centerX, centerY + 80.0f }, { 200.0f, 60.0f });
 
-        setupButton("empty_button", yesTex, yesBtn, { centerX - 120.0f, centerY }, { 150.0f, 60.0f });
-        setupButton("empty_button", noTex, noBtn, { centerX + 120.0f, centerY }, { 150.0f, 60.0f });
+        setupButton("ui_empty_button", resumeBtn, { centerX, centerY - 80.0f }, { 200.0f, 60.0f });
+        setupButton("ui_empty_button", settingsBtn, { centerX, centerY }, { 200.0f, 60.0f });
+        setupButton("ui_empty_button", exitBtn, { centerX, centerY + 80.0f }, { 200.0f, 60.0f });
+
+        setupButton("ui_empty_button", yesBtn, { centerX - 120.0f, centerY }, { 150.0f, 60.0f });
+        setupButton("ui_empty_button", noBtn, { centerX + 120.0f, centerY }, { 150.0f, 60.0f });
 
         setupButtonText(resumeText, "RESUME", { centerX, centerY - 80.0f });
         setupButtonText(settingsText, "SETTINGS", { centerX, centerY });
@@ -50,37 +44,22 @@ namespace game::states
     {
         textObj.emplace(game->mainFont, str, fontSize);
         textObj->setFillColor(sf::Color::White);
-
         sf::FloatRect bounds = textObj->getLocalBounds();
         textObj->setOrigin({ std::round(bounds.position.x + bounds.size.x / 2.0f),
                              std::round(bounds.position.y + bounds.size.y / 2.0f) });
         textObj->setPosition(pos);
     }
 
-    void PauseState::setupButton(const std::string& key, std::optional<sf::Texture>& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
+    void PauseState::setupButton(const std::string& key, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
     {
-        if (game->menuUiBuffer.contains(key))
+        auto& rm = game::core::ResourceManager::get();
+        if (rm.hasTexture(key))
         {
-            try
-            {
-                tex.emplace(game->menuUiBuffer.at(key));
-                spr.emplace(*tex);
-
-                sf::Vector2f originalSize(tex->getSize());
-                float scaleX = targetSize.x / originalSize.x;
-                float scaleY = targetSize.y / originalSize.y;
-                spr->setScale({ scaleX, scaleY });
-                spr->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
-                spr->setPosition(pos);
-            }
-            catch (const std::exception& e)
-            {
-                std::cerr << "[UI ERROR] Creatig texture error '" << key << "': " << e.what() << '\n';
-            }
-        }
-        else
-        {
-            std::cerr << "[UI ERROR] can not to find a button '" << key << "' w menuUiBuffer\n";
+            spr.emplace(*rm.getTexture(key));
+            sf::Vector2f originalSize(spr->getTexture().getSize());
+            spr->setScale({ targetSize.x / originalSize.x, targetSize.y / originalSize.y });
+            spr->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
+            spr->setPosition(pos);
         }
     }
 

@@ -8,6 +8,7 @@
 #include "../components/ColliderComponent.h"
 #include "../components/SpriteComponent.h"
 #include "../components/AbilityComponent.h"
+#include "../components/MovementComponent.h"
 
 #include "../abilities/AcidSquirtAbility.h"
 #include "../abilities/ShotgunAbility.h"
@@ -99,6 +100,22 @@ namespace game::factories
         }
 
         entity->addComponent(std::move(abilities));
+
+        
+        // MAPS DEPENDENCY CONFIGURATION
+
+		std::string mapKey = game->selectedMapKey;
+        const auto& mapData = game->mapsConfig[mapKey];
+
+        if (auto* moveComp = entity->getComponent<game::components::MovementComponent>()) {
+            moveComp->setGamePointer(game);
+
+            float mapFriction = mapData["physics"].value("friction", 1.0f);
+            float mapSpeedMulti = mapData["physics"].value("speedMultiplier", 1.0f);
+
+            moveComp->setFriction(mapFriction);
+            moveComp->setSpeedMultiplier(mapSpeedMulti);
+        }
 
         return entity;
     }

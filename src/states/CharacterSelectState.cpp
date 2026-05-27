@@ -1,7 +1,9 @@
-// --- CharacterSelectState.cpp --- 
-
+// ==========================================
+// CharacterSelectState.cpp
+// ==========================================
 #include "CharacterSelectState.h"
 #include "../core/Game.h"
+#include "../core/ResourceManager.h" // NOWE! Odwołanie do menedżera
 #include <iostream>
 #include <cmath>
 #include <algorithm>
@@ -9,7 +11,7 @@
 
 namespace
 {
-    //stałe do pasków statystyk
+    // stałe do pasków statystyk
     constexpr float GAME_MAX_HP = 20.0f;
     constexpr float GAME_MAX_DAMAGE = 25.0f;
     constexpr float GAME_MAX_SPEED = 600.0f;
@@ -20,26 +22,23 @@ namespace game::states
     CharacterSelectState::CharacterSelectState(game::Game* game)
         : State(game), targetIndex(0), currentScroll(0.0f)
     {
+        auto& rm = game::core::ResourceManager::get();
+
         sf::Vector2f viewSize = game->getWindow().getView().getSize();
         float centerX = viewSize.x / 2.0f;
         float centerY = viewSize.y / 2.0f;
 
-        // Load Background
-        if (game->menuUiBuffer.contains("select_bg"))
+        if (rm.hasTexture("ui_select_bg"))
         {
-            if (bgTex.loadFromImage(game->menuUiBuffer["select_bg"])) {
-                bgSprite.emplace(bgTex); // SFML 3 explicit emplace due to strict constructors
-                sf::Vector2u bgSize(bgTex.getSize());
-                bgSprite->setScale({ viewSize.x / bgSize.x, viewSize.y / bgSize.y });
-            }
-
+            bgSprite.emplace(*rm.getTexture("ui_select_bg"));
+            sf::Vector2u bgSize(bgSprite->getTexture().getSize());
+            bgSprite->setScale({ viewSize.x / bgSize.x, viewSize.y / bgSize.y });
         }
 
         // dark overlay
         darkOverlay.setSize(viewSize);
         darkOverlay.setFillColor(sf::Color(0, 0, 0, 0));
 
-        // Setup typography with SFML 3 specific sf::Text constructor order: (font, string, size)
         characterNameText.emplace(game->mainFont, "", 45);
         characterNameText->setFillColor(sf::Color(255, 255, 255));
         characterNameText->setOutlineColor(sf::Color::Black);
@@ -58,10 +57,10 @@ namespace game::states
         initFireflies();
         loadRoster();
 
-        // Setup UI Buttons
-        setupButton("left_arrow", leftArrowTex, leftArrowSprite, { centerX - 450.f, centerY - 50.f }, { 80.f, 80.f });
-        setupButton("right_arrow", rightArrowTex, rightArrowSprite, { centerX + 450.f, centerY - 50.f }, { 80.f, 80.f });
-        setupButton("empty_button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
+        // 2. UI elements
+        setupButton("ui_left_arrow", leftArrowTex, leftArrowSprite, { centerX - 450.f, centerY - 50.f }, { 80.f, 80.f });
+        setupButton("ui_right_arrow", rightArrowTex, rightArrowSprite, { centerX + 450.f, centerY - 50.f }, { 80.f, 80.f });
+        setupButton("ui_empty_button", selectBtnTex, selectBtnSprite, { centerX, viewSize.y - 100.f }, { 170.f, 70.f });
 
         // Setup Text for Select Button
         selectBtnText.emplace(game->mainFont, "SELECT", 27);
@@ -69,32 +68,30 @@ namespace game::states
         selectBtnText->setOutlineColor(sf::Color::Black);
         selectBtnText->setOutlineThickness(4.5f);
 
-        // SFML 3 getLocalBounds uses .position and .size
         sf::FloatRect chooseTextRect = selectBtnText->getLocalBounds();
         selectBtnText->setOrigin({ std::round(chooseTextRect.position.x + chooseTextRect.size.x / 2.0f),
                                    std::round(chooseTextRect.position.y + chooseTextRect.size.y / 2.0f) });
         selectBtnText->setPosition({ centerX, viewSize.y - 100.f });
 
         // Additional UI
-        setupButton("back", backBtnTex, backBtnSprite, { 50.f, 50.f }, { 60.f, 60.f });
+        setupButton("ui_back", backBtnTex, backBtnSprite, { 50.f, 50.f }, { 60.f, 60.f });
+        setupButton("ui_hp_icon", hpIconTex, hpIconSprite, { 0.f, 0.f }, { 40.f, 40.f });
+        setupButton("ui_dmg_icon", dmgIconTex, dmgIconSprite, { 0.f, 0.f }, { 40.f, 40.f });
+        setupButton("ui_spd_icon", spdIconTex, spdIconSprite, { 0.f, 0.f }, { 40.f, 40.f });
 
-        setupButton("hp_icon", hpIconTex, hpIconSprite, { 0.f, 0.f }, { 40.f, 40.f });
-        setupButton("dmg_icon", dmgIconTex, dmgIconSprite, { 0.f, 0.f }, { 40.f, 40.f });
-        setupButton("spd_icon", spdIconTex, spdIconSprite, { 0.f, 0.f }, { 40.f, 40.f });
-
-        // --- PASKI STATYSTYK ---
-        if (game->menuUiBuffer.contains("stat_bar_frame") && statBarFrameTex.loadFromImage(game->menuUiBuffer["stat_bar_frame"]))
+        // --- Statistics bars ---
+        if (rm.hasTexture("ui_stat_bar_frame"))
         {
-            statBarFrameSprite.emplace(statBarFrameTex);
+            statBarFrameSprite.emplace(*rm.getTexture("ui_stat_bar_frame"));
             statBarFrameSprite->setScale({ 1.5f, 1.5f });
-            statBarFrameSprite->setOrigin({ 0.0f, static_cast<float>(statBarFrameTex.getSize().y) / 2.0f });
+            statBarFrameSprite->setOrigin({ 0.0f, static_cast<float>(statBarFrameSprite->getTexture().getSize().y) / 2.0f });
         }
 
-        if (game->menuUiBuffer.contains("stat_bar_fill") && statBarFillTex.loadFromImage(game->menuUiBuffer["stat_bar_fill"]))
+        if (rm.hasTexture("ui_stat_bar_fill"))
         {
-            statBarFillSprite.emplace(statBarFillTex);
+            statBarFillSprite.emplace(*rm.getTexture("ui_stat_bar_fill"));
             statBarFillSprite->setScale({ 1.5f, 1.5f });
-            statBarFillSprite->setOrigin({ 0.0f, static_cast<float>(statBarFillTex.getSize().y) / 2.0f });
+            statBarFillSprite->setOrigin({ 0.0f, static_cast<float>(statBarFillSprite->getTexture().getSize().y) / 2.0f });
         }
     }
 
@@ -143,9 +140,11 @@ namespace game::states
         }
     }
 
+    // --- ROASTER ---
     void CharacterSelectState::loadRoster()
     {
         roster.clear();
+        auto& rm = game::core::ResourceManager::get();
 
         for (auto& el : game->fruitsConfig.items())
         {
@@ -182,59 +181,52 @@ namespace game::states
             roster.push_back(std::move(opt));
             auto& savedFruit = roster.back();
 
-            if (game->menuUiBuffer.contains("log_platform"))
+            
+            if (rm.hasTexture("ui_log_platform"))
             {
-                if (savedFruit.platformTexture.loadFromImage(game->menuUiBuffer["log_platform"]))
-                {
-                    savedFruit.platformSprite.emplace(savedFruit.platformTexture);
-                    sf::Vector2u logSize(savedFruit.platformTexture.getSize());
-                    savedFruit.platformSprite->setOrigin({ logSize.x / 2.0f, logSize.y / 2.0f });
-                }
+                savedFruit.platformSprite.emplace(*rm.getTexture("ui_log_platform"));
+                sf::Vector2u logSize(savedFruit.platformSprite->getTexture().getSize());
+                savedFruit.platformSprite->setOrigin({ logSize.x / 2.0f, logSize.y / 2.0f });
             }
 
             int idleFramesCount = fruitData.value("idleFrames", 8);
             int initFramesCount = fruitData.value("initFrames", 8);
 
-            if (game->characterImageBuffer.contains(jsonKey))
+            if (rm.hasTexture(jsonKey + "_idle"))
             {
-                if (savedFruit.texture.loadFromImage(game->characterImageBuffer[jsonKey]))
+                savedFruit.sprite.emplace(*rm.getTexture(jsonKey + "_idle"));
+                sf::Vector2u size(savedFruit.sprite->getTexture().getSize());
+
+                if (size.x > size.y * 1.5f)
                 {
-                    savedFruit.sprite.emplace(savedFruit.texture);
-                    sf::Vector2u size(savedFruit.texture.getSize());
+                    savedFruit.isAnimated = true;
+                    int frameWidth = size.x / idleFramesCount;
+                    int frameHeight = size.y;
 
-                    if (size.x > size.y * 1.5f)
-                    {
-                        savedFruit.isAnimated = true;
-                        int frameWidth = size.x / idleFramesCount;
-                        int frameHeight = size.y;
-
-                        for (int i = 0; i < idleFramesCount; ++i) {
-                            savedFruit.animationFrames.push_back(sf::IntRect({ i * frameWidth, 0 }, { frameWidth, frameHeight }));
-                        }
-                        savedFruit.sprite->setTextureRect(savedFruit.animationFrames[0]);
-                        savedFruit.sprite->setOrigin({ frameWidth / 2.0f, frameHeight / 2.0f });
+                    for (int i = 0; i < idleFramesCount; ++i) {
+                        savedFruit.animationFrames.push_back(sf::IntRect({ i * frameWidth, 0 }, { frameWidth, frameHeight }));
                     }
-                    else
-                    {
-                        savedFruit.isAnimated = false;
-                        savedFruit.sprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
-                    }
+                    savedFruit.sprite->setTextureRect(savedFruit.animationFrames[0]);
+                    savedFruit.sprite->setOrigin({ frameWidth / 2.0f, frameHeight / 2.0f });
+                }
+                else
+                {
+                    savedFruit.isAnimated = false;
+                    savedFruit.sprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
                 }
             }
 
-            if (game->characterImageBuffer.contains(jsonKey + "_start"))
+            if (rm.hasTexture(jsonKey + "_start"))
             {
-                if (savedFruit.startTexture.loadFromImage(game->characterImageBuffer[jsonKey + "_start"]))
-                {
-                    savedFruit.hasStartAnimation = true;
-                    sf::Vector2u size(savedFruit.startTexture.getSize());
+                savedFruit.hasStartAnimation = true;
 
-                    int frameWidth = size.x / initFramesCount;
-                    int frameHeight = size.y;
 
-                    for (int i = 0; i < initFramesCount; ++i) {
-                        savedFruit.startAnimationFrames.push_back(sf::IntRect({ i * frameWidth, 0 }, { frameWidth, frameHeight }));
-                    }
+                sf::Vector2u size(rm.getTexture(jsonKey + "_start")->getSize());
+                int frameWidth = size.x / initFramesCount;
+                int frameHeight = size.y;
+
+                for (int i = 0; i < initFramesCount; ++i) {
+                    savedFruit.startAnimationFrames.push_back(sf::IntRect({ i * frameWidth, 0 }, { frameWidth, frameHeight }));
                 }
             }
         }
@@ -242,16 +234,14 @@ namespace game::states
 
     void CharacterSelectState::setupButton(const std::string& key, sf::Texture& tex, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
     {
-        if (game->menuUiBuffer.contains(key))
+        auto& rm = game::core::ResourceManager::get();
+        if (rm.hasTexture(key))
         {
-            if (tex.loadFromImage(game->menuUiBuffer[key]))
-            {
-                spr.emplace(tex);
-                sf::Vector2u originalSize(tex.getSize());
-                spr->setScale({ targetSize.x / originalSize.x, targetSize.y / originalSize.y });
-                spr->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
-                spr->setPosition(pos);
-            }
+            spr.emplace(*rm.getTexture(key));
+            sf::Vector2u originalSize(spr->getTexture().getSize());
+            spr->setScale({ targetSize.x / originalSize.x, targetSize.y / originalSize.y });
+            spr->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
+            spr->setPosition(pos);
         }
     }
 
@@ -322,6 +312,8 @@ namespace game::states
         float centerX = viewSize.x / 2.0f;
         float centerY = viewSize.y / 2.0f - 50.f;
 
+        auto& rm = game::core::ResourceManager::get();
+
         for (int i = 0; i < roster.size(); ++i)
         {
             float diff = static_cast<float>(i) - currentScroll;
@@ -364,7 +356,10 @@ namespace game::states
                         roster[i].currentFrameIndex = 0;
                         roster[i].animationTimer = 0.0f;
 
-                        roster[i].sprite->setTexture(roster[i].startTexture, true);
+                        if (rm.hasTexture(roster[i].jsonKey + "_start")) {
+                            roster[i].sprite->setTexture(*rm.getTexture(roster[i].jsonKey + "_start"), true);
+                        }
+
                         if (!roster[i].startAnimationFrames.empty()) {
                             roster[i].sprite->setTextureRect(roster[i].startAnimationFrames[0]);
                         }
@@ -383,7 +378,10 @@ namespace game::states
                                 roster[i].isPlayingStartAnimation = false;
                                 roster[i].currentFrameIndex = 0;
 
-                                roster[i].sprite->setTexture(roster[i].texture, true);
+                                if (rm.hasTexture(roster[i].jsonKey + "_idle")) {
+                                    roster[i].sprite->setTexture(*rm.getTexture(roster[i].jsonKey + "_idle"), true);
+                                }
+
                                 if (!roster[i].animationFrames.empty()) {
                                     roster[i].sprite->setTextureRect(roster[i].animationFrames[0]);
                                 }
@@ -395,7 +393,11 @@ namespace game::states
                         else
                         {
                             roster[i].currentFrameIndex = (roster[i].currentFrameIndex + 1) % roster[i].animationFrames.size();
-                            roster[i].sprite->setTexture(roster[i].texture, true);
+
+                            if (rm.hasTexture(roster[i].jsonKey + "_idle")) {
+                                roster[i].sprite->setTexture(*rm.getTexture(roster[i].jsonKey + "_idle"), true);
+                            }
+
                             roster[i].sprite->setTextureRect(roster[i].animationFrames[roster[i].currentFrameIndex]);
                         }
                     }
@@ -407,7 +409,9 @@ namespace game::states
                     roster[i].isPlayingStartAnimation = false;
                     roster[i].hasPlayedStartAnimation = false;
 
-                    roster[i].sprite->setTexture(roster[i].texture, true);
+                    if (rm.hasTexture(roster[i].jsonKey + "_idle")) {
+                        roster[i].sprite->setTexture(*rm.getTexture(roster[i].jsonKey + "_idle"), true);
+                    }
                     if (!roster[i].animationFrames.empty()) {
                         roster[i].sprite->setTextureRect(roster[i].animationFrames[0]);
                     }
@@ -447,7 +451,7 @@ namespace game::states
                     (*txt)->setScale({ 1.0f, 1.0f });
                 }
             }
-        };
+            };
 
         updateHover(leftArrowSprite, { 80.f, 80.f });
         updateHover(rightArrowSprite, { 80.f, 80.f });
@@ -470,34 +474,26 @@ namespace game::states
         }
     }
 
-    // --- ZAKTUALIZOWANA, PROFESJONALNA FUNKCJA RYSOWANIA STATYSTYK ---
     void CharacterSelectState::drawStatBar(sf::RenderWindow& window, std::optional<sf::Sprite>& icon, int value, float gameMaxValue, sf::Vector2f pos, sf::Color barColor, const std::string& labelText)
     {
-        // 1. Rysowanie ikony
         if (icon) {
-            // Ponieważ ikona z setupButton ma ustawiony origin na środku, 
-            // przesuwamy ją delikatnie w prawo (o jej promień, czyli ~20.f), 
-            // aby jej lewa krawędź dotykała matematycznego punktu X.
             icon->setPosition({ std::round(pos.x + 20.f), std::round(pos.y) });
             window.draw(*icon);
         }
 
-        // 2. Rysowanie skróconej etykiety (HP, DMG, SPD)
         if (!labelText.empty()) {
             sf::Text titleText(game->mainFont, labelText, 20);
             titleText.setFillColor(sf::Color(220, 220, 220));
             titleText.setOutlineColor(sf::Color::Black);
             titleText.setOutlineThickness(2.0f);
 
-            // Centrujemy tekst idealnie w osi Y
             sf::FloatRect titleBounds = titleText.getLocalBounds();
             titleText.setOrigin({ 0.f, std::round(titleBounds.position.y + titleBounds.size.y / 2.0f) });
             titleText.setPosition({ std::round(pos.x + 50.f), std::round(pos.y) });
             window.draw(titleText);
         }
 
-        // 3. Rysowanie pasków
-        float barStartX = pos.x + 110.f; // Niezależnie od długości tekstu, pasek zawsze zaczyna się w tym samym miejscu
+        float barStartX = pos.x + 110.f;
         sf::Vector2f barPos = { std::round(barStartX), std::round(pos.y) };
 
         if (statBarFrameSprite) {
@@ -518,7 +514,6 @@ namespace game::states
             window.draw(*statBarFillSprite);
         }
 
-        // 4. Rysowanie wartości
         sf::Text valueText(game->mainFont, std::to_string(value), 20);
         valueText.setFillColor(sf::Color::White);
         valueText.setOutlineColor(sf::Color::Black);
@@ -527,7 +522,6 @@ namespace game::states
         float barDisplayWidth = statBarFrameSprite ? statBarFrameSprite->getGlobalBounds().size.x : 100.0f;
         sf::FloatRect textBounds = valueText.getLocalBounds();
 
-        // Centrowanie w osi Y
         valueText.setOrigin({ 0.f, std::round(textBounds.position.y + textBounds.size.y / 2.0f) });
         valueText.setPosition({ std::round(barStartX + barDisplayWidth + 15.f), std::round(pos.y) });
         window.draw(valueText);
@@ -587,15 +581,13 @@ namespace game::states
             int actualIndex = (targetIndex % N + N) % N;
             sf::Vector2f viewSize = game->getWindow().getView().getSize();
 
-            // Zwarte, estetyczne pozycjonowanie całości
             float barStartX = 45.f;
             float baseBarY = viewSize.y - 180.f;
-            float spacingY = 45.f; // Mniejszy odstęp pionowy dla zachowania spójności
+            float spacingY = 45.f;
 
-            // Tło za statystykami poprawiające czytelność (opcjonalne, ale bardzo zalecane w pixel-arcie)
             sf::RectangleShape statsPanelBg({ 420.f, 160.f });
             statsPanelBg.setPosition({ 20.f, viewSize.y - 210.f });
-            statsPanelBg.setFillColor(sf::Color(20, 20, 25, 210)); // Półprzezroczysty, ciemny grafit
+            statsPanelBg.setFillColor(sf::Color(20, 20, 25, 210));
             statsPanelBg.setOutlineThickness(2.f);
             statsPanelBg.setOutlineColor(sf::Color(80, 80, 80, 150));
             window.draw(statsPanelBg);

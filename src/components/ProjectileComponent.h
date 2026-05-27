@@ -1,6 +1,5 @@
-// ==========================================
-// components/ProjectileComponent.h
-// ==========================================
+// --- ProjectileComponent.h ---
+
 #pragma once
 #include "Component.h"
 #include <SFML/Graphics.hpp>
@@ -9,28 +8,29 @@
 
 namespace game::components
 {
-    enum class StatusEffect { None, Poison };
+    enum class StatusEffect { None, Poison, IceShatter };
 
     class ProjectileComponent final : public Component
     {
     public:
-        // Przywrócony stary konstruktor!
         ProjectileComponent(sf::Vector2f startPos, sf::Vector2f direction);
 
-        // Tymczasowa metoda dla kompatybilno?ci z PlayingState
         void update(float dt, const sf::Image& collisionMask, float mapScale);
-        void update(float dt) override; // Wymagane przez Component bazowy
+        void update(float dt) override;
         void render(sf::RenderWindow& window) override;
 
         void setupParabolic(sf::Vector2f start, sf::Vector2f target, float customSpeed);
+        void setupDropFromSky(sf::Vector2f targetPos, float dropHeight, float customSpeed);
+
         void addVelocity(sf::Vector2f additionalVelocity);
         void destroy();
 
-        // Przywrócone stare nazwy getterów!
         bool getIsActive() const;
         sf::Vector2f getPosition() const;
         float getRadius() const;
         StatusEffect getStatusEffect() const;
+        float getDamage() const { return damage_; }
+        void setDamage(float dmg) { damage_ = dmg; }
 
         void setAppearance(float radius, sf::Color color);
         void setSpeedMultiplier(float multi);
@@ -41,12 +41,14 @@ namespace game::components
         bool consumeSplash();
 
     private:
-        sf::Vector2f position_; // Tymczasowo w?asna pozycja, bo obiekt le?y luzem w wektorze
+        sf::Vector2f position_;
         sf::Vector2f velocity_;
         float speed_ = 800.0f;
         float speedMultiplier_ = 1.0f;
         float lifetime_ = 0.0f;
         bool isActive_ = true;
+
+        float damage_ = 25.0f; // default damage
 
         bool useTexture_ = false;
         bool renderFallbackShape_ = true;
@@ -69,6 +71,8 @@ namespace game::components
         bool isFake3DRoll_ = false;
 
         bool isParabolic_ = false;
+        bool isDropping_ = false;
+
         sf::Vector2f targetPos_;
         sf::Vector2f startPos_;
         float totalDistance_ = 0.0f;

@@ -7,6 +7,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <memory>
 #include <optional>
 #include <iostream>
 
@@ -20,35 +21,25 @@ namespace game::core
         ResourceManager(const ResourceManager&) = delete;
         ResourceManager& operator=(const ResourceManager&) = delete;
 
-        bool loadTexture(
-            const std::string& id,
-            const std::string& filepath);
+        bool loadTexture(const std::string& id, const std::string& filepath);
+        bool loadImage(const std::string& id, const std::string& filepath);
+        bool loadFont(const std::string& id, const std::string& filepath);
+        bool loadSound(const std::string& id, const std::string& filepath);
 
-        bool loadImage(
-            const std::string& id,
-            const std::string& filepath);
+		// reverse compatibility raw pointer
+        sf::Texture* getTexture(const std::string& id);
 
-        bool loadFont(
-            const std::string& id,
-            const std::string& filepath);
+        // retunr shared pointer
+        std::shared_ptr<sf::Texture> getTextureShared(const std::string& id);
 
-        bool loadSound(
-            const std::string& id,
-            const std::string& filepath);
-
-        sf::Texture* getTexture(
-            const std::string& id);
-
-        sf::Image* getImage(
-            const std::string& id) const;
-
-        sf::Font* getFont(
-            const std::string& id);
-
-        sf::SoundBuffer* getSound(
-            const std::string& id);
+        sf::Image* getImage(const std::string& id) const;
+        sf::Font* getFont(const std::string& id);
+        sf::SoundBuffer* getSound(const std::string& id);
 
         bool hasTexture(const std::string& id) const;
+
+		// Clean up a specific texture resource
+        void removeTexture(const std::string& id);
 
         void clear();
 
@@ -56,7 +47,7 @@ namespace game::core
         ResourceManager() = default;
 
     private:
-        std::unordered_map<std::string, sf::Texture> textures_;
+        std::unordered_map<std::string, std::shared_ptr<sf::Texture>> textures_;
         std::unordered_map<std::string, sf::Image> images_;
         std::unordered_map<std::string, sf::Font> fonts_;
         std::unordered_map<std::string, sf::SoundBuffer> sounds_;

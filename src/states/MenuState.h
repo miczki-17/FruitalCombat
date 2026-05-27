@@ -1,64 +1,53 @@
-// --- MenuState.h --- 
-
+// --- MenuState.h ---
 
 #pragma once
 
 #include "State.h"
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 #include <optional>
 #include <vector>
+#include <memory>
 
 namespace game::states
 {
-	class MenuState : public State
-	{
-	private:
-		// Background textures vector
-		std::vector<sf::Texture> bgTextures;
+    class MenuState : public State
+    {
+    private:
+        std::vector<std::shared_ptr<sf::Texture>> bgTextures;
+        std::optional<sf::Sprite> frameSprite;
 
-		std::optional<sf::Sprite> frameSprite;
 
-		// Menu Buttons
-		sf::Texture startBtnTex;
-		std::optional<sf::Sprite> startBtnSprite;
+        std::optional<sf::Sprite> startBtnSprite;
+        std::optional<sf::Text> startText;
 
-		// START text
-		std::optional<sf::Text> startText;
+        std::optional<sf::Sprite> settingsBtnSprite;
+        std::optional<sf::Sprite> shopBtnSprite;
+        std::optional<sf::Sprite> achievementsBtnSprite;
+        std::optional<sf::Sprite> backBtnSprite;
 
-		sf::Texture settingsBtnTex;
-		std::optional<sf::Sprite> settingsBtnSprite;
+        // Background animation logic
+        int currentFrame;
+        int totalFrames;
+        float frameDuration;
+        float elapsedTime;
 
-		sf::Texture shopBtnTex;
-		std::optional<sf::Sprite> shopBtnSprite;
+        // Button logic properties
+        const float baseScale = 1.0f;
+        const float pulseAmplitude = 0.05f;
+        const float pulseSpeed = 4.0f;
+        sf::Clock clock;
 
-		sf::Texture achievementsBtnTex;
-		std::optional<sf::Sprite> achievementsBtnSprite;
+    public:
+        MenuState(game::Game* game);
 
-		sf::Texture backBtnTex;
-		std::optional<sf::Sprite> backBtnSprite;
+        StateType getType() const override;
 
-		// Background animation logic
-		int currentFrame;
-		int totalFrames;
-		float frameDuration;
-		float elapsedTime;
+        void handleEvent(const sf::Event& event) override;
+        void update(float dt) override;
+        void render(sf::RenderWindow& window) override;
 
-		// Button logic properties
-		const float baseScale = 1.0f;
-		const float pulseAmplitude = 0.05f;
-		const float pulseSpeed = 4.0f;
-		sf::Clock clock;
-
-	public:
-		MenuState(game::Game* game);
-
-		StateType getType() const override;
-
-		void handleEvent(const sf::Event& event) override;
-		void update(float dt) override;
-		void render(sf::RenderWindow& window) override;
-
-		void buttonPulse(std::optional<sf::Sprite>& btnSprite, sf::Vector2f targetSizeInPixels, std::optional<sf::Text>* linkedText = nullptr);
-	};
+        void buttonPulse(std::optional<sf::Sprite>& btnSprite, sf::Vector2f targetSizeInPixels, std::optional<sf::Text>* linkedText = nullptr);
+    };
 }

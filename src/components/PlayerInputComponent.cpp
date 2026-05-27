@@ -25,16 +25,9 @@ namespace game::components
         if (sf::Keyboard::isKeyPressed(game_->keyLeft))  input.x -= 1.f;
         if (sf::Keyboard::isKeyPressed(game_->keyRight)) input.x += 1.f;
 
-        // Je?li posta? posiada komponent ruchu, przekazujemy mu bezpiecznie znormalizowan? intencj?
         if (auto* moveComp = owner->getComponent<MovementComponent>())
         {
             moveComp->setDesiredDirection(game::utils::math::safeNormalize(input));
         }
-    }
-
-    void ProjectileComponent::setWobble(bool state, bool fake3DRoll)
-    {
-        isWobbly_ = state;
-        isFake3DRoll_ = fake3DRoll;
     }
 }

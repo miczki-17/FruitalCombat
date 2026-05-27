@@ -17,13 +17,13 @@ namespace game::components
     MovementComponent::MovementComponent(game::Game* game, float maxSpeed)
         : maxSpeed_(maxSpeed)
     {
-        // game_ nie jest ju? polem tej klasy. Fizyka nie potrzebuje klawiatury!
+        // game_ nie jest juz polem tej klasy. Fizyka nie potrzebuje klawiatury.
     }
 
     void MovementComponent::setGamePointer(game::Game* game)
     {
-        // Sprytny punkt wstrzykni?cia: gdy PlayingState wywo?a t? funkcj? na graczu,
-        // automatycznie dodamy mu komponent wej?ciowy obs?uguj?cy klawiatur?.
+        // Sprytny punkt wstrzykne?cia: gdy PlayingState wywola ta funkcj na graczu,
+        // automatycznie dodamy mu komponent wejsciowy obslugujacy klawiature.
         if (game && owner && !owner->getComponent<PlayerInputComponent>())
         {
             owner->addComponent(std::make_unique<PlayerInputComponent>(game));
@@ -81,7 +81,6 @@ namespace game::components
     {
         owner->velocity -= owner->velocity * stopDrag_ * deltaTime;
 
-        // NOWO?? SFML 3: .length() zamiast r?cznego sqrt
         if (owner->velocity.length() < STOP_THRESHOLD)
         {
             owner->velocity = { 0.f, 0.f };
@@ -109,7 +108,17 @@ namespace game::components
         float speed = owner->velocity.length(); // SFML 3
         if (speed <= maxSpeed || speed <= 0.001f) return;
 
-        // NOWO?? SFML 3: .normalized() produkuje czysty wektor jednostkowy bez modyfikacji orygina?u
         owner->velocity = owner->velocity.normalized() * maxSpeed;
     }
+
+    void MovementComponent::setFriction(const float friction)
+    {
+        activeDrag_ = friction;
+        stopDrag_ = friction * 2.0f; // Stop drag jest zawsze silniejszy, by postac szybciej sie zatrzymywala
+	}
+
+    void MovementComponent::setSpeedMultiplier(const float multiplier)
+    {
+        maxSpeed_ *= multiplier;
+	}
 }

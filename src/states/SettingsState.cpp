@@ -7,6 +7,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm> // Wymagane dla std::clamp
+#include "../core/ResourceManager.h"
 
 namespace game::states
 {
@@ -14,10 +15,11 @@ namespace game::states
 		: State(game)
 	{
 		sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
+		auto& rm = game::core::ResourceManager::get();
 
-		if (game->menuUiBuffer.contains("select_bg"))
+		if (rm.hasTexture("select_bg"))
 		{
-			if (bgTexture.loadFromImage(game->menuUiBuffer["select_bg"]))
+			if (bgTexture.loadFromImage(*rm.getImage("select_bg")))
 			{
 				bgSprite = sf::Sprite(bgTexture);
 				sf::Vector2f texSize(bgTexture.getSize());
@@ -70,20 +72,15 @@ namespace game::states
 		setupBindRow(rightLabel, rightBtnText, "Move Right", 520.f);
 
 		// --- BACK BUTTON ---
-		if (game->menuUiBuffer.contains("back"))
+		if (rm.hasTexture("ui_back"))
 		{
-			if (backBtnTex.loadFromImage(game->menuUiBuffer["back"]))
-			{
-				backBtnSprite = sf::Sprite(backBtnTex);
-				sf::Vector2f originalSize(backBtnTex.getSize());
+			backBtnSprite.emplace(*rm.getTexture("ui_back"));
 
-				sf::Vector2f targetSize(60.f, 60.f);
-				backBtnSprite->setScale({ targetSize.x / originalSize.x, targetSize.y / originalSize.y });
+			const auto size = backBtnSprite->getTexture().getSize();
 
-				backBtnSprite->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
-
-				backBtnSprite->setPosition({ 50.f, 50.f });
-			}
+			backBtnSprite->setScale({ 60.f / size.x, 60.f / size.y });
+			backBtnSprite->setOrigin({ size.x / 2.f, size.y / 2.f });
+			backBtnSprite->setPosition({ 50.f, 50.f });
 		}
 
 		currentVolume = sf::Listener::getGlobalVolume();

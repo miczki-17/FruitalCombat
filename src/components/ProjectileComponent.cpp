@@ -1,6 +1,5 @@
-// ==========================================
-// components/ProjectileComponent.cpp
-// ==========================================
+// --- ProjectileComponent.cpp ---
+
 #include "ProjectileComponent.h"
 #include <cmath>
 #include <algorithm>
@@ -10,57 +9,52 @@ namespace game::components
     ProjectileComponent::ProjectileComponent(sf::Vector2f startPos, sf::Vector2f direction)
         : position_(startPos)
     {
-        shape_.setRadius(radius_);
-        shape_.setFillColor(color_);
-        shape_.setOrigin({ radius_, radius_ });
-        shape_.setPosition(position_);
-
+        float len = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+        if (len != 0.0f) {
+            direction.x /= len;
+            direction.y /= len;
+        }
         velocity_ = direction * speed_;
-    }
 
-    void ProjectileComponent::setAppearance(float radius, sf::Color color)
-    {
-        radius_ = radius;
-        color_ = color;
         shape_.setRadius(radius_);
-        shape_.setFillColor(color_);
         shape_.setOrigin({ radius_, radius_ });
-    }
-
-    void ProjectileComponent::setAnimation(std::shared_ptr<sf::Texture> tex, int frames, float animSpeed, sf::Vector2i size)
-    {
-        if (!tex || tex->getSize().x == 0 || tex->getSize().y == 0) return;
-
-        useTexture_ = true;
-        renderFallbackShape_ = false;
-        texture_ = tex;
-        totalFrames_ = frames;
-        frameDuration_ = animSpeed;
-        frameSize_ = size;
-        currentFrame_ = 0;
-        frameTimer_ = frameDuration_;
-
-        sprite_.emplace(*texture_);
-        sprite_->setTextureRect(sf::IntRect({ 0, 0 }, frameSize_));
-        sprite_->setOrigin({ frameSize_.x / 2.0f, frameSize_.y / 2.0f });
+        shape_.setFillColor(color_);
+        shape_.setPosition(position_);
     }
 
     void ProjectileComponent::setupParabolic(sf::Vector2f start, sf::Vector2f target, float customSpeed)
     {
         isParabolic_ = true;
         startPos_ = start;
-        position_ = start;
         targetPos_ = target;
+        position_ = start;
         speed_ = customSpeed;
 
-        sf::Vector2f toTarget = targetPos_ - startPos_;
-        totalDistance_ = std::sqrt(toTarget.x * toTarget.x + toTarget.y * toTarget.y);
-
-        if (totalDistance_ > 0.001f)
-            velocity_ = (toTarget / totalDistance_) * speed_;
+        sf::Vector2f diff = target - start;
+        totalDistance_ = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+        if (totalDistance_ > 0.0001f) {
+            velocity_ = (diff / totalDistance_) * speed_;
+        }
 
         shadowShape_.setRadius(radius_);
-        shadowShape_.setFillColor(sf::Color(0, 0, 0, 100));
+        shadowShape_.setFillColor(sf::Color(0, 0, 0, 150));
+        shadowShape_.setOrigin({ radius_, radius_ });
+    }
+
+    void ProjectileComponent::setupDropFromSky(sf::Vector2f targetPos, float dropHeight, float customSpeed)
+    {
+        isDropping_ = true;
+        targetPos_ = targetPos;
+        startPos_ = { targetPos.x, targetPos.y - dropHeight };
+        position_ = startPos_;
+        speed_ = customSpeed;
+
+        // velocity of scaling only in Y direction
+        velocity_ = { 0.f, speed_ };
+        totalDistance_ = dropHeight;
+
+        shadowShape_.setRadius(radius_);
+        shadowShape_.setFillColor(sf::Color(0, 0, 0, 150));
         shadowShape_.setOrigin({ radius_, radius_ });
     }
 
@@ -78,46 +72,71 @@ namespace game::components
     sf::Vector2f ProjectileComponent::getPosition() const { return position_; }
     float ProjectileComponent::getRadius() const { return radius_; }
     StatusEffect ProjectileComponent::getStatusEffect() const { return payloadStatus_; }
-    void ProjectileComponent::setSpeedMultiplier(float multi) { speedMultiplier_ = multi; }
-    void ProjectileComponent::setStatusEffect(StatusEffect status) { payloadStatus_ = status; }
-
-    void ProjectileComponent::update(float dt)
+    bool ProjectileComponent::consumeSplash()
     {
-        // Pusta implementacja dla Component::update
+        if (spawnSplash_) {
+            spawnSplash_ = false;
+            return true;
+        }
+        return false;
+    }
+
+    void ProjectileComponent::setAppearance(float radius, sf::Color color)
+    {
+        radius_ = radius;
+        color_ = color;
+        shape_.setRadius(radius_);
+        shape_.setOrigin({ radius_, radius_ });
+        shape_.setFillColor(color_);
+    }
+
+    void ProjectileComponent::setSpeedMultiplier(float multi)
+    {
+        speedMultiplier_ = multi;
+    }
+
+    void ProjectileComponent::setStatusEffect(StatusEffect status)
+    {
+        payloadStatus_ = status;
+    }
+
+    void ProjectileComponent::setWobble(bool state, bool fake3DRoll)
+    {
+        isWobbly_ = state;
+        isFake3DRoll_ = fake3DRoll;
+    }
+
+    void ProjectileComponent::setAnimation(std::shared_ptr<sf::Texture> tex, int frames, float animSpeed, sf::Vector2i size)
+    {
+        if (!tex) return;
+        texture_ = tex;
+        totalFrames_ = frames;
+        frameDuration_ = animSpeed;
+        frameSize_ = size;
+
+        useTexture_ = true;
+        renderFallbackShape_ = false;
+
+        sprite_.emplace(*texture_);
+        sprite_->setTextureRect(sf::IntRect({ 0, 0 }, frameSize_));
+        sprite_->setOrigin({ frameSize_.x / 2.0f, frameSize_.y / 2.0f });
+
+        if (!isWobbly_ && !isParabolic_ && !isDropping_) {
+            float angle = std::atan2(velocity_.y, velocity_.x) * 180.0f / 3.14159f;
+            sprite_->setRotation(sf::degrees(angle));
+        }
     }
 
     void ProjectileComponent::update(float dt, const sf::Image& collisionMask, float mapScale)
     {
         if (!isActive_) return;
-
         lifetime_ += dt;
-        if (lifetime_ > 8.0f)
+
+        // --- Move from sky (vertical drop) ---
+        if (isDropping_)
         {
-            destroy();
-            return;
-        }
-
-        if (mapScale <= 0.0001f) return;
-
-        // --- ANIMACJA ---
-        if (useTexture_ && totalFrames_ > 1 && sprite_.has_value())
-        {
-            frameTimer_ -= dt;
-            if (frameTimer_ <= 0.0f)
-            {
-                frameTimer_ = frameDuration_;
-                currentFrame_ = (currentFrame_ + 1) % totalFrames_;
-                sprite_->setTextureRect(sf::IntRect({ currentFrame_ * frameSize_.x, 0 }, frameSize_));
-            }
-        }
-
-        // --- RUCH ---
-        if (isParabolic_)
-        {
-            sf::Vector2f toTarget = targetPos_ - position_;
-            float distLeft = std::sqrt(toTarget.x * toTarget.x + toTarget.y * toTarget.y);
-
-            if (distLeft < 8.0f || (velocity_.x * toTarget.x + velocity_.y * toTarget.y) < 0.0f)
+            float distLeft = targetPos_.y - position_.y;
+            if (distLeft <= 0.0f)
             {
                 position_ = targetPos_;
                 spawnSplash_ = true;
@@ -125,60 +144,115 @@ namespace game::components
                 return;
             }
 
-            position_ += velocity_ * dt;
+            position_ += velocity_ * dt * speedMultiplier_;
+            float progress = std::clamp(1.0f - (distLeft / totalDistance_), 0.0f, 1.0f);
 
-            sf::Vector2f traveledVec = position_ - startPos_;
-            float traveledDist = std::sqrt(traveledVec.x * traveledVec.x + traveledVec.y * traveledVec.y);
-            float progress = std::clamp(traveledDist / totalDistance_, 0.0f, 1.0f);
-
-            float distanceFactor = std::clamp(totalDistance_ / 900.0f, 0.0f, 1.0f);
-            float arcHeight = minArcHeight_ + distanceFactor * (maxArcHeight_ - minArcHeight_);
-            float currentHeight = 4.0f * arcHeight * progress * (1.0f - progress);
-
-            sf::Vector2f visualPos = { position_.x, position_.y - currentHeight };
-            shape_.setPosition(visualPos);
-            if (sprite_.has_value()) sprite_->setPosition(visualPos);
-
-            shadowShape_.setPosition(position_);
-            float shadowScale = 1.0f - (currentHeight / arcHeight) * 0.5f;
+			// shadow goes from 2.5x scale to 0 as it falls, and becomes more transparent
+            float shadowScale = 2.5f * (1.0f - progress);
+            shadowShape_.setPosition(targetPos_);
             shadowShape_.setScale({ shadowScale, shadowScale });
-            shadowShape_.setFillColor(sf::Color(0, 0, 0, static_cast<uint8_t>(100 * (1.0f - progress * 0.3f))));
+            shadowShape_.setFillColor(sf::Color(0, 0, 0, static_cast<std::uint8_t>(150 * (1.0f - progress))));
 
-            float angleDeg = std::atan2(velocity_.y, velocity_.x) * 180.0f / 3.14159265f;
-            if (sprite_.has_value()) sprite_->setRotation(sf::degrees(angleDeg + 90.0f));
-        }
-        else
-        {
-            position_ += velocity_ * speedMultiplier_ * dt;
             shape_.setPosition(position_);
             if (sprite_.has_value()) sprite_->setPosition(position_);
         }
-
-        // --- KOLIZJA ---
-        sf::Vector2u maskSize = collisionMask.getSize();
-        int px = static_cast<int>(position_.x / mapScale);
-        int py = static_cast<int>(position_.y / mapScale);
-
-        if (px < 0 || py < 0 || px >= static_cast<int>(maskSize.x) || py >= static_cast<int>(maskSize.y) ||
-            collisionMask.getPixel(sf::Vector2u(px, py)) == sf::Color::Black)
+        // --- PARABOLIC MOVEMENT ---
+        else if (isParabolic_)
         {
-            destroy();
+            sf::Vector2f diff = targetPos_ - position_;
+            float currentDist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+
+            if (currentDist < 15.0f)
+            {
+                position_ = targetPos_;
+                spawnSplash_ = true;
+                destroy();
+                return;
+            }
+
+            position_ += velocity_ * dt * speedMultiplier_;
+
+            float progress = 1.0f - (currentDist / totalDistance_);
+            progress = std::clamp(progress, 0.0f, 1.0f);
+
+            float currentArcHeight = maxArcHeight_ * std::sin(progress * 3.14159f);
+            if (currentArcHeight < minArcHeight_) currentArcHeight = minArcHeight_;
+
+            sf::Vector2f visualPos = position_;
+            visualPos.y -= currentArcHeight;
+
+            shadowShape_.setPosition(position_);
+            shadowShape_.setScale({ 1.0f - (currentArcHeight / maxArcHeight_) * 0.5f, 1.0f - (currentArcHeight / maxArcHeight_) * 0.5f });
+
+            shape_.setPosition(visualPos);
+            if (sprite_.has_value()) sprite_->setPosition(visualPos);
         }
+        // --- STANDARD MOVEMENT ON PLANE ---
+        else
+        {
+            position_ += velocity_ * dt * speedMultiplier_;
+            shape_.setPosition(position_);
+            if (sprite_.has_value()) sprite_->setPosition(position_);
+
+			// 1. check if projectile is out of bounds of the collision mask
+            sf::Vector2i pixelPos(static_cast<int>(position_.x / mapScale), static_cast<int>(position_.y / mapScale));
+
+            if (pixelPos.x < 0 || pixelPos.x >= static_cast<int>(collisionMask.getSize().x) ||
+                pixelPos.y < 0 || pixelPos.y >= static_cast<int>(collisionMask.getSize().y))
+            {
+                destroy();
+                return;
+            }
+
+			// 2. get pixel color from collision mask
+            sf::Color pixel = collisionMask.getPixel({ static_cast<unsigned int>(pixelPos.x), static_cast<unsigned int>(pixelPos.y) });
+ 
+            // if projectile hits a dark pixel (wall) -> destroy it
+            if (pixel.r < 50 && pixel.g < 50 && pixel.b < 50)
+            {
+                destroy();
+                return;
+            }
+        }
+
+        // --- ANIMATION ---
+        if (useTexture_ && sprite_.has_value())
+        {
+            frameTimer_ += dt;
+            if (frameTimer_ >= frameDuration_) {
+                frameTimer_ -= frameDuration_;
+                currentFrame_ = (currentFrame_ + 1) % totalFrames_;
+                sprite_->setTextureRect(sf::IntRect({ currentFrame_ * frameSize_.x, 0 }, frameSize_));
+            }
+
+            if (isWobbly_) {
+                float wave = std::sin(lifetime_ * 15.0f) * 15.0f;
+                sprite_->setRotation(sf::degrees(wave));
+            }
+            if (isFake3DRoll_) {
+                sprite_->rotate(sf::degrees(dt * 360.0f));
+            }
+        }
+    }
+
+    void ProjectileComponent::update(float /*dt*/)
+    {
+        // empty 
     }
 
     void ProjectileComponent::render(sf::RenderWindow& window)
     {
         if (!isActive_) return;
 
-        if (isParabolic_) window.draw(shadowShape_);
-        if (useTexture_ && sprite_.has_value()) window.draw(*sprite_);
-        else if (renderFallbackShape_) window.draw(shape_);
-    }
+        if (isParabolic_ || isDropping_) {
+            window.draw(shadowShape_);
+        }
 
-    bool ProjectileComponent::consumeSplash()
-    {
-        bool val = spawnSplash_;
-        spawnSplash_ = false;
-        return val;
+        if (useTexture_ && sprite_.has_value()) {
+            window.draw(*sprite_);
+        }
+        else if (renderFallbackShape_) {
+            window.draw(shape_);
+        }
     }
 }

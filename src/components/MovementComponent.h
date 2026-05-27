@@ -23,6 +23,9 @@ namespace game::components
         // Nowe, czyste API systemu gier: pozwala zewn?trznym komponentom sterowa? t? encj?
         void setDesiredDirection(const sf::Vector2f& dir);
 
+        void setFriction(const float friction);
+        void setSpeedMultiplier(const float multiplier);
+
     private:
         float maxSpeed_;
         float acceleration_ = 2500.0f;
@@ -38,5 +41,6 @@ namespace game::components
         void applyStopping(float deltaTime);
         void updateRollingState(float deltaTime);
         void limitSpeed(float maxSpeed);
+
     };
 }

@@ -25,6 +25,15 @@
     "dustB": 52,
     "dustA": 180,
 
+
+    "hazard": {
+      "damage": 4.0,
+      "speed": 600.0,
+      "dropHeight": 1200.0,
+      "radius": 8.0
+    },
+
+
     "spawnPoints": [
       {
         "x": 300,
@@ -63,6 +72,15 @@
     "dustB": 39,
     "dustA": 225,
 
+
+    "hazard": {
+      "damage": 20.0,
+      "speed": 900.0,
+      "dropHeight": 1200.0,
+      "radius": 50.0
+    },
+
+
     "spawnPoints": [
       {
         "x": 200,
@@ -100,6 +118,15 @@
     "dustG": 117,
     "dustB": 166,
     "dustA": 190,
+
+
+    "hazard": {
+      "damage": 8.0,
+      "speed": 900.0,
+      "dropHeight": 1200.0,
+      "radius": 35.0
+    },
+
 
     "spawnPoints": [
       {

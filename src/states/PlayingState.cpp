@@ -1,25 +1,20 @@
-// states/PlayingState.cpp
+// --- PlayingState.cpp ---
 
 #include "PlayingState.h"
-#include "../factories/FruitFactory.h"
-#include "../core/ArenaContext.h"
 #include "../core/ResourceManager.h"
 #include "../components/AbilityComponent.h"
-#include "../components/SpriteComponent.h"
-#include "../components/MovementComponent.h"
+#include "../components/StatsComponent.h"
+#include "../systems/EvolutionManager.h"
 #include <algorithm>
 #include <iostream>
 #include <random>
 
 namespace game::states
 {
-    // INICJALIZACJA I SEKCJA STARTOWA
-
     PlayingState::PlayingState(game::Game* game) : State(game)
     {
-        std::cout << "[PlayingState] Inicjalizacja areny i systemow...\n";
+        std::cout << "[PlayingState] Inicjalizacja swiata...\n";
 
-        // --- 1. Mapa i fizyka terenu ---
         std::string mapKey = game->selectedMapKey;
         const auto& mapData = game->mapsConfig[mapKey];
         std::string mapMaskPath = mapData.value("maskPath", "");
@@ -35,7 +30,24 @@ namespace game::states
             std::cerr << "[ERROR] Could not load collision mask from: " << mapMaskPath << '\n';
         }
 
-        // --- 2. Czyszczenie wspó?dzielonego ArenaContext ---
+        // --- Loading resources dependent on the map ---
+        auto& rm = game::core::ResourceManager::get();
+        if (mapKey == "CrisperDrawer")
+        {
+            rm.loadTexture("hazard_icicle", "assets/textures/hazards/icicle.png");
+            rm.loadTexture("hazard_icicle_shard", "assets/textures/hazards/icicle_shard.png");
+        }
+        else if (mapKey == "ChoppingBlock")
+        {
+            // rm.loadTexture("hazard_cleaver", "assets/textures/hazards/cleaver.png");
+        }
+        else if (mapKey == "WildOrchard")
+        {
+            // rm.loadTexture("hazard_spore", "assets/textures/hazards/spore.png");
+        }
+        // -------------------------------------------
+
+        // Clear arena context
         game->arenaContext.entities.clear();
         game->arenaContext.splashTextures.clear();
         game->arenaContext.zones.clear();
@@ -45,7 +57,6 @@ namespace game::states
         game->arenaContext.juiceDrops.clear();
         game->arenaContext.walkParticles.clear();
 
-        // ?adowanie wizualnych rozbryzgów kwasu
         for (int i = 1; i <= 3; i++) {
             auto tex = std::make_shared<sf::Texture>();
             if (tex->loadFromFile("assets/textures/entities/characters/citrus_maximus/orange_acid_splash_" + std::to_string(i) + ".png")) {
@@ -61,42 +72,35 @@ namespace game::states
             static_cast<std::uint8_t>(mapData.value("dustA", 150))
         );
 
-        // --- 3. Inicjalizacja HUD ---
         initHUD();
 
-        // --- 4. Fabryki i narodziny Gracza ---
-        game::factories::FruitFactory factory(game->arenaContext, game->fruitsConfig, collisionMask, mapScale, enemies);
-        player = factory.createFruit(game->selectedFruitType);
+        // Create the game world with the loaded map and collision data
+        sf::Vector2f startPos(mapLimits.x / 2.0f, mapLimits.y / 2.0f);
+        world = std::make_unique<game::core::GameWorld>(game, collisionMask, mapScale, startPos);
 
-        if (player != nullptr) {
-            player->position = sf::Vector2f(mapLimits.x / 2.0f, mapLimits.y / 2.0f);
-            lastPlayerPos = player->position;
-
-            game->arenaContext.playerStats = player->getComponent<game::components::StatsComponent>();
-
-            if (auto* moveComp = player->getComponent<game::components::MovementComponent>()) {
-                moveComp->setGamePointer(game);
-            }
-        }
-
-        // --- 5. Fabryka Mutantów i Evolution Manager ---
-        mutantFactory = std::make_unique<game::factories::MutantFactory>(game->arenaContext, game, collisionMask, mapScale);
-        evolutionManager = std::make_unique<game::systems::EvolutionManager>(
-            *mutantFactory, enemies, player.get(), game->enemiesConfig, collisionMask, mapScale
-        );
-
-        evolutionManager->startFirstWave();
-
-        // --- 6. POWO?ANIE NOWYCH SYSTEMÓW DO ?YCIA ---
-        collisionSystem = std::make_unique<game::systems::CollisionSystem>(game->arenaContext, enemies);
-        combatSystem = std::make_unique<game::systems::CombatSystem>(game, game->arenaContext, enemies);
-        particleSystem = std::make_unique<game::systems::ParticleSystem>(game->arenaContext);
-        renderSystem = std::make_unique<game::systems::RenderSystem>(game->arenaContext);
-
-        // --- 7. Ustawienie Kamery SFML ---
         cameraView = game->getWindow().getDefaultView();
         cameraView.zoom(1.4f);
     }
+
+	// CLEAR RAM RESOURCES DEPENDING ON THE MAP
+    PlayingState::~PlayingState()
+    {
+        std::cout << "[PlayingState] Sprzatanie zasobow mapy z pamieci RAM...\n";
+        auto& rm = game::core::ResourceManager::get();
+
+        if (game->selectedMapKey == "CrisperDrawer") {
+            rm.removeTexture("hazard_icicle");
+            rm.removeTexture("hazard_icicle_shard");
+        }
+        else if (game->selectedMapKey == "ChoppingBlock") {
+            // rm.removeTexture("hazard_cleaver");
+        }
+        else if (game->selectedMapKey == "WildOrchard") {
+            // rm.removeTexture("hazard_spore");
+        }
+    }
+
+    StateType PlayingState::getType() const { return StateType::Playing; }
 
     void PlayingState::initHUD()
     {
@@ -133,18 +137,24 @@ namespace game::states
         biomassText->setOutlineColor(sf::Color::Black);
         biomassText->setPosition({ 45.f, 53.f });
 
-        if (game->menuUiBuffer.contains("crosshair") && crosshairTex.loadFromImage(game->menuUiBuffer["crosshair"])) {
-            crosshairSprite.emplace(crosshairTex);
-            crosshairSprite->setOrigin({ crosshairTex.getSize().x / 2.0f, crosshairTex.getSize().y / 2.0f });
+		auto& rm = game::core::ResourceManager::get();
+
+        if (rm.hasTexture("ui_crosshair"))
+        {
+            crosshairSprite.emplace( *rm.getTexture("ui_crosshair") );
+            auto size = crosshairSprite->getTexture().getSize();
+            crosshairSprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
             game->getWindow().setMouseCursorVisible(false);
         }
 
-        if (game->menuUiBuffer.contains("settings") && settingsBtnTex.loadFromImage(game->menuUiBuffer["settings"])) {
-            settingsBtnSprite = sf::Sprite(settingsBtnTex);
-            settingsBtnSprite->setScale({ 60.0f / settingsBtnTex.getSize().x, 60.0f / settingsBtnTex.getSize().y });
-            settingsBtnSprite->setOrigin({ settingsBtnTex.getSize().x / 2.0f, settingsBtnTex.getSize().y / 2.0f });
+        if (rm.hasTexture("ui_settings"))
+        {
+            settingsBtnSprite.emplace(*rm.getTexture("ui_settings"));
+            const auto size = settingsBtnSprite->getTexture().getSize();
 
-            sf::Vector2f viewSize = game->getWindow().getView().getSize();
+            settingsBtnSprite->setScale({ 60.0f / size.x, 60.0f / size.y });
+            settingsBtnSprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
+            sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
             settingsBtnSprite->setPosition({ viewSize.x - 50.0f, 50.0f });
         }
     }
@@ -160,13 +170,13 @@ namespace game::states
             if (keyPressed->code == sf::Keyboard::Key::Escape) {
                 game->getStateMachine().pushState(StateType::Pause);
             }
+
+            // Player input
+            auto* player = world->getPlayer();
             if (player != nullptr) {
                 if (keyPressed->code == sf::Keyboard::Key::LShift) {
-                    sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
-                    sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
-                    if (auto* ab = player->getComponent<game::components::AbilityComponent>()) {
-                        ab->useSkill(mouseWorldPos);
-                    }
+                    sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(sf::Mouse::getPosition(game->getWindow()), cameraView);
+                    if (auto* ab = player->getComponent<game::components::AbilityComponent>()) ab->useSkill(mouseWorldPos);
                 }
                 if (keyPressed->code == sf::Keyboard::Key::Space) {
                     if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
@@ -193,8 +203,6 @@ namespace game::states
         }
     }
 
-    // G?ÓWNA P?TLA AKTUALIZACJI (ZUNIFIKOWANE PIPELINE SYSTEMOWE)
-
     void PlayingState::update(float dt)
     {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::H)) {
@@ -202,80 +210,51 @@ namespace game::states
             sf::sleep(sf::milliseconds(45));
         }
 
-        if (player == nullptr) return;
+        // 1. Main game logic update
+        world->update(dt);
 
-        // --- 1. Aktualizacja Komponentów Stats (Buffy, DoTy, Cooldowny) ---
-        if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
-            stats->update(dt);
-        }
-        for (auto& enemy : enemies) {
-            if (auto* stats = enemy->getComponent<game::components::StatsComponent>()) {
-                stats->update(dt);
-            }
-        }
-
-        // --- 2. Aktualizacja bazowych Encji ---
-        player->update(dt);
-        for (auto& enemy : enemies) {
-            enemy->update(dt);
-        }
-
-        // --- 3. Obs?uga ci?g?ego ataku podstawowego broni? ---
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-            sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
-            sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(pixelPos, cameraView);
+        // 2. continuous player input (weapon aiming)
+        auto* player = world->getPlayer();
+        if (player && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+            sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(sf::Mouse::getPosition(game->getWindow()), cameraView);
             if (auto* ab = player->getComponent<game::components::AbilityComponent>()) {
                 ab->useWeapon(mouseWorldPos);
             }
         }
 
-        // --- 4. WYWO?ANIA NOWYCH MODU?ÓW SYSTEMOWYCH ---
-        collisionSystem->updateJuiceCollection(player.get(), dt);
-
-        // ZMIANA: Przekazujemy parametry do zaktualizowanego systemu kolizji pocisków!
-        collisionSystem->updateBulletIntersections(dt, collisionMask, mapScale);
-
-        combatSystem->processJuiceCollection(player.get());
-        combatSystem->processBulletDamage();
-
-        particleSystem->updateEffects(dt);
-        particleSystem->updateParticles(player.get(), dt, lastPlayerPos, playerDustSpawnTimer);
-
-        combatSystem->processEnemyDeaths(*evolutionManager);
-
-        // --- 5. Logika pomocnicza i HUD ---
+        // 3. HUD, camera and UI updates
         updateHUD();
         updateCamera(dt);
         handleUIHover();
 
-        // --- 6. Aktualizacja fal ewolucyjnych potworów ---
-        evolutionManager->update(dt);
-        if (evolutionManager->requiresShop()) {
-            evolutionManager->resolveShopBreak();
+        if (world->requiresShop()) {
+            world->resolveShopBreak();
             game->getWindow().setMouseCursorVisible(true);
             game->getStateMachine().pushState(StateType::Shop);
         }
     }
 
-    // LOGIKA APARATU I INTERFEJSU
-
     void PlayingState::updateHUD()
     {
-        if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
-            float currentHp = std::max(0.0f, stats->getHealth());
-            hpBarFill.setSize({ 200.f * (currentHp / stats->getMaxHealth()), 20.f });
-            hpText->setString(std::to_string(static_cast<int>(currentHp)) + " / " + std::to_string(static_cast<int>(stats->getMaxHealth())));
+        auto* player = world->getPlayer();
+        if (player) {
+            if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
+                float currentHp = std::max(0.0f, stats->getHealth());
+                hpBarFill.setSize({ 200.f * (currentHp / stats->getMaxHealth()), 20.f });
+                hpText->setString(std::to_string(static_cast<int>(currentHp)) + " / " + std::to_string(static_cast<int>(stats->getMaxHealth())));
 
-            sf::FloatRect bounds = hpText->getLocalBounds();
-            hpText->setOrigin({ bounds.position.x + (bounds.size.x / 2.0f), bounds.position.y + (bounds.size.y / 2.0f) });
-            hpText->setPosition({ hpBarBg.getPosition().x + 100.0f, hpBarBg.getPosition().y + 10.0f });
+                sf::FloatRect bounds = hpText->getLocalBounds();
+                hpText->setOrigin({ bounds.position.x + (bounds.size.x / 2.0f), bounds.position.y + (bounds.size.y / 2.0f) });
+                hpText->setPosition({ hpBarBg.getPosition().x + 100.0f, hpBarBg.getPosition().y + 10.0f });
+            }
         }
 
-        waveText->setString("Wave " + std::to_string(evolutionManager->getCurrentWave()));
+        waveText->setString("Wave " + std::to_string(world->getEvolutionManager()->getCurrentWave()));
         sf::FloatRect waveBounds = waveText->getLocalBounds();
         waveText->setOrigin({ waveBounds.size.x / 2.0f, waveBounds.size.y / 2.0f });
         waveText->setPosition({ game->getWindow().getView().getSize().x / 2.0f, 60.f });
 
+        // player biomass juice update
         if (biomassText.has_value()) {
             biomassText->setString(std::to_string(game->profile.biomassJuice));
         }
@@ -283,6 +262,9 @@ namespace game::states
 
     void PlayingState::updateCamera(float dt)
     {
+        auto* player = world->getPlayer();
+        if (!player) return;
+
         sf::Vector2f viewSize = cameraView.getSize();
         float hW = viewSize.x / 2.0f, hH = viewSize.y / 2.0f;
         sf::Vector2f center = player->position;
@@ -302,15 +284,37 @@ namespace game::states
 
     void PlayingState::handleUIHover()
     {
-        sf::Vector2f uiHoverPos = game->getWindow().mapPixelToCoords(sf::Mouse::getPosition(game->getWindow()), game->getWindow().getDefaultView());
-        if (settingsBtnSprite) {
-            if (settingsBtnSprite->getGlobalBounds().contains(uiHoverPos)) {
+        sf::Vector2f uiHoverPos =
+            game->getWindow().mapPixelToCoords(
+                sf::Mouse::getPosition(game->getWindow()),
+                game->getWindow().getDefaultView());
+
+        if (settingsBtnSprite)
+        {
+            auto size =
+                settingsBtnSprite->getTexture().getSize();
+
+            float baseScaleX = 60.0f / size.x;
+            float baseScaleY = 60.0f / size.y;
+
+            if (settingsBtnSprite->getGlobalBounds().contains(uiHoverPos))
+            {
                 settingsBtnSprite->setColor(sf::Color::White);
-                settingsBtnSprite->setScale({ 1.1f * (60.0f / settingsBtnTex.getSize().x), 1.1f * (60.0f / settingsBtnTex.getSize().y) });
+
+                settingsBtnSprite->setScale({
+                    baseScaleX * 1.1f,
+                    baseScaleY * 1.1f
+                    });
             }
-            else {
-                settingsBtnSprite->setColor(sf::Color(210, 210, 210));
-                settingsBtnSprite->setScale({ 60.0f / settingsBtnTex.getSize().x, 60.0f / settingsBtnTex.getSize().y });
+            else
+            {
+                settingsBtnSprite->setColor(
+                    sf::Color(210, 210, 210));
+
+                settingsBtnSprite->setScale({
+                    baseScaleX,
+                    baseScaleY
+                    });
             }
         }
     }
@@ -330,7 +334,8 @@ namespace game::states
     {
         window.setView(cameraView);
 
-        renderSystem->renderWorld(window, mapSprite, player.get(), enemies);
+        // Game world rendering
+        world->render(window, mapSprite);
 
         window.setView(window.getDefaultView());
 
@@ -341,9 +346,4 @@ namespace game::states
 
         renderHUD(window);
     }
-
-    StateType PlayingState::getType() const
-    {
-        return StateType::Playing;
-	}
 }

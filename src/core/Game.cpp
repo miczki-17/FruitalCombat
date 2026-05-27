@@ -2,6 +2,7 @@
 
 
 #include "Game.h"
+#include "ResourceManager.h"
 
 namespace game
 {
@@ -69,41 +70,55 @@ namespace game
 	{
 		if (!isCursorInitialized)
 		{
-			if (menuUiBuffer.contains("cursor"))
+			auto& rm = game::core::ResourceManager::get();
+
+			if (rm.hasTexture("ui_cursor"))
 			{
-				if (menuCursorTex.loadFromImage(menuUiBuffer["cursor"]))
-				{
-					menuCursorSprite.emplace(menuCursorTex);
+				menuCursorSprite.emplace(
+					*rm.getTexture("ui_cursor"));
 
-					menuCursorSprite->setTextureRect(sf::IntRect({ 0, 0 }, { 64, 64 }));
-					menuCursorSprite->setOrigin({ 14.f, 10.f });
+				menuCursorSprite->setTextureRect(
+					sf::IntRect({ 0, 0 }, { 64, 64 }));
 
-					window.setMouseCursorVisible(false);
-					isCursorInitialized = true;
-				}
+				menuCursorSprite->setOrigin({
+					14.f, 10.f
+					});
+
+				window.setMouseCursorVisible(false);
+				isCursorInitialized = true;
 			}
 		}
 
-		if (isCursorInitialized && menuCursorSprite.has_value())
+		if (isCursorInitialized &&
+			menuCursorSprite.has_value())
 		{
 			sf::View oldView = window.getView();
 			window.setView(window.getDefaultView());
 
-			sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-			sf::Vector2f worldPos = window.mapPixelToCoords(mousePos, window.getDefaultView());
-			menuCursorSprite->setPosition({ worldPos });
+			sf::Vector2i mousePos =
+				sf::Mouse::getPosition(window);
 
-			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+			sf::Vector2f worldPos =
+				window.mapPixelToCoords(
+					mousePos,
+					window.getDefaultView());
+
+			menuCursorSprite->setPosition(worldPos);
+
+			if (sf::Mouse::isButtonPressed(
+				sf::Mouse::Button::Left))
 			{
-				menuCursorSprite->setTextureRect(sf::IntRect({ 0, 64 }, { 64, 64 })); // Dolna klatka
+				menuCursorSprite->setTextureRect(
+					sf::IntRect({ 0, 64 }, { 64, 64 }));
 			}
 			else
 			{
-				menuCursorSprite->setTextureRect(sf::IntRect({ 0, 0 }, { 64, 64 }));  // Górna klatka
+				menuCursorSprite->setTextureRect(
+					sf::IntRect({ 0, 0 }, { 64, 64 }));
 			}
 
 			window.draw(*menuCursorSprite);
-			window.setView(oldView); 
+			window.setView(oldView);
 		}
 	}
 }
