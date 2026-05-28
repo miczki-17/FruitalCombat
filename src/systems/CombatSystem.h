@@ -28,7 +28,7 @@ namespace game::systems
         void processJuiceCollection(game::entities::Entity* player);
 
         // Przetwarza wybuchy pocisków, zadaje obra?enia obszarowe, nak?ada HitFlash oraz tworzy strefy kwasu
-        void processBulletDamage();
+        void processBulletDamage(game::entities::Entity* player);
 
         // Sprawdza stan zdrowia wrogów, obs?uguje ich ?mier?, generuje dropy soku i karmi genami EvolutionManager
         void processEnemyDeaths(game::systems::EvolutionManager& evolutionManager);

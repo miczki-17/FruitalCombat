@@ -17,6 +17,8 @@ namespace game::systems
         float speed = 800.0f;
         float dropHeight = 1000.0f;
         float radius = 10.0f;
+        float minSpawnTime = 3.0f;
+        float maxSpawnTime = 6.0f;
     };
 
     class MapHazardSystem final

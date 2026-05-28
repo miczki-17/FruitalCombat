@@ -53,7 +53,7 @@ namespace game
         std::vector<game::components::Bullet> bullets;
         std::vector<game::effects::AcidSplash> acidSplashes;
         std::vector<AoEZone> zones;
-        std::vector<std::shared_ptr<sf::Texture>> splashTextures;
+        //std::vector<std::shared_ptr<sf::Texture>> splashTextures;
         std::vector<game::effects::FloatingText> floatingTexts;
         std::vector<game::entities::JuiceDrop> juiceDrops;
         std::vector<WalkDust> walkParticles;

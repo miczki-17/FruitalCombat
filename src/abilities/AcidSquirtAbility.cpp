@@ -27,10 +27,14 @@ namespace game::components
     AcidSquirtAbility::AcidSquirtAbility(
         std::vector<Bullet>& bulletContainer,
         game::entities::Entity* owner,
-        const std::string& texturePath)
+        const std::string& texturePath,
+        const std::string& splashKeyBase,
+        bool isFriendly)
         : bullets_(&bulletContainer),
         owner_(owner),
-        projectileTexture_(std::make_shared<sf::Texture>())
+        projectileTexture_(std::make_shared<sf::Texture>()),
+        splashKeyBase_(splashKeyBase),
+        isFriendly_(isFriendly)
     {
         if (!projectileTexture_->loadFromFile(texturePath))
         {
@@ -132,6 +136,11 @@ namespace game::components
             origin,
             targetPosition,
             PROJECTILE_SPEED);
+
+        projectile.setFriendly(isFriendly_);
+
+        projectile.setSplashKeyBase(splashKeyBase_);
+
 
         if (projectileTexture_->getSize().x > 0)
         {

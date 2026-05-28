@@ -8,7 +8,13 @@
 
 namespace game::components
 {
-    enum class StatusEffect { None, Poison, IceShatter };
+    enum class StatusEffect 
+    { 
+        None,
+        Poison,
+        SporePoison,
+        IceShatter
+    };
 
     class ProjectileComponent final : public Component
     {
@@ -37,8 +43,16 @@ namespace game::components
         void setStatusEffect(StatusEffect status);
         void setWobble(bool state, bool fake3DRoll = false);
         void setAnimation(std::shared_ptr<sf::Texture> tex, int frames, float animSpeed, sf::Vector2i size);
+        void setSpriteScale(float scaleX, float scaleY);
+
+        void setSplashKeyBase(const std::string& baseKey) { splashKeyBase_ = baseKey; }
+        std::string getSplashKeyBase() const { return splashKeyBase_; }
 
         bool consumeSplash();
+
+        bool getIsFriendly() const { return isFriendly_; }
+        void setFriendly(bool friendly) { isFriendly_ = friendly; }
+
 
     private:
         sf::Vector2f position_;
@@ -76,9 +90,16 @@ namespace game::components
         sf::Vector2f targetPos_;
         sf::Vector2f startPos_;
         float totalDistance_ = 0.0f;
-        float maxArcHeight_ = 165.0f;
+        float maxArcHeight_ = 120.0f;
         float minArcHeight_ = 20.0f;
         sf::CircleShape shadowShape_;
         bool spawnSplash_ = false;
+
+
+        // default splashKey
+        std::string splashKeyBase_ = "acid_splash";
+
+        // bullets friendly logic
+        bool isFriendly_ = true;
     };
 }

@@ -127,6 +127,13 @@ namespace game::components
         }
     }
 
+    void ProjectileComponent::setSpriteScale(float scaleX, float scaleY)
+    {
+        if (sprite_.has_value()) {
+            sprite_->setScale({ scaleX, scaleY });
+        }
+    }
+
     void ProjectileComponent::update(float dt, const sf::Image& collisionMask, float mapScale)
     {
         if (!isActive_) return;

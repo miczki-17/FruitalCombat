@@ -75,7 +75,7 @@ namespace game::core
         collisionSystem->updateBulletIntersections(dt, collisionMask_, mapScale_);
 
         combatSystem->processJuiceCollection(player.get());
-        combatSystem->processBulletDamage();
+        combatSystem->processBulletDamage(player.get());
 
         particleSystem->updateEffects(dt);
         particleSystem->updateParticles(player.get(), dt, lastPlayerPos_, playerDustSpawnTimer_);

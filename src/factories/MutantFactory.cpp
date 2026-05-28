@@ -86,7 +86,12 @@ namespace game::factories
             if (abName == "AcidSquirt")
             {
                 abilities->setWeapon(std::make_unique<game::components::AcidSquirtAbility>(
-                    context.bullets, entity.get(), "assets/textures/default_bullet.png"));
+                    context.bullets,
+                    entity.get(), 
+                    "assets/textures/default_bullet.png",
+                    "acid_splash",
+                    false
+                ));
             }
             else if (abName == "Dash")
             {

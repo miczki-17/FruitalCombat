@@ -40,6 +40,11 @@ namespace game::states
         void handleUIHover();
         void renderHUD(sf::RenderWindow& window);
 
+
+
+        // Memory clear
+        std::string loadedSplashKey_ = "";
+
     public:
         PlayingState(game::Game* game);
         ~PlayingState() override;

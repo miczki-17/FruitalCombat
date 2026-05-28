@@ -13,7 +13,7 @@ namespace game::states
 {
     PlayingState::PlayingState(game::Game* game) : State(game)
     {
-        std::cout << "[PlayingState] Inicjalizacja swiata...\n";
+        std::cout << "[PlayingState] World initialization...\n";
 
         std::string mapKey = game->selectedMapKey;
         const auto& mapData = game->mapsConfig[mapKey];
@@ -43,13 +43,47 @@ namespace game::states
         }
         else if (mapKey == "WildOrchard")
         {
-            // rm.loadTexture("hazard_spore", "assets/textures/hazards/spore.png");
+            rm.loadTexture("hazard_spore", "assets/textures/hazards/spore.png");
+            rm.loadTexture("hazard_spore_splash", "assets/textures/hazards/spore_splash_1.png");
         }
         // -------------------------------------------
 
+
+        // loading splash textures
+        std::string fruitKey = "";
+        switch (game->selectedFruitType) {
+        case game::entities::FruitType::Apple:      fruitKey = "Apple"; break;
+        case game::entities::FruitType::Banana:     fruitKey = "Banana"; break;
+        case game::entities::FruitType::Orange:     fruitKey = "Orange"; break;
+        case game::entities::FruitType::Cherry:     fruitKey = "Cherry"; break;
+        case game::entities::FruitType::Strawberry: fruitKey = "Strawberry"; break;
+        case game::entities::FruitType::Blackberry: fruitKey = "Blackberry"; break;
+        }
+
+        if (game->fruitsConfig.contains(fruitKey))
+        {
+            const auto& fruitData = game->fruitsConfig[fruitKey];
+
+            if (fruitData.contains("splashKey") && fruitData.contains("splashProjectileTexturePath"))
+            {
+                loadedSplashKey_ = fruitData.value("splashKey", "");
+                std::string basePath = fruitData.value("splashProjectileTexturePath", "");
+
+                
+                for (int i = 1; i <= 3; i++) {
+                    std::string finalKey = loadedSplashKey_ + "_" + std::to_string(i);
+                    std::string finalPath = basePath + std::to_string(i) + ".png";
+                    rm.loadTexture(finalKey, finalPath);
+                }
+                std::cout << "[PlayingState] Zaladowano tekstury rozprysku dla gracza pod kluczem: " << loadedSplashKey_ << "\n";
+            }
+        }
+        // ----------------------------------------------
+
+
         // Clear arena context
         game->arenaContext.entities.clear();
-        game->arenaContext.splashTextures.clear();
+        //game->arenaContext.splashTextures.clear();
         game->arenaContext.zones.clear();
         game->arenaContext.acidSplashes.clear();
         game->arenaContext.bullets.clear();
@@ -57,13 +91,7 @@ namespace game::states
         game->arenaContext.juiceDrops.clear();
         game->arenaContext.walkParticles.clear();
 
-        for (int i = 1; i <= 3; i++) {
-            auto tex = std::make_shared<sf::Texture>();
-            if (tex->loadFromFile("assets/textures/entities/characters/citrus_maximus/orange_acid_splash_" + std::to_string(i) + ".png")) {
-                tex->setSmooth(true);
-                game->arenaContext.splashTextures.push_back(tex);
-            }
-        }
+        
 
         game->arenaContext.mapDustColor = sf::Color(
             static_cast<std::uint8_t>(mapData.value("dustR", 150)),
@@ -85,7 +113,7 @@ namespace game::states
 	// CLEAR RAM RESOURCES DEPENDING ON THE MAP
     PlayingState::~PlayingState()
     {
-        std::cout << "[PlayingState] Sprzatanie zasobow mapy z pamieci RAM...\n";
+        std::cout << "[PlayingState] Cleaning RAM...\n";
         auto& rm = game::core::ResourceManager::get();
 
         if (game->selectedMapKey == "CrisperDrawer") {
@@ -96,7 +124,15 @@ namespace game::states
             // rm.removeTexture("hazard_cleaver");
         }
         else if (game->selectedMapKey == "WildOrchard") {
-            // rm.removeTexture("hazard_spore");
+            rm.removeTexture("hazard_spore");
+            rm.removeTexture("hazard_spore_splash");
+        }
+
+        if (!loadedSplashKey_.empty())
+        {
+            for (int i = 1; i <= 3; i++) {
+                rm.removeTexture(loadedSplashKey_ + "_" + std::to_string(i));
+            }
         }
     }
 

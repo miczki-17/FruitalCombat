@@ -69,7 +69,9 @@
     "idleFrames": 3,
     "walkTexturePath": "",
     "walkFrames": 4,
-    "projectileTexture": "assets/textures/entities/characters/citrus_maximus/acid_blob.png",
+    "projectileTexturePath": "assets/textures/entities/characters/citrus_maximus/acid_blob.png",
+    "splashKey": "orange_splash",
+    "splashProjectileTexturePath":  "assets/textures/entities/characters/citrus_maximus/orange_acid_splash_",
     "abilities": [ "AcidSquirt", "RindRoll", "AcidPoolUlt" ],
     "upgrades": [
       {

@@ -104,13 +104,15 @@ namespace game::factories
                 idleTex, idleFrames, walkTex, walkFrames));
 
         // ---------------- ABILITIES ----------------
+        // ---------------- ABILITIES ----------------
         auto abilities = std::make_unique<game::components::AbilityComponent>();
 
         if (data.contains("abilities"))
         {
             for (const auto& a : data["abilities"])
             {
-                attachAbility(abilities.get(), a.get<std::string>(), entity.get());
+                // PRZEKAZUJEMY 'data' DO FUNKCJI:
+                attachAbility(abilities.get(), a.get<std::string>(), entity.get(), data);
             }
         }
 
@@ -122,7 +124,8 @@ namespace game::factories
     void FruitFactory::attachAbility(
         game::components::AbilityComponent* abilities,
         const std::string& name,
-        game::entities::Entity* entity)
+        game::entities::Entity* entity,
+        const nlohmann::json& fruitData) // ODBIERAMY DANE OWOCU!
     {
         if (!abilities) return; // Safety check
 
@@ -136,8 +139,17 @@ namespace game::factories
             abilities->setSkill(std::make_unique<game::components::DashAbility>(entity));
         }
         else if (name == "AcidSquirt") {
-            const std::string texPath = "assets/textures/default_bullet.png";
-            abilities->setWeapon(std::make_unique<game::components::AcidSquirtAbility>(context.bullets, entity, texPath));
+            // Get JSON data
+            std::string texPath = fruitData.value("projectileTexturePath", "assets/textures/default_bullet.png");
+            std::string splashKey = fruitData.value("splashKey", "acid_splash");
+
+            abilities->setWeapon(std::make_unique<game::components::AcidSquirtAbility>(
+                context.bullets,
+                entity,
+                texPath,
+                splashKey,
+                true
+            ));
         }
         else if (name == "RindRoll") {
             const float kRadius = 130.0f;

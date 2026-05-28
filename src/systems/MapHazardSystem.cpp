@@ -1,6 +1,5 @@
-// ==========================================
-// systems/MapHazardSystem.cpp
-// ==========================================
+// --- MapHazardSystem.cpp ---
+
 #include "MapHazardSystem.h"
 #include "../core/ArenaContext.h"
 #include "../core/ResourceManager.h"
@@ -25,6 +24,8 @@ namespace game::systems
             config_.speed = haz.value("speed", 800.0f);
             config_.dropHeight = haz.value("dropHeight", 1000.0f);
             config_.radius = haz.value("radius", 10.0f);
+            config_.minSpawnTime = haz.value("minSpawnTime", 3.0f);
+            config_.maxSpawnTime = haz.value("maxSpawnTime", 6.0f);
         }
     }
 
@@ -36,14 +37,14 @@ namespace game::systems
         if (hazardTimer_ <= 0.0f)
         {
             std::random_device rd; std::mt19937 gen(rd());
-            std::uniform_real_distribution<float> offsetDist(-300.0f, 300.0f);
+            std::uniform_real_distribution<float> offsetDist(-200.0f, 200.0f);
             sf::Vector2f targetPos = player->position + sf::Vector2f(offsetDist(gen), offsetDist(gen));
 
             if (mapKey_ == "ChoppingBlock") spawnChoppingBlockHazard(context, targetPos);
             else if (mapKey_ == "CrisperDrawer") spawnCrisperDrawerHazard(context, targetPos);
             else if (mapKey_ == "WildOrchard") spawnWildOrchardHazard(context, targetPos);
 
-            std::uniform_real_distribution<float> timeDist(3.0f, 6.0f);
+            std::uniform_real_distribution<float> timeDist(config_.minSpawnTime, config_.maxSpawnTime);
             hazardTimer_ = timeDist(gen);
         }
     }
@@ -55,6 +56,7 @@ namespace game::systems
 
         cleaver.setAppearance(config_.radius, sf::Color(180, 180, 180));
         cleaver.setDamage(config_.damage);
+		cleaver.setFriendly(false); // hazards should not be friendly to the player
 
         context.bullets.push_back(cleaver);
     }
@@ -72,8 +74,11 @@ namespace game::systems
             auto tex = rm.getTextureShared("hazard_icicle");
             auto size = tex->getSize();
             icicle.setAnimation(tex, 1, 1.0f, { static_cast<int>(size.x), static_cast<int>(size.y) });
+            icicle.setSpriteScale(3.5f, 3.5f);
+			icicle.setFriendly(false); // hazards should not be friendly to the player
         }
         else {
+            // Fallback
             icicle.setAppearance(config_.radius, sf::Color(100, 200, 255));
         }
 
@@ -83,11 +88,28 @@ namespace game::systems
     void MapHazardSystem::spawnWildOrchardHazard(game::ArenaContext& context, const sf::Vector2f& targetPos)
     {
         game::components::Bullet spore({ targetPos.x, targetPos.y - config_.dropHeight }, { 0.f, 1.f });
-        spore.setupParabolic({ targetPos.x, targetPos.y - config_.dropHeight }, targetPos, config_.speed);
+        //spore.setupParabolic({ targetPos.x, targetPos.y - config_.dropHeight }, targetPos, config_.speed);
+        spore.setupDropFromSky(targetPos, config_.dropHeight, config_.speed);
 
-        spore.setAppearance(config_.radius, sf::Color(130, 255, 50));
         spore.setDamage(config_.damage);
-        spore.setStatusEffect(game::components::StatusEffect::Poison);
+        spore.setStatusEffect(game::components::StatusEffect::SporePoison);
+        spore.setFriendly(false);
+        spore.setSplashKeyBase("hazard_spore_splash"); // for Combat System
+
+        auto& rm = game::core::ResourceManager::get();
+        if (rm.hasTexture("hazard_spore"))
+        {
+            auto tex = rm.getTextureShared("hazard_spore");
+            auto size = tex->getSize();
+            spore.setAnimation(tex, 1, 1.0f, { static_cast<int>(size.x), static_cast<int>(size.y) });
+            spore.setSpriteScale(2.5f, 2.5f);
+            spore.setWobble(true, false);
+        }
+        else
+        {
+            // Fallback
+            spore.setAppearance(config_.radius, sf::Color(130, 255, 50));
+        }
 
         context.bullets.push_back(spore);
     }

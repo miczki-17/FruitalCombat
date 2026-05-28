@@ -32,7 +32,8 @@ namespace game::factories
         void attachAbility(
             game::components::AbilityComponent* abilities,
             const std::string& abilityName,
-            game::entities::Entity* entity);
+            game::entities::Entity* entity,
+            const nlohmann::json& fruitData);
 
     public:
         FruitFactory(

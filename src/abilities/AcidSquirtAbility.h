@@ -22,7 +22,9 @@ namespace game::components
         AcidSquirtAbility(
             std::vector<Bullet>& bulletContainer,
             game::entities::Entity* owner,
-            const std::string& texturePath);
+            const std::string& texturePath,
+            const std::string& splashKeyBase,
+            bool isFriendly = true);
 
         void update(float deltaTime) override;
 
@@ -35,6 +37,8 @@ namespace game::components
         std::vector<Bullet>* bullets_;
         game::entities::Entity* owner_;
         std::shared_ptr<sf::Texture> projectileTexture_;
+        std::string splashKeyBase_;
+        bool isFriendly_;
 
         float baseCooldown_ = 0.6f;
         float cooldownTimer_ = 0.0f;
