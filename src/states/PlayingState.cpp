@@ -39,7 +39,8 @@ namespace game::states
         }
         else if (mapKey == "ChoppingBlock")
         {
-            // rm.loadTexture("hazard_cleaver", "assets/textures/hazards/cleaver.png");
+            rm.loadTexture("hazard_knife", "assets/textures/hazards/knife.png");
+            //rm.loadTexture("hazard_knife_splash_sheet", "assets/textures/knife_splash_sheet.png");
         }
         else if (mapKey == "WildOrchard")
         {
@@ -121,7 +122,8 @@ namespace game::states
             rm.removeTexture("hazard_icicle_shard");
         }
         else if (game->selectedMapKey == "ChoppingBlock") {
-            // rm.removeTexture("hazard_cleaver");
+            rm.removeTexture("hazard_knife");
+            //rm.removeTexture("hazard_knife_splash_sheet");
         }
         else if (game->selectedMapKey == "WildOrchard") {
             rm.removeTexture("hazard_spore");

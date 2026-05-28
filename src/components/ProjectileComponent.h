@@ -53,6 +53,8 @@ namespace game::components
         bool getIsFriendly() const { return isFriendly_; }
         void setFriendly(bool friendly) { isFriendly_ = friendly; }
 
+        void enableShadow(float shadowRadius);
+
 
     private:
         sf::Vector2f position_;

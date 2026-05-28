@@ -51,14 +51,28 @@ namespace game::systems
 
     void MapHazardSystem::spawnChoppingBlockHazard(game::ArenaContext& context, const sf::Vector2f& targetPos)
     {
-        game::components::Bullet cleaver({ targetPos.x, targetPos.y - config_.dropHeight }, { 0.f, 1.f });
-        cleaver.setupParabolic({ targetPos.x, targetPos.y - config_.dropHeight }, targetPos, config_.speed);
+        sf::Vector2f startPos = { targetPos.x, targetPos.y - config_.dropHeight };
+        context.bullets.emplace_back(startPos, sf::Vector2f{ 0.f, 1.f });
+        auto& knife = context.bullets.back();
 
-        cleaver.setAppearance(config_.radius, sf::Color(180, 180, 180));
-        cleaver.setDamage(config_.damage);
-		cleaver.setFriendly(false); // hazards should not be friendly to the player
+        knife.setupDropFromSky(targetPos, config_.dropHeight, config_.speed);
 
-        context.bullets.push_back(cleaver);
+        knife.setDamage(config_.damage);
+        knife.setFriendly(false);
+        knife.setStatusEffect(game::components::StatusEffect::None);
+
+        knife.setSplashKeyBase("");
+
+        auto& rm = game::core::ResourceManager::get();
+        if (rm.hasTexture("hazard_knife")) {
+            auto tex = rm.getTextureShared("hazard_knife");
+            knife.setAnimation(tex, 1, 1.0f, { static_cast<int>(tex->getSize().x), static_cast<int>(tex->getSize().y) });
+            knife.setSpriteScale(0.2f, 0.2f);
+            knife.enableShadow(20.0f);
+        }
+        else {
+            knife.setAppearance(config_.radius, sf::Color(180, 180, 180));
+        }
     }
 
     void MapHazardSystem::spawnCrisperDrawerHazard(game::ArenaContext& context, const sf::Vector2f& targetPos)
@@ -76,6 +90,7 @@ namespace game::systems
             icicle.setAnimation(tex, 1, 1.0f, { static_cast<int>(size.x), static_cast<int>(size.y) });
             icicle.setSpriteScale(3.5f, 3.5f);
 			icicle.setFriendly(false); // hazards should not be friendly to the player
+            icicle.enableShadow(16.0f);
         }
         else {
             // Fallback
@@ -104,6 +119,7 @@ namespace game::systems
             spore.setAnimation(tex, 1, 1.0f, { static_cast<int>(size.x), static_cast<int>(size.y) });
             spore.setSpriteScale(2.5f, 2.5f);
             spore.setWobble(true, false);
+            spore.enableShadow(16.0f);
         }
         else
         {
