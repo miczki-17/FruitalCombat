@@ -2,6 +2,7 @@
 
 #include "PlayingState.h"
 #include "../core/ResourceManager.h"
+#include "../core/AudioManager.h"
 #include "../components/AbilityComponent.h"
 #include "../components/StatsComponent.h"
 #include "../systems/EvolutionManager.h"
@@ -15,42 +16,15 @@ namespace game::states
     {
         std::cout << "[PlayingState] World initialization...\n";
 
-        std::string mapKey = game->selectedMapKey;
-        const auto& mapData = game->mapsConfig[mapKey];
-        std::string mapMaskPath = mapData.value("maskPath", "");
+        game::core::AudioManager::get().stopMusic();
+        game::core::AudioManager::get().stopAllSounds();
+        game::core::ResourceManager::get().unloadGroup(game::core::AssetGroup::Menu);
+        game::core::ResourceManager::get().unloadGroup(game::core::AssetGroup::Intro);
 
-        if (game::core::ResourceManager::get().hasTexture(mapKey + "_map")) {
-            mapSprite.emplace(*game::core::ResourceManager::get().getTexture(mapKey + "_map"));
-            mapSprite->setScale({ mapScale, mapScale });
-            sf::Vector2u rawSize = game::core::ResourceManager::get().getTexture(mapKey + "_map")->getSize();
-            mapLimits = sf::Vector2f(rawSize.x * mapScale, rawSize.y * mapScale);
-        }
 
-        if (!collisionMask.loadFromFile(mapMaskPath)) {
-            std::cerr << "[ERROR] Could not load collision mask from: " << mapMaskPath << '\n';
-        }
-
-        // --- Loading resources dependent on the map ---
         auto& rm = game::core::ResourceManager::get();
-        if (mapKey == "CrisperDrawer")
-        {
-            rm.loadTexture("hazard_icicle", "assets/textures/hazards/icicle.png");
-            rm.loadTexture("hazard_icicle_shard", "assets/textures/hazards/icicle_shard.png");
-        }
-        else if (mapKey == "ChoppingBlock")
-        {
-            rm.loadTexture("hazard_knife", "assets/textures/hazards/knife.png");
-            //rm.loadTexture("hazard_knife_splash_sheet", "assets/textures/knife_splash_sheet.png");
-        }
-        else if (mapKey == "WildOrchard")
-        {
-            rm.loadTexture("hazard_spore", "assets/textures/hazards/spore.png");
-            rm.loadTexture("hazard_spore_splash", "assets/textures/hazards/spore_splash_1.png");
-        }
-        // -------------------------------------------
 
-
-        // loading splash textures
+        // loading entities textures
         std::string fruitKey = "";
         switch (game->selectedFruitType) {
         case game::entities::FruitType::Apple:      fruitKey = "Apple"; break;
@@ -65,6 +39,7 @@ namespace game::states
         {
             const auto& fruitData = game->fruitsConfig[fruitKey];
 
+            // effects
             if (fruitData.contains("splashKey") && fruitData.contains("splashProjectileTexturePath"))
             {
                 loadedSplashKey_ = fruitData.value("splashKey", "");
@@ -74,16 +49,73 @@ namespace game::states
                 for (int i = 1; i <= 3; i++) {
                     std::string finalKey = loadedSplashKey_ + "_" + std::to_string(i);
                     std::string finalPath = basePath + std::to_string(i) + ".png";
-                    rm.loadTexture(finalKey, finalPath);
+                    rm.loadTexture(finalKey, finalPath, game::core::AssetGroup::Playing);
                 }
-                std::cout << "[PlayingState] Zaladowano tekstury rozprysku dla gracza pod kluczem: " << loadedSplashKey_ << "\n";
+                std::cout << "[PlayingState] Loaded splash textures under key: " << loadedSplashKey_ << "\n";
+            }
+
+            // textures & animations - character
+
+            if (fruitData.contains("walkTexturePath")) {
+                std::string path = fruitData.value("walkTexturePath", "");
+                if (!path.empty()) rm.loadTexture(fruitKey + "_walk", path, game::core::AssetGroup::Playing);
             }
         }
-        // ----------------------------------------------
+
+        // textures & animations - enemies
+        for (auto& [enemyKey, enemyData] : game->enemiesConfig.items()) {
+            if (enemyData.contains("idleTexturePath")) {
+                rm.loadTexture(enemyKey + "_idle", enemyData.value("idleTexturePath", ""), game::core::AssetGroup::Playing);
+            }
+            if (enemyData.contains("walkTexturePath")) {
+                rm.loadTexture(enemyKey + "_walk", enemyData.value("walkTexturePath", ""), game::core::AssetGroup::Playing);
+            }
+        }
+
+
+        // loading maps
+        std::string mapKey = game->selectedMapKey;
+        const auto& mapData = game->mapsConfig[mapKey];
+
+        // arena backgrounds
+        if (mapData.contains("texturePath")) {
+            rm.loadTexture(mapKey + "_map", mapData.value("texturePath", ""), game::core::AssetGroup::Playing);
+        }
+
+        std::string mapMaskPath = mapData.value("maskPath", "");
+
+        if (game::core::ResourceManager::get().hasTexture(mapKey + "_map")) {
+            mapSprite.emplace(*game::core::ResourceManager::get().getTexture(mapKey + "_map"));
+            mapSprite->setScale({ mapScale, mapScale });
+            sf::Vector2u rawSize = game::core::ResourceManager::get().getTexture(mapKey + "_map")->getSize();
+            mapLimits = sf::Vector2f(rawSize.x * mapScale, rawSize.y * mapScale);
+        }
+
+        if (!collisionMask.loadFromFile(mapMaskPath)) {
+            std::cerr << "[ERROR] Could not load collision mask from: " << mapMaskPath << '\n';
+        }
+
+        // --- Loading resources dependent on the map ---
+        if (mapKey == "CrisperDrawer")
+        {
+            rm.loadTexture("hazard_icicle", "assets/textures/hazards/icicle.png", game::core::AssetGroup::Playing);
+            rm.loadTexture("hazard_icicle_shard", "assets/textures/hazards/icicle_shard.png", game::core::AssetGroup::Playing);
+        }
+        else if (mapKey == "ChoppingBlock")
+        {
+            rm.loadTexture("hazard_knife", "assets/textures/hazards/knife.png", game::core::AssetGroup::Playing);
+            //rm.loadTexture("hazard_knife_splash_sheet", "assets/textures/knife_splash_sheet.png");
+        }
+        else if (mapKey == "WildOrchard")
+        {
+            rm.loadTexture("hazard_spore", "assets/textures/hazards/spore.png", game::core::AssetGroup::Playing);
+            rm.loadTexture("hazard_spore_splash", "assets/textures/hazards/spore_splash_1.png", game::core::AssetGroup::Playing);
+        }
+
 
 
         // HUD resources
-        rm.loadTexture("drop_biomass", "assets/textures/entities/drops/biomass_juice.png");
+        rm.loadTexture("drop_biomass", "assets/textures/entities/drops/biomass_juice.png", game::core::AssetGroup::Playing);
 
 
         // Clear arena context
@@ -118,34 +150,17 @@ namespace game::states
 	// CLEAR RAM RESOURCES DEPENDING ON THE MAP
     PlayingState::~PlayingState()
     {
-        std::cout << "[PlayingState] Cleaning RAM...\n";
-        auto& rm = game::core::ResourceManager::get();
-
-        if (game->selectedMapKey == "CrisperDrawer") {
-            rm.removeTexture("hazard_icicle");
-            rm.removeTexture("hazard_icicle_shard");
-        }
-        else if (game->selectedMapKey == "ChoppingBlock") {
-            rm.removeTexture("hazard_knife");
-            //rm.removeTexture("hazard_knife_splash_sheet");
-        }
-        else if (game->selectedMapKey == "WildOrchard") {
-            rm.removeTexture("hazard_spore");
-            rm.removeTexture("hazard_spore_splash");
-        }
-
-        if (!loadedSplashKey_.empty())
-        {
-            for (int i = 1; i <= 3; i++) {
-                rm.removeTexture(loadedSplashKey_ + "_" + std::to_string(i));
-            }
-        }
-
-        // HUD resources remove
-        rm.removeTexture("drop_biomass");
+        game::core::AudioManager::get().stopMusic();
+        game::core::AudioManager::get().stopAllSounds();
+        game::core::ResourceManager::get().unloadGroup(game::core::AssetGroup::Playing);
+        game::core::ResourceManager::get().unloadGroup(game::core::AssetGroup::Global);         // to change
     }
 
+
+
     StateType PlayingState::getType() const { return StateType::Playing; }
+
+
 
     void PlayingState::initHUD()
     {

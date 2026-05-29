@@ -3,6 +3,7 @@
 #include "MapSelectState.h"
 #include "../core/Game.h"
 #include "../core/ResourceManager.h"
+#include "../core/AudioManager.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
@@ -70,6 +71,12 @@ namespace game::states
 
         setupButton("ui_star_full_icon", starFullTex, starFullSprite, { 0.f, 0.f }, { 25.f, 25.f });
         setupButton("ui_star_empty_icon", starEmptyTex, starEmptySprite, { 0.f, 0.f }, { 25.f, 25.f });
+    }
+
+    MapSelectState::~MapSelectState() 
+    { 
+        game::core::AudioManager::get().stopMusic();
+        game::core::ResourceManager::get().unloadGroup(game::core::AssetGroup::Intro);
     }
 
     void MapSelectState::initFireflies()
@@ -166,6 +173,7 @@ namespace game::states
 
     void MapSelectState::handleEvent(const sf::Event& event)
     {
+
         if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
         {
             if (keyPressed->code == sf::Keyboard::Key::A || keyPressed->code == sf::Keyboard::Key::Left) {
@@ -180,7 +188,6 @@ namespace game::states
                 if (N > 0) {
                     int actualIndex = (targetIndex % N + N) % N;
                     game->selectedMapKey = roster[actualIndex].jsonKey;
-                    game->menuMusic.stop();
                     game->getStateMachine().changeState(StateType::Playing);
                 }
             }
@@ -209,7 +216,6 @@ namespace game::states
                     if (N > 0) {
                         int actualIndex = (targetIndex % N + N) % N;
                         game->selectedMapKey = roster[actualIndex].jsonKey;
-                        game->menuMusic.stop();
                         game->getStateMachine().changeState(StateType::Playing);
                     }
                 }

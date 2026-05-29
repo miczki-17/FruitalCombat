@@ -40,6 +40,7 @@ namespace game::states
         void handleUIHover();
         void renderHUD(sf::RenderWindow& window);
 
+        void loadingGameAssets();
 
 
         // Memory clear

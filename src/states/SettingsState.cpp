@@ -27,6 +27,10 @@ namespace game::states
 			}
 		}
 
+		// dark overlay
+		darkOverlay.setSize(viewSize);
+		darkOverlay.setFillColor(sf::Color(0, 0, 0, 200));
+
 
 		// --- SETTINGS NAME ---
 		settingsText.emplace(game->mainFont, "SETTINGS", 55);
@@ -213,6 +217,9 @@ namespace game::states
 	{
 		sf::View uiView = window.getDefaultView();
 		window.setView(uiView);
+
+		// dark overlay
+		window.draw(darkOverlay);
 
 		if (bgSprite.has_value())	window.draw(*bgSprite);
 

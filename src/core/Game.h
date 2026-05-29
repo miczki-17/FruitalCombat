@@ -29,11 +29,6 @@ namespace game
 		sf::RenderWindow window;
 		StateMachine stateMachine;
 
-		sf::Texture menuCursorTex;
-		std::optional<sf::Sprite> menuCursorSprite;
-
-		bool isCursorInitialized = false;
-
 	public:
 		Game();
 
@@ -48,11 +43,6 @@ namespace game
 		StateMachine& getStateMachine();
 		sf::RenderWindow& getWindow();
 
-		// ---------- IMAGE BUFFERS ----------
-		//std::map<std::string, sf::Image> menuUiBuffer;
-		//std::vector<sf::Image> menuImageBuffer;
-		//std::map<std::string, sf::Image> characterImageBuffer;
-		//std::map<std::string, sf::Image> mapImageBuffer;
 
 		// ---------- INPUT ----------
 		sf::Keyboard::Key keyUp = sf::Keyboard::Key::W;
@@ -60,12 +50,7 @@ namespace game
 		sf::Keyboard::Key keyDown = sf::Keyboard::Key::S;
 		sf::Keyboard::Key keyRight = sf::Keyboard::Key::D;
 
-		// ---------- AUDIO ----------
-		sf::SoundBuffer uiClickBuffer;
-		std::optional<sf::Sound> uiClickSound;
-
-		// ---------- MUSIC ----------
-		sf::Music menuMusic;
+		
 
 		// --------- FONTS ----------
 		sf::Font mainFont;

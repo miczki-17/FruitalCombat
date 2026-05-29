@@ -3,6 +3,7 @@
 
 #include "Game.h"
 #include "ResourceManager.h"
+#include "AudioManager.h"
 
 namespace game
 {
@@ -40,6 +41,9 @@ namespace game
 			// UPDATE
 			stateMachine.update(dt);
 
+			// AUDIO
+			game::core::AudioManager::get().update();
+
 			// RENDER
 			window.clear();
 			stateMachine.render(window);
@@ -60,65 +64,38 @@ namespace game
 	// UI helpers
 	void Game::playUIClick()
 	{
-		uiClickSound->stop();
-		uiClickSound->play();
+		game::core::AudioManager::get().playSound("mouse_click");
 	}
 
 
 	//cursor
 	void Game::drawMenuCursor()
 	{
-		if (!isCursorInitialized)
-		{
-			auto& rm = game::core::ResourceManager::get();
+		auto& rm = game::core::ResourceManager::get();
 
-			if (rm.hasTexture("ui_cursor"))
-			{
-				menuCursorSprite.emplace(
-					*rm.getTexture("ui_cursor"));
+		if (!rm.hasTexture("ui_cursor"))
+			return;
 
-				menuCursorSprite->setTextureRect(
-					sf::IntRect({ 0, 0 }, { 64, 64 }));
+		sf::Sprite cursor(*rm.getTexture("ui_cursor"));
 
-				menuCursorSprite->setOrigin({
-					14.f, 10.f
-					});
+		cursor.setOrigin({ 14.f, 10.f });
 
-				window.setMouseCursorVisible(false);
-				isCursorInitialized = true;
-			}
-		}
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+			cursor.setTextureRect(sf::IntRect({ 0, 64 }, { 64, 64 }));
+		else
+			cursor.setTextureRect(sf::IntRect({ 0, 0 }, { 64, 64 }));
 
-		if (isCursorInitialized &&
-			menuCursorSprite.has_value())
-		{
-			sf::View oldView = window.getView();
-			window.setView(window.getDefaultView());
+		sf::View oldView = window.getView();
+		window.setView(window.getDefaultView());
 
-			sf::Vector2i mousePos =
-				sf::Mouse::getPosition(window);
+		auto mousePos = sf::Mouse::getPosition(window);
+		auto worldPos =
+			window.mapPixelToCoords(mousePos, window.getDefaultView());
 
-			sf::Vector2f worldPos =
-				window.mapPixelToCoords(
-					mousePos,
-					window.getDefaultView());
+		cursor.setPosition(worldPos);
 
-			menuCursorSprite->setPosition(worldPos);
+		window.draw(cursor);
 
-			if (sf::Mouse::isButtonPressed(
-				sf::Mouse::Button::Left))
-			{
-				menuCursorSprite->setTextureRect(
-					sf::IntRect({ 0, 64 }, { 64, 64 }));
-			}
-			else
-			{
-				menuCursorSprite->setTextureRect(
-					sf::IntRect({ 0, 0 }, { 64, 64 }));
-			}
-
-			window.draw(*menuCursorSprite);
-			window.setView(oldView);
-		}
+		window.setView(oldView);
 	}
 }

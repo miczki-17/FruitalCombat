@@ -95,7 +95,7 @@ namespace game::states
                 {
                     if (yesBtn.has_value() && yesBtn->getGlobalBounds().contains(worldPos)) {
                         game->playUIClick();
-                        game->getStateMachine().changeState(StateType::Menu);
+                        game->getStateMachine().changeState(StateType::Intro);
                         return;
                     }
                     if (noBtn.has_value() && noBtn->getGlobalBounds().contains(worldPos)) {

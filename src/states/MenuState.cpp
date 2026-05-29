@@ -3,6 +3,7 @@
 #include "MenuState.h"
 #include "../core/Game.h"
 #include "../core/ResourceManager.h"
+#include "../core/AudioManager.h"
 #include <format>
 #include <iostream>
 #include <cmath> 
@@ -89,18 +90,11 @@ namespace game::states
 
         sf::Listener::setGlobalVolume(35.0f);
 
-        // music
-        if (game->menuMusic.getStatus() != sf::SoundSource::Status::Playing)
+        // bg music
+        auto& audio = game::core::AudioManager::get();
+        if (!audio.isMusicPlaying("bg_music"))
         {
-            if (game->menuMusic.openFromFile("assets/audio/menu/Victory_at_Canopy_Peak.mp3"))
-            {
-                game->menuMusic.setLooping(true);
-                game->menuMusic.play();
-            }
-            else
-            {
-                std::cerr << "[MENU ERROR] Cannot load bg music.\n";
-            }
+            audio.playMusic("bg_music");
         }
     }
 

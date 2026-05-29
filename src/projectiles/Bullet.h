@@ -4,7 +4,6 @@
 
 namespace game::components
 {
-    // MOSTEK KOMPATYBILNO?CI: 
-    // Od teraz dla ca?ego starego kodu s?owo 'Bullet' oznacza nasz nowy, ultra-szybki komponent!
+    // compatibility bridge
     using Bullet = game::components::ProjectileComponent;
 }

@@ -76,6 +76,7 @@ namespace game::states
 
 	public:
 		MapSelectState(game::Game* game);
+		~MapSelectState();
 
 		StateType getType() const override;
 

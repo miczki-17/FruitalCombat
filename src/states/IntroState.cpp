@@ -10,6 +10,8 @@
 
 namespace game::states
 {
+    // Constructor
+
     IntroState::IntroState(game::Game* game)
         : State(game)
     {
@@ -53,6 +55,9 @@ namespace game::states
         workerThread = std::make_unique<std::thread>(&IntroState::loadAssetsInBg, this);
     }
 
+
+    // Destructor
+
     IntroState::~IntroState()
     {
         if (workerThread && workerThread->joinable()) {
@@ -60,16 +65,19 @@ namespace game::states
         }
     }
 
+
+
+    // Async assets loading
+
     void IntroState::loadAssetsInBg()
     {
         std::cout << "[ASYNC] Assets loading started...\n";
         auto& rm = game::core::ResourceManager::get();
 
-        rm.clear();
-
         loadProgress = 5;
 
 		// 1. LOADING CONFIGURATION AND TEXTURES FOR CHARACTERS
+        // ONLY MENU TEXTURES
         std::cout << "[ASYNC] Characters config loading...\n";
         std::ifstream configFile("assets/configs/fruits.json");
         if (configFile.is_open())
@@ -85,18 +93,13 @@ namespace game::states
 
                     if (characterData.contains("idleTexturePath")) {
                         std::string path = characterData.value("idleTexturePath", "");
-                        if (!path.empty()) rm.loadTexture(characterKey + "_idle", path);
-                    }
-
-                    if (characterData.contains("walkTexturePath")) {
-                        std::string path = characterData.value("walkTexturePath", "");
-                        if (!path.empty()) rm.loadTexture(characterKey + "_walk", path);
+                        if (!path.empty()) rm.loadTexture(characterKey + "_idle", path, game::core::AssetGroup::Menu);
                     }
 
                     
                     if (characterData.contains("initTexturePath")) {
                         std::string path = characterData.value("initTexturePath", "");
-                        if (!path.empty()) rm.loadTexture(characterKey + "_start", path);
+                        if (!path.empty()) rm.loadTexture(characterKey + "_start", path, game::core::AssetGroup::Menu);
                     }
 
                     index++;
@@ -116,15 +119,6 @@ namespace game::states
             try {
                 enemiesFile >> (game->enemiesConfig);
                 std::cout << "[ASYNC] enemies.json loaded successfully.\n";
-
-                for (auto& [enemyKey, enemyData] : game->enemiesConfig.items()) {
-                    if (enemyData.contains("idleTexturePath")) {
-                        rm.loadTexture(enemyKey + "_idle", enemyData.value("idleTexturePath", ""));
-                    }
-                    if (enemyData.contains("walkTexturePath")) {
-                        rm.loadTexture(enemyKey + "_walk", enemyData.value("walkTexturePath", ""));
-                    }
-                }
             }
             catch (const nlohmann::json::parse_error& e) {
                 std::cerr << "[ASYNC ERROR] enemies.json Parse error: " << e.what() << "\n";
@@ -133,7 +127,7 @@ namespace game::states
 
         loadProgress = 35;
 
-		// 3. LOADING CONFIGURATION AND TEXTURES FOR MAPS
+		// 3. LOADING CONFIGURATION AND MINIATURES FOR MAPS
         std::cout << "[ASYNC] Maps config loading...\n";
         std::ifstream mapsFile("assets/configs/maps.json");
         if (mapsFile.is_open())
@@ -146,15 +140,10 @@ namespace game::states
 
                 for (auto& [mapKey, mapData] : game->mapsConfig.items()) {
 
-                    // arena backgrounds
-                    if (mapData.contains("texturePath")) {
-                        rm.loadTexture(mapKey + "_map", mapData.value("texturePath", ""));
-                    }
-
                     // miniatures
                     if (mapData.contains("thumbnailPath")) {
                         std::string path = mapData.value("thumbnailPath", "");
-                        if (!path.empty()) rm.loadTexture(mapKey + "_thumb", path);
+                        if (!path.empty()) rm.loadTexture(mapKey + "_thumb", path, game::core::AssetGroup::Menu);
                     }
                     index++;
                     if (totalMaps > 0) loadProgress = 35 + (30 * index / totalMaps);
@@ -168,7 +157,7 @@ namespace game::states
         loadProgress = 60;
 
 		// 4. GLOBAF FONT AND MISC TEXTURES
-        rm.loadFont("main_font", "assets/fonts/Minecraftia-Regular.ttf");
+        rm.loadFont("main_font", "assets/fonts/Minecraftia-Regular.ttf", game::core::AssetGroup::Global);
 
 
         if (sf::Font* fontPtr = rm.getFont("main_font")) {
@@ -181,12 +170,10 @@ namespace game::states
         for (int i = 1; i <= 1; ++i)
         {
             std::string filename = std::format("assets/textures/ui/bg_{:01}.png", i);
-            rm.loadTexture("bg_" + std::to_string(i), filename);
+            rm.loadTexture("bg_" + std::to_string(i), filename, game::core::AssetGroup::Menu);
         }
 
         std::map<std::string, std::string> uiPaths = {
-            {"empty_button", "assets/textures/ui/empty_button.png"},
-            {"settings", "assets/textures/ui/settings_button.png"},
             {"shop", "assets/textures/ui/shop.png"},
             {"achievements", "assets/textures/ui/achievements.png"},
             {"left_arrow", "assets/textures/ui/left_arrow.png"},
@@ -199,30 +186,39 @@ namespace game::states
             {"dmg_icon", "assets/textures/ui/damage_icon.png"},
             {"star_full_icon", "assets/textures/ui/star_full_icon.png"},
             {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
-            {"cursor", "assets/textures/ui/cursor.png" },
-            {"crosshair", "assets/textures/ui/crosshairV3.png"},
             {"stat_bar_frame", "assets/textures/ui/stat_bar_frame.png"},
             {"stat_bar_fill", "assets/textures/ui/stat_bar_fill.png"}
+        };
+
+        std::map<std::string, std::string> uiGlobalPaths = {
+            {"empty_button", "assets/textures/ui/empty_button.png"},
+            {"settings", "assets/textures/ui/settings_button.png"},
+            {"cursor", "assets/textures/ui/cursor.png" },
+            {"crosshair", "assets/textures/ui/crosshairV3.png"},
         };
 
         int uiIndex = 0;
         int uiTotal = uiPaths.size();
         
-        // ResourceManager loading
+        // UI Menu loading
         for (const auto& [key, path] : uiPaths) {
-            rm.loadTexture("ui_" + key, path);
+            rm.loadTexture("ui_" + key, path, game::core::AssetGroup::Menu);
+            uiIndex++;
+        }
 
+        // UI Global loading
+        uiIndex = 0;
+        uiTotal = uiGlobalPaths.size();
+
+        for (const auto& [key, path] : uiGlobalPaths) {
+            rm.loadTexture("ui_" + key, path, game::core::AssetGroup::Global);
             uiIndex++;
             loadProgress = 70 + (25 * uiIndex / uiTotal);
         }
 
-        // 6. UI SOUNDS (final 5%)
-        if (game->uiClickBuffer.loadFromFile("../../../assets/audio/ui/click.mp3")) {
-            game->uiClickSound.emplace(game->uiClickBuffer);
-        }
-        else if (game->uiClickBuffer.loadFromFile("assets/audio/ui/click.mp3")) {
-            game->uiClickSound.emplace(game->uiClickBuffer);
-        }
+        // sounds loading
+        rm.loadSound("mouse_click", "assets/audio/ui/click.mp3", game::core::AssetGroup::Global);
+        rm.loadMusic("bg_music", "assets/audio/menu/Victory_at_Canopy_Peak.mp3", game::core::AssetGroup::Menu);
 
         loadProgress = 100;
         isFinished = true;
@@ -230,6 +226,7 @@ namespace game::states
     }
 
     StateType IntroState::getType() const { return StateType::Intro; }
+
 
     void IntroState::handleEvent(const sf::Event& event)
     {
