@@ -82,6 +82,10 @@ namespace game::states
         // ----------------------------------------------
 
 
+        // HUD resources
+        rm.loadTexture("drop_biomass", "assets/textures/entities/drops/biomass_juice.png");
+
+
         // Clear arena context
         game->arenaContext.entities.clear();
         //game->arenaContext.splashTextures.clear();
@@ -136,6 +140,9 @@ namespace game::states
                 rm.removeTexture(loadedSplashKey_ + "_" + std::to_string(i));
             }
         }
+
+        // HUD resources remove
+        rm.removeTexture("drop_biomass");
     }
 
     StateType PlayingState::getType() const { return StateType::Playing; }

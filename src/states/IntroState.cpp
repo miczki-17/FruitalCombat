@@ -170,10 +170,6 @@ namespace game::states
 		// 4. GLOBAF FONT AND MISC TEXTURES
         rm.loadFont("main_font", "assets/fonts/Minecraftia-Regular.ttf");
 
-        // ?????????????
-        rm.loadTexture("drop_biomass", "assets/textures/entities/drops/biomass_juice.png");
-
-        //??????????????
 
         if (sf::Font* fontPtr = rm.getFont("main_font")) {
             game->mainFont = *fontPtr;
