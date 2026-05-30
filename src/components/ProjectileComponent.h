@@ -55,6 +55,9 @@ namespace game::components
 
         void enableShadow(float shadowRadius);
 
+        void setImpactSound(const std::string& id);
+        const std::string& getImpactSound() const;
+
 
     private:
         sf::Vector2f position_;
@@ -96,6 +99,10 @@ namespace game::components
         float minArcHeight_ = 20.0f;
         sf::CircleShape shadowShape_;
         bool spawnSplash_ = false;
+
+
+        // sounds
+        std::string impactSoundId_;
 
 
         // default splashKey

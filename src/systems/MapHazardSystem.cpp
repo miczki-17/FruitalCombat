@@ -69,6 +69,7 @@ namespace game::systems
             knife.setAnimation(tex, 1, 1.0f, { static_cast<int>(tex->getSize().x), static_cast<int>(tex->getSize().y) });
             knife.setSpriteScale(0.2f, 0.2f);
             knife.enableShadow(20.0f);
+            knife.setImpactSound("knife_hit");
         }
         else {
             knife.setAppearance(config_.radius, sf::Color(180, 180, 180));
@@ -91,6 +92,7 @@ namespace game::systems
             icicle.setSpriteScale(3.5f, 3.5f);
 			icicle.setFriendly(false); // hazards should not be friendly to the player
             icicle.enableShadow(16.0f);
+            icicle.setImpactSound("icicle_shatter");
         }
         else {
             // Fallback
@@ -120,6 +122,7 @@ namespace game::systems
             spore.setSpriteScale(2.5f, 2.5f);
             spore.setWobble(true, false);
             spore.enableShadow(16.0f);
+            spore.setImpactSound("spore_splat");
         }
         else
         {

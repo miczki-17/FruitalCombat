@@ -23,12 +23,12 @@ namespace game::systems
         for (int i = static_cast<int>(drops.size()) - 1; i >= 0; --i)
         {
             sf::Vector2f diff = player->position - drops[i].position;
-            float dist = diff.length(); // SFML 3
+            float dist = diff.length();
 
             if (dist < 180.0f && dist > 0.001f)
             {
                 drops[i].position += (diff / dist) * 350.0f * dt;
-                drops[i].shape.setPosition(drops[i].position);
+                drops[i].update(dt);
             }
 
             if (dist < 30.0f)

@@ -335,5 +335,15 @@ namespace game::components
         shadowShape_.setOrigin({ shadowRadius, shadowRadius });
         shadowShape_.setFillColor(sf::Color(0, 0, 0, 150));
     }
+
+    void ProjectileComponent::setImpactSound(const std::string& id)
+    {
+        impactSoundId_ = id;
+    }
+
+    const std::string& ProjectileComponent::getImpactSound() const
+    {
+        return impactSoundId_;
+    }
 }
 

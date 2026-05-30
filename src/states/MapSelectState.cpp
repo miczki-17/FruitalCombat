@@ -75,8 +75,7 @@ namespace game::states
 
     MapSelectState::~MapSelectState() 
     { 
-        game::core::AudioManager::get().stopMusic();
-        game::core::ResourceManager::get().unloadGroup(game::core::AssetGroup::Intro);
+        
     }
 
     void MapSelectState::initFireflies()

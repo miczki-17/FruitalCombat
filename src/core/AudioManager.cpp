@@ -11,8 +11,7 @@ namespace game::core
         return instance;
     }
 
-    void AudioManager::playSound(
-        const std::string& id)
+    void AudioManager::playSound(const std::string& id)
     {
         auto* buffer =
             ResourceManager::get()
@@ -27,6 +26,33 @@ namespace game::core
 
         activeSounds_.back().play();
     }
+
+    void AudioManager::playSoundVolume(const std::string& id, float volume)
+    {
+        auto* buffer =
+            ResourceManager::get().getSound(id);
+
+        if (!buffer)
+        {
+            return;
+        }
+
+        activeSounds_.emplace_back(*buffer);
+
+        if (volume < 0.f)
+        {
+            activeSounds_.back().setVolume(sfxVolume_);
+        }
+        else
+        {
+            activeSounds_.back().setVolume(
+                std::clamp(volume, 0.f, 100.f));
+        }
+
+        activeSounds_.back().play();
+    }
+
+
 
     void AudioManager::playMusic(const std::string& id, bool loop)
     {
@@ -48,6 +74,29 @@ namespace game::core
         currentMusic_->setVolume(musicVolume_);
         currentMusic_->play();
     }
+
+    void AudioManager::playMusicVolume(const std::string& id, bool loop, float volume)
+    {
+        auto* music = ResourceManager::get().getMusic(id);
+
+        if (!music)
+        {
+            return;
+        }
+
+        if (currentMusic_)
+        {
+            currentMusic_->stop();
+        }
+
+        currentMusic_ = music;
+        currentMusicId_ = id;
+        currentMusic_->setVolume(volume < 0.f ? musicVolume_ : volume);
+        currentMusic_->setLooping(loop);
+        currentMusic_->setVolume(musicVolume_);
+        currentMusic_->play();
+    }
+
 
     void AudioManager::stopMusic()
     {

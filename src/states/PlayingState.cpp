@@ -16,6 +16,7 @@ namespace game::states
     {
         std::cout << "[PlayingState] World initialization...\n";
 
+        // clear RAM
         game::core::AudioManager::get().stopMusic();
         game::core::AudioManager::get().stopAllSounds();
         game::core::ResourceManager::get().unloadGroup(game::core::AssetGroup::Menu);
@@ -100,22 +101,28 @@ namespace game::states
         {
             rm.loadTexture("hazard_icicle", "assets/textures/hazards/icicle.png", game::core::AssetGroup::Playing);
             rm.loadTexture("hazard_icicle_shard", "assets/textures/hazards/icicle_shard.png", game::core::AssetGroup::Playing);
+            rm.loadSound("icicle_shatter", "assets/sounds/icicle_shatter.mp3", game::core::AssetGroup::Playing);
         }
         else if (mapKey == "ChoppingBlock")
         {
             rm.loadTexture("hazard_knife", "assets/textures/hazards/knife.png", game::core::AssetGroup::Playing);
-            //rm.loadTexture("hazard_knife_splash_sheet", "assets/textures/knife_splash_sheet.png");
+            rm.loadSound("knife_hit", "assets/sounds/knife_hit.mp3", game::core::AssetGroup::Playing);
         }
         else if (mapKey == "WildOrchard")
         {
             rm.loadTexture("hazard_spore", "assets/textures/hazards/spore.png", game::core::AssetGroup::Playing);
             rm.loadTexture("hazard_spore_splash", "assets/textures/hazards/spore_splash_1.png", game::core::AssetGroup::Playing);
+            rm.loadSound("spore_splat", "assets/sounds/spore_splat.mp3", game::core::AssetGroup::Playing);
         }
 
 
 
         // HUD resources
-        rm.loadTexture("drop_biomass", "assets/textures/entities/drops/biomass_juice.png", game::core::AssetGroup::Playing);
+        for (uint8_t i = 0; i <= 4; i++)
+        {
+            std::string path = "assets/textures/entities/drops/biomass_juice_" + std::to_string(i) + ".png";
+            rm.loadTexture("juice_drop_" + std::to_string(i), path, game::core::AssetGroup::Playing);
+        }
 
 
         // Clear arena context

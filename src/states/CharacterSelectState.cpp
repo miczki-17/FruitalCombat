@@ -1,9 +1,9 @@
-// ==========================================
-// CharacterSelectState.cpp
-// ==========================================
+// --- CharacterSelectState.cpp ---
+
 #include "CharacterSelectState.h"
 #include "../core/Game.h"
-#include "../core/ResourceManager.h" // NOWE! Odwołanie do menedżera
+#include "../core/ResourceManager.h"
+#include "../core/AudioManager.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>

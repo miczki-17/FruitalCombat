@@ -19,7 +19,9 @@ namespace game::core
         AudioManager& operator=(const AudioManager&) = delete;
 
         void playSound(const std::string& id);
+        void playSoundVolume(const std::string& id, float volume = -1.f);
         void playMusic(const std::string& id, bool loop = true);
+        void playMusicVolume(const std::string& id, bool loop = true, float volume = -1.f);
         void stopMusic();
         void stopAllSounds();
         void pauseMusic();

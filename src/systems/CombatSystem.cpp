@@ -4,6 +4,7 @@
 #include "../core/Game.h"
 #include "../core/ArenaContext.h"
 #include "../core/ResourceManager.h"
+#include "../core/AudioManager.h"
 #include "../entities/Entity.h"
 #include "../components/StatsComponent.h"
 #include "../components/SpriteComponent.h"
@@ -217,6 +218,12 @@ namespace game::systems
 
                         newShards.push_back(shard);
                     }
+                }
+
+                // Sounds
+                if (!bullets[i].getImpactSound().empty())
+                {
+                    game::core::AudioManager::get().playSoundVolume(bullets[i].getImpactSound(), 75.f);
                 }
 
                 bullets.erase(bullets.begin() + i);
