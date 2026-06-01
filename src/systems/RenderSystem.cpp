@@ -4,7 +4,13 @@
 #include "../core/ArenaContext.h"
 #include "../components/TextComponent.h"
 #include "../components/SpriteComponent.h"
+#include "../components/ParticleComponent.h"
+#include "../components/TransformComponent.h"
+#include "../components/JuiceComponent.h"
+#include "../components/AoEComponent.h"
 #include "../entities/Entity.h"
+
+#include <SFML/Graphics/RectangleShape.hpp>
 
 namespace game::systems
 {
@@ -20,22 +26,34 @@ namespace game::systems
         if (mapSprite.has_value()) window.draw(*mapSprite);
 
 		// Layer 3: Walk dust particles (if any)
-        for (const auto& p : context_.walkParticles)
+        sf::RectangleShape dustShape;
+
+        for (auto& entity : context_.entities)
         {
-            sf::RectangleShape dustShape(sf::Vector2f(p.size * 2.0f, p.size * 2.0f));
-            dustShape.setOrigin({ p.size, p.size });
-            dustShape.setPosition(p.position);
+            auto* particle = entity->getComponent<game::components::ParticleComponent>();
+            if (!particle) continue; // Encja nie jest kurzem
 
-            sf::Color c = p.color;
+            auto* transform = entity->getComponent<game::components::TransformComponent>();
+            if (!transform) continue; // Kurz bez pozycji? Niemo¿liwe, ale bezpieczne.
 
-            c.a = static_cast<std::uint8_t>(c.a * (p.lifetime / p.maxLifetime));
+            // Konfigurujemy kszta³t na podstawie danych z komponentu
+            dustShape.setSize({ particle->size * 2.0f, particle->size * 2.0f });
+            dustShape.setOrigin({ particle->size, particle->size });
+            dustShape.setPosition(transform->position);
+
+            sf::Color c = particle->baseColor;
             dustShape.setFillColor(c);
 
             window.draw(dustShape);
         }
 
 		// Layer 4: Juice drops (if any)
-        for (auto& drop : context_.juiceDrops) drop.render(window);
+        for (auto& entity : context_.entities)
+        {
+            if (auto* juice = entity->getComponent<game::components::JuiceComponent>()) {
+                juice->render(window);
+            }
+        }
 
 		// Layer 5: Bullets (if any)
         for (auto& entity : context_.entities)
@@ -71,9 +89,9 @@ namespace game::systems
 		// Layer 9: AoE zones (if any)
         for (auto& entity : context_.entities)
         {
-            if (auto* textComp = entity->getComponent<game::components::TextComponent>())
+            if (auto* aoeComp = entity->getComponent<game::components::AoEComponent>())
             {
-                textComp->render(window);
+                aoeComp->render(window);
             }
         }
 

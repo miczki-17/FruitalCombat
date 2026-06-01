@@ -4,6 +4,7 @@
 #include "../entities/Entity.h"
 #include "../components/TransformComponent.h"
 #include "../components/ProjectileComponent.h"
+#include "../components/AoEComponent.h"
 #include <random>
 
 namespace game::systems

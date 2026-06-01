@@ -48,11 +48,28 @@ namespace game::core
         combatSystem = std::make_unique<game::systems::CombatSystem>(game_, game_->arenaContext, enemies);
         particleSystem = std::make_unique<game::systems::ParticleSystem>(game_->arenaContext);
         renderSystem = std::make_unique<game::systems::RenderSystem>(game_->arenaContext);
+        particleSystem = std::make_unique<game::systems::ParticleSystem>(game_->arenaContext);
+        renderSystem = std::make_unique<game::systems::RenderSystem>(game_->arenaContext);
+
+        // ParticleSystem config from maps json
         const auto& currentMapConfig = game_->mapsConfig[game_->selectedMapKey];
+
+        uint8_t r = currentMapConfig.value("dustR", 200);
+        uint8_t g = currentMapConfig.value("dustG", 200);
+        uint8_t b = currentMapConfig.value("dustB", 200);
+        uint8_t a = currentMapConfig.value("dustA", 150);
+        game_->arenaContext.mapDustColor = sf::Color(r, g, b, a);
+
         mapHazardSystem = std::make_unique<game::systems::MapHazardSystem>(game_->selectedMapKey, currentMapConfig);
     }
 
-    GameWorld::~GameWorld() = default;
+    GameWorld::~GameWorld()
+    {
+        if (game_)
+        {
+            game_->arenaContext.clear();
+        }
+    }
 
     bool GameWorld::requiresShop() const { return evolutionManager->requiresShop(); }
     void GameWorld::resolveShopBreak() { evolutionManager->resolveShopBreak(); }

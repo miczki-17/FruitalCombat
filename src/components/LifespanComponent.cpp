@@ -4,6 +4,8 @@
 #include "../entities/Entity.h"
 #include "TextComponent.h"
 #include "SpriteComponent.h"
+#include "ParticleComponent.h"
+#include "AoEComponent.h"
 #include <algorithm>
 
 namespace game::components
@@ -27,6 +29,27 @@ namespace game::components
             // Wymaga dopisania metody setAlpha do SpriteComponent (Krok 0)
             if (auto* spriteComp = owner->getComponent<SpriteComponent>()) {
                 spriteComp->setAlpha(alpha);
+            }
+
+            // wyciemnianie czasteczek -> zmiana kanalu alpha
+            if (auto* particleComp = owner->getComponent<ParticleComponent>()) {
+                particleComp->baseColor.a = alpha;
+            }
+
+            // wyciemnianie stref AoE
+            if (auto* aoeComp = owner->getComponent<game::components::AoEComponent>()) {
+                if (aoeComp->sprite.has_value()) {
+                    sf::Color spriteColor = aoeComp->sprite->getColor();
+                    spriteColor.a = alpha;
+                    aoeComp->sprite->setColor(spriteColor);
+                }
+                else
+                {
+                    // Wyciemnianie zapasowego ko³a
+                    sf::Color c = aoeComp->shape.getFillColor();
+                    c.a = alpha;
+                    aoeComp->shape.setFillColor(c);
+                }
             }
         }
 

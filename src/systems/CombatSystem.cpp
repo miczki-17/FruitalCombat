@@ -14,6 +14,8 @@
 #include "../components/TextComponent.h"
 #include "../components/LifespanComponent.h"
 #include "../components/PopAnimationComponent.h"
+#include "../components/JuiceComponent.h"
+#include "../components/AoEComponent.h"
 #include "EvolutionManager.h"
 
 #include <algorithm>
@@ -32,21 +34,20 @@ namespace game::systems
     {
         if (!player || player->isDead()) return;
 
-        auto& drops = context_.juiceDrops;
-
-        for (int i = static_cast<int>(drops.size()) - 1; i >= 0; --i)
+        auto& entities = context_.entities;
+        for (int i = static_cast<int>(entities.size()) - 1; i >= 0; --i)
         {
-            if (drops[i].isCollected)
+            if (auto* juice = entities[i]->getComponent<game::components::JuiceComponent>())
             {
-                float juiceValue = drops[i].value;
-                game_->profile.addJuice(static_cast<int>(juiceValue));
-
-                if (auto* stats = player->getComponent<game::components::StatsComponent>())
+                if (juice->isCollected)
                 {
-                    stats->addUltCharge(juiceValue * 0.5f);
+                    game_->profile.addJuice(static_cast<int>(juice->value));
+                    if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
+                        stats->addUltCharge(juice->value * 0.5f);
+                    }
+                    // Oznaczamy do usuniêcia
+                    entities[i]->destroy();
                 }
-
-                drops.erase(drops.begin() + i);
             }
         }
     }
@@ -166,67 +167,90 @@ namespace game::systems
                 }
             }
 
+
             // 4. AOE DLA TRUCIZNY 
-            if (proj->getStatusEffect() == game::components::StatusEffect::Poison ||
-                proj->getStatusEffect() == game::components::StatusEffect::SporePoison)
+            if (proj->getStatusEffect() == game::components::StatusEffect::Poison)
             {
-                AoEZone puddle;
-                puddle.radius = (proj->getStatusEffect() == game::components::StatusEffect::SporePoison) ? 120.0f : 80.0f;
-                puddle.dps = (proj->getStatusEffect() == game::components::StatusEffect::SporePoison) ? 5.0f : 25.0f;
-                puddle.shape.setRadius(puddle.radius);
-                puddle.shape.setOrigin({ puddle.radius, puddle.radius });
-                puddle.shape.setPosition(explodePos);
-                puddle.shape.setFillColor(sf::Color(50, 205, 50, 130));
-                puddle.shape.setOutlineThickness(0.0f);
-                puddle.lifetime = 5.0f;
-                puddle.maxLifetime = 5.0f;
-                puddle.appliesPoison = true;
+                float r = 80.0f;
+                float dps = 5.0f;
 
-                context_.zones.push_back(puddle);
+                auto aoeEntity = std::make_unique<game::entities::Entity>();
+                if (auto* transform = aoeEntity->getComponent<game::components::TransformComponent>()) {
+                    transform->position = explodePos;
+                }
 
-                if (proj->getStatusEffect() == game::components::StatusEffect::SporePoison)
-                {
-                    std::string baseKey = proj->getSplashKeyBase();
-                    auto& rm = game::core::ResourceManager::get();
-                    if (!baseKey.empty() && rm.hasTexture(baseKey)) {
-                        auto splashEntity = std::make_unique<game::entities::Entity>();
-                        if (auto* transform = splashEntity->getComponent<game::components::TransformComponent>()) {
-                            transform->position = explodePos;
-                            transform->rotation = static_cast<float>(rand() % 360);
+                auto poisonAoE = std::make_unique<game::components::AoEComponent>(
+                    120.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f);
+                poisonAoE->isVisible = false;
+                aoeEntity->addComponent(std::move(poisonAoE));
 
-                            float baseScale = 0.55f + static_cast<float>(rand() % 40) / 100.0f;
-                            transform->scale = { baseScale * 1.35f, baseScale * 0.7f };
+                // Dodajemy czas zycia z wygaszaniem 
+                aoeEntity->addComponent(std::make_unique<game::components::LifespanComponent>(5.0f, true));
 
-                            splashEntity->addComponent(std::make_unique<game::components::PopAnimationComponent>(
-                                transform->scale, sf::Vector2f(baseScale, baseScale), 10.0f));
-                        }
+                context_.spawnEntity(std::move(aoeEntity));
+            }
 
-                        auto spriteComp = std::make_unique<game::components::SpriteComponent>();
-                        spriteComp->setTexture(rm.getTextureShared(baseKey));
-                        splashEntity->addComponent(std::move(spriteComp));
-                        splashEntity->addComponent(std::make_unique<game::components::LifespanComponent>(1.5f, true));
 
-                        context_.spawnEntity(std::move(splashEntity));
+            // 5. Spore AoE
+            if (proj->getStatusEffect() == game::components::StatusEffect::SporePoison)
+            {
+                float r = 120.0f;
+                float dps = 25.0f;
+
+                auto sporeEntity = std::make_unique<game::entities::Entity>();
+                if (auto* transform = sporeEntity->getComponent<game::components::TransformComponent>()) {
+                    transform->position = explodePos;
+                }
+
+                auto sporeAoE = std::make_unique<game::components::AoEComponent>(
+                    120.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f);
+                sporeAoE->isVisible = false;
+                sporeEntity->addComponent(std::move(sporeAoE));
+
+                std::string baseKey = proj->getSplashKeyBase();
+                auto& rm = game::core::ResourceManager::get();
+                if (!baseKey.empty() && rm.hasTexture(baseKey)) {
+                    auto splashEntity = std::make_unique<game::entities::Entity>();
+                    if (auto* transform = splashEntity->getComponent<game::components::TransformComponent>()) {
+                        transform->position = explodePos;
+                        transform->rotation = static_cast<float>(rand() % 360);
+
+                        float baseScale = 0.55f + static_cast<float>(rand() % 40) / 100.0f;
+                        transform->scale = { baseScale * 1.35f, baseScale * 0.7f };
+
+                        splashEntity->addComponent(std::make_unique<game::components::PopAnimationComponent>(
+                            transform->scale, sf::Vector2f(baseScale, baseScale), 10.0f));
                     }
+
+                    auto spriteComp = std::make_unique<game::components::SpriteComponent>();
+                    spriteComp->setTexture(rm.getTextureShared(baseKey));
+                    splashEntity->addComponent(std::move(spriteComp));
+                    splashEntity->addComponent(std::make_unique<game::components::LifespanComponent>(1.5f, true));
+
+                    context_.spawnEntity(std::move(splashEntity));
                 }
             }
 
-            // 5. EXPLOSION LOGIC: ICE SHATTER (Sople jako encje)
+            // 6. EXPLOSION LOGIC: ICE SHATTER (Sople jako encje)
             if (proj->getStatusEffect() == game::components::StatusEffect::IceShatter)
             {
-                AoEZone iceZone;
-                iceZone.radius = 120.0f;
-                iceZone.shape.setRadius(120.0f);
-                iceZone.shape.setOrigin({ 120.0f, 120.0f });
-                iceZone.shape.setPosition(explodePos);
-                iceZone.shape.setFillColor(sf::Color(100, 200, 255, 80));
-                iceZone.lifetime = 3.0f;
-                iceZone.maxLifetime = 3.0f;
-                iceZone.dps = 40.0f;
-                iceZone.appliesSlow = true;
-                iceZone.slowMultiplier = 0.4f;
+                auto iceEntity = std::make_unique<game::entities::Entity>();
+                if (auto* transform = iceEntity->getComponent<game::components::TransformComponent>()) {
+                    transform->position = explodePos;
+                }
 
-                context_.zones.push_back(iceZone);
+                // Dodajemy komponent AoE (Lod zadaje 40 DPS i spowalnia o 0.4x)
+                auto iceAoE = std::make_unique<game::components::AoEComponent>(
+                    120.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f);
+                iceAoE->isVisible = false;
+                iceEntity->addComponent(std::move(iceAoE));
+
+                // Czas zycia z wygaszaniem (3 sekundy)
+                iceEntity->addComponent(std::make_unique<game::components::LifespanComponent>(3.0f, true));
+
+                
+
+                context_.spawnEntity(std::move(iceEntity));
 
                 auto& rm = game::core::ResourceManager::get();
                 std::shared_ptr<sf::Texture> shardTex = rm.hasTexture("hazard_icicle_shard") ? rm.getTextureShared("hazard_icicle_shard") : nullptr;
@@ -264,6 +288,7 @@ namespace game::systems
                 }
             }
 
+
             if (!proj->getImpactSound().empty())
             {
                 game::core::AudioManager::get().playSoundVolume(proj->getImpactSound(), 75.f);
@@ -290,7 +315,24 @@ namespace game::systems
                     float randomRoll = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
                     if (randomRoll <= dnaData.dropChance)
                     {
-                        context_.juiceDrops.emplace_back(enemies_transform->position, dnaData.baseJuice * dnaData.sizeScale);
+                        std::random_device rd; std::mt19937 gen(rd());
+                        std::uniform_real_distribution<float> angleDist(0.f, 6.283185f);
+                        std::uniform_real_distribution<float> speedDist(80.f, 180.f);
+
+                        float angle = angleDist(gen);
+                        float speed = speedDist(gen);
+                        sf::Vector2f randomVel = { std::cos(angle) * speed, std::sin(angle) * speed - 220.f };
+
+                        auto juiceEntity = std::make_unique<game::entities::Entity>();
+
+                        if (auto* transform = juiceEntity->getComponent<game::components::TransformComponent>()) {
+                            transform->position = enemies_transform->position;
+                        }
+
+                        juiceEntity->addComponent(std::make_unique<game::components::JuiceComponent>(
+                            dnaData.baseJuice * dnaData.sizeScale, randomVel));
+
+                        context_.spawnEntity(std::move(juiceEntity));
                     }
                 }
 

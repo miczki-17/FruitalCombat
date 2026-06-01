@@ -6,6 +6,7 @@
 #include "../components/ProjectileComponent.h"
 #include "../components/StatsComponent.h"
 #include "../components/TransformComponent.h"
+#include "../components/JuiceComponent.h"
 #include <cmath>
 
 namespace game::systems
@@ -19,24 +20,31 @@ namespace game::systems
     {
         if (!player || player->isDead()) return;
 
-        auto& drops = context_.juiceDrops;
+        auto* player_transform = player->getComponent<game::components::TransformComponent>();
+        if (!player_transform) return;
 
-        for (int i = static_cast<int>(drops.size()) - 1; i >= 0; --i)
+        auto& entities = context_.entities;
+
+        for (auto& entity : entities)
         {
-            auto* player_transform = player->getComponent<game::components::TransformComponent>(); if (!player_transform) return;
+            auto* juice = entity->getComponent<game::components::JuiceComponent>();
+            if (!juice || juice->isCollected) continue;
 
-            sf::Vector2f diff = player_transform->position - drops[i].position;
-            float dist = diff.length();
+            auto* juice_transform = entity->getComponent<game::components::TransformComponent>();
+            if (!juice_transform) continue;
+
+            sf::Vector2f diff = player_transform->position - juice_transform->position;
+            float dist = diff.length(); // SFML 3
 
             if (dist < 180.0f && dist > 0.001f)
             {
-                drops[i].position += (diff / dist) * 350.0f * dt;
-                drops[i].update(dt);
+                // Przyspieszone "magnesowanie" do gracza
+                juice_transform->position += (diff / dist) * 350.0f * dt;
             }
 
             if (dist < 30.0f)
             {
-                drops[i].isCollected = true;
+                juice->isCollected = true;
             }
         }
     }

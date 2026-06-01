@@ -124,16 +124,6 @@ namespace game::states
             std::string path = "assets/textures/entities/drops/biomass_juice_" + std::to_string(i) + ".png";
             rm.loadTexture("juice_drop_" + std::to_string(i), path, game::core::AssetGroup::Playing);
         }
-
-
-        // Clear arena context
-        game->arenaContext.entities.clear();
-        //game->arenaContext.splashTextures.clear();
-        game->arenaContext.zones.clear();
-        //game->arenaContext.acidSplashes.clear();
-        game->arenaContext.juiceDrops.clear();
-        game->arenaContext.walkParticles.clear();
-
         
 
         game->arenaContext.mapDustColor = sf::Color(

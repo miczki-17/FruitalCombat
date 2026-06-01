@@ -3,6 +3,8 @@
 #include "../entities/Entity.h"
 #include "../components/StatsComponent.h"
 #include "../components/TransformComponent.h"
+#include "../components/LifespanComponent.h"
+#include "../components/ParticleComponent.h"
 #include "../core/ArenaContext.h"
 
 #include <cmath>
@@ -51,11 +53,24 @@ namespace game::components
             if (length > 0.001f) backDir /= length;
 
             for (int i = 0; i < 4; ++i) {
-                context_->walkParticles.emplace_back(
-                    owner_transform->position + sf::Vector2f(offset(gen), offset(gen) + 15.0f),
-                    (backDir * 150.0f) + sf::Vector2f(velSpread(gen), velSpread(gen)),
-                    0.4f, 5.0f, sf::Color(255, 120, 20, 220)
-                );
+                // Tworzymy now¹ encjê cz¹steczki
+                auto dust = std::make_unique<game::entities::Entity>();
+
+                // 1. Ustawiamy pozycjê (z offsetem) i prêdkoœæ (z odrzutem i rozrzutem)
+                if (auto* t = dust->getComponent<game::components::TransformComponent>()) {
+                    t->position = owner_transform->position + sf::Vector2f(offset(gen), offset(gen) + 15.0f);
+                    t->velocity = (backDir * 150.0f) + sf::Vector2f(velSpread(gen), velSpread(gen));
+                }
+
+                // 2. Czas ¿ycia: 0.4 sekundy, p³ynne wygaszanie (fadeOut = true)
+                dust->addComponent(std::make_unique<game::components::LifespanComponent>(0.4f, true));
+
+                // 3. Rozmiar: 5.0f, Kolor: Pomarañczowy, Tarcie: 5.0f (¿eby iskry ³adnie zwalnia³y)
+                dust->addComponent(std::make_unique<game::components::ParticleComponent>(
+                    5.0f, sf::Color(255, 120, 20, 220), 5.0f));
+
+                // Wrzucamy do kot³a ECS!
+                context_->spawnEntity(std::move(dust));
             }
 
             // 2. OBRAZENIA I PROMIEN ODRZUTU (Dla Gracza walcz¹cego z grupa)

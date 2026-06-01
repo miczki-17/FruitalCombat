@@ -3,7 +3,10 @@
 #include "AcidPoolUltimate.h"
 
 #include "../components/StatsComponent.h"
+#include "../components/AoEComponent.h"
+#include "../components/LifespanComponent.h"
 #include "../components/TransformComponent.h"
+#include "../entities/Entity.h"
 
 namespace game::components
 {
@@ -60,29 +63,30 @@ namespace game::components
 
     void AcidPoolUltimate::spawnAcidPool() const
     {
-        AoEZone acidPool;
+        auto* owner_transform = owner_->getComponent<TransformComponent>();
+        if (!owner_transform) return;
 
-        auto* owner_transform = owner_->getComponent<TransformComponent>(); if (!owner_transform) return;
+        auto aoeEntity = std::make_unique<game::entities::Entity>();
 
-        acidPool.radius = ACID_POOL_RADIUS;
-        acidPool.dps = 0.0f;
+        // 1. Pozycja ka³u¿y
+        if (auto* transform = aoeEntity->getComponent<game::components::TransformComponent>()) {
+            transform->position = owner_transform->position;
+        }
 
-        acidPool.appliesPoison = true;
-        acidPool.poisonDps = POISON_DAMAGE_PER_SECOND;
+        aoeEntity->addComponent(std::make_unique<game::components::AoEComponent>(
+            ACID_POOL_RADIUS,
+            ACID_POOL_COLOR,
+            0.0f,                       // Bazowy DPS
+            true,                       // appliesPoison
+            POISON_DAMAGE_PER_SECOND,   // poisonDps
+            true,                       // appliesSlow
+            SLOW_MULTIPLIER             // slowMult
+            ));
 
-        acidPool.appliesSlow = true;
-        acidPool.slowMultiplier = SLOW_MULTIPLIER;
+        // 3. Dodajemy czas ¿ycia z p³ynnym wygaszaniem (fadeOut = true)
+        aoeEntity->addComponent(std::make_unique<game::components::LifespanComponent>(ACID_POOL_DURATION, true));
 
-        acidPool.lifetime = ACID_POOL_DURATION;
-        acidPool.maxLifetime = ACID_POOL_DURATION;
-
-        acidPool.shape.setRadius(acidPool.radius);
-        acidPool.shape.setOrigin(
-            { acidPool.radius, acidPool.radius });
-
-        acidPool.shape.setPosition(owner_transform->position);
-        acidPool.shape.setFillColor(ACID_POOL_COLOR);
-
-        arenaContext_->zones.push_back(acidPool);
+        // 4. Wrzucamy do systemu!
+        arenaContext_->spawnEntity(std::move(aoeEntity));
     }
 }

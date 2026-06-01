@@ -8,7 +8,6 @@
 #include <SFML/Graphics.hpp>
 
 #include "../entities/Entity.h"
-#include "../entities/JuiceDrop.h"
 #include "../components/ProjectileComponent.h"
 
 namespace game::components { class StatsComponent; }
@@ -47,11 +46,6 @@ namespace game
         // --- DOCELOWA PULA ECS ---
         std::vector<std::unique_ptr<game::entities::Entity>> entities;
 
-        // --- LEGACY WEKTORY ---
-        //std::vector<game::effects::AcidSplash> acidSplashes;
-        std::vector<AoEZone> zones;
-        std::vector<game::entities::JuiceDrop> juiceDrops;
-        std::vector<WalkDust> walkParticles;
 
         sf::Color mapDustColor = sf::Color(200, 200, 200, 150);
         game::components::StatsComponent* playerStats = nullptr;
@@ -63,6 +57,12 @@ namespace game
             {
                 entities.push_back(std::move(entity));
             }
+        }
+
+        void clear()
+        {
+            entities.clear();
+            playerStats = nullptr;
         }
     };
 }
