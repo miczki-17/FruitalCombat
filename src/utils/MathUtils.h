@@ -7,7 +7,7 @@
 
 namespace game::utils::math
 {
-    // return cubed distance between two points
+    // return squared distance between two points
     template<typename T>
     inline float distanceSquared(const sf::Vector2<T>& a, const sf::Vector2<T>& b)
     {

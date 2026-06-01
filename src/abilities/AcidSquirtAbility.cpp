@@ -3,6 +3,8 @@
 #include "AcidSquirtAbility.h"
 
 #include "../components/StatsComponent.h"
+#include "../components/ProjectileComponent.h"
+#include "../core/ArenaContext.h"
 #include "../entities/Entity.h"
 
 #include <cmath>
@@ -25,12 +27,12 @@ namespace game::components
     }
 
     AcidSquirtAbility::AcidSquirtAbility(
-        std::vector<Bullet>& bulletContainer,
+        game::ArenaContext* context,
         game::entities::Entity* owner,
         const std::string& texturePath,
         const std::string& splashKeyBase,
         bool isFriendly)
-        : bullets_(&bulletContainer),
+        : context_(context),
         owner_(owner),
         projectileTexture_(std::make_shared<sf::Texture>()),
         splashKeyBase_(splashKeyBase),
@@ -58,7 +60,7 @@ namespace game::components
         const sf::Vector2f& targetPosition,
         const sf::Vector2f& ownerVelocity)
     {
-        if (bullets_ == nullptr || isOnCooldown())
+        if (context_ == nullptr || isOnCooldown())
         {
             return;
         }
@@ -117,39 +119,41 @@ namespace game::components
         const sf::Vector2f& origin,
         const sf::Vector2f& targetPosition)
     {
-        bullets_->emplace_back(
-            origin,
-            sf::Vector2f(0.f, 0.f));
+        if (!context_) return;
 
-        auto& projectile = bullets_->back();
+        // TWORZYMY NOW¥, CZYST¥ ENCJÊ ECS
+        auto bulletEntity = std::make_unique<game::entities::Entity>();
 
-        projectile.setAppearance(
-            PROJECTILE_RADIUS,
-            PROJECTILE_COLOR);
+        // 1. TransformComponent (Pozycja) - nadpisujemy domyœlny tworzony w konstruktorze Entity
+        if (auto* transform = bulletEntity->getComponent<game::components::TransformComponent>())
+        {
+            transform->position = origin;
+        }
 
-        projectile.setStatusEffect(
-            StatusEffect::Poison);
+        // 2. Tworzymy pocisk (Logikê uderzeniow¹)
+        // Podajemy {0,0} jako kierunek, bo setupParabolic zaraz i tak to nadpisze
+        auto projectile = std::make_unique<game::components::ProjectileComponent>(origin, sf::Vector2f(0.f, 0.f));
 
-        projectile.setWobble(false, false);
-
-        projectile.setupParabolic(
-            origin,
-            targetPosition,
-            PROJECTILE_SPEED);
-
-        projectile.setFriendly(isFriendly_);
-
-        projectile.setSplashKeyBase(splashKeyBase_);
-
+        projectile->setAppearance(PROJECTILE_RADIUS, PROJECTILE_COLOR);
+        projectile->setStatusEffect(game::components::StatusEffect::Poison);
+        projectile->setWobble(false, false);
+        projectile->setupParabolic(origin, targetPosition, PROJECTILE_SPEED);
+        projectile->setFriendly(isFriendly_);
+        projectile->setSplashKeyBase(splashKeyBase_);
 
         if (projectileTexture_->getSize().x > 0)
         {
-            projectile.setAnimation(
+            projectile->setAnimation(
                 projectileTexture_,
                 ANIMATION_FRAMES,
                 ANIMATION_FRAME_DURATION,
                 ANIMATION_FRAME_SIZE);
         }
+
+        // Dodajemy logikê pocisku do encji
+        bulletEntity->addComponent(std::move(projectile));
+
+        context_->spawnEntity(std::move(bulletEntity));
     }
 
     float AcidSquirtAbility::getAttackSpeedModifier() const

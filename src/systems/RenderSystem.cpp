@@ -2,6 +2,8 @@
 
 #include "RenderSystem.h"
 #include "../core/ArenaContext.h"
+#include "../components/TextComponent.h"
+#include "../components/SpriteComponent.h"
 #include "../entities/Entity.h"
 
 namespace game::systems
@@ -16,9 +18,6 @@ namespace game::systems
     {
 		// Layer 1: background map (if loaded successfully)
         if (mapSprite.has_value()) window.draw(*mapSprite);
-
-		// Layer 2: Acid splashes (if any)
-        for (auto& splash : context_.acidSplashes) splash.render(window);
 
 		// Layer 3: Walk dust particles (if any)
         for (const auto& p : context_.walkParticles)
@@ -39,15 +38,44 @@ namespace game::systems
         for (auto& drop : context_.juiceDrops) drop.render(window);
 
 		// Layer 5: Bullets (if any)
-        for (auto& bullet : context_.bullets) bullet.render(window);
+        for (auto& entity : context_.entities)
+        {
+            if (auto* proj = entity->getComponent<game::components::ProjectileComponent>())
+            {
+                proj->render(window);
+            }
+        }
+        // Layer 6: Sprites
+        for (auto& entity : context_.entities)
+        {
+            if (auto* spriteComp = entity->getComponent<game::components::SpriteComponent>())
+            {
+                spriteComp->render(window);
+            }
+        }
 
-		// Layer 6: Enemies (if any)
-        for (auto& enemy : enemies) enemy->render(window);
+        // Layer 7: Enemies (if any)
+        for (auto& enemy : enemies) {
+            if (auto* sprite = enemy->getComponent<game::components::SpriteComponent>()) {
+                sprite->render(window);
+            }
+        }
 
-		// Layer 7: Player (if exists)
-        if (player != nullptr) player->render(window);
+        // Layer 8: Player (if exists)
+        if (player != nullptr) {
+            if (auto* sprite = player->getComponent<game::components::SpriteComponent>()) {
+                sprite->render(window);
+            }
+        }
 
-		// Layer 8: AoE zones (if any)
-        for (auto& text : context_.floatingTexts) text.render(window);
+		// Layer 9: AoE zones (if any)
+        for (auto& entity : context_.entities)
+        {
+            if (auto* textComp = entity->getComponent<game::components::TextComponent>())
+            {
+                textComp->render(window);
+            }
+        }
+
     }
 }

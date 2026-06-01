@@ -35,7 +35,7 @@ namespace game::systems
 
     void EvolutionManager::update(float dt)
     {
-        if (targetPlayer == nullptr || targetPlayer->isDead) return;
+        if (targetPlayer == nullptr || targetPlayer->isDead()) return;
 
         if (!spawnQueue.empty())
         {
@@ -69,6 +69,8 @@ namespace game::systems
     // Advanced position validation algorithm using the bitmask
     sf::Vector2f EvolutionManager::getRandomValidPosition(bool aroundPlayer)
     {
+        auto* targetPlayer_transform = targetPlayer->getComponent<game::components::TransformComponent>(); if (!targetPlayer_transform) return {0.0f, 0.0f};
+
         sf::Vector2f rolledPos;
         bool valid = false;
         int attempts = 0;
@@ -87,8 +89,9 @@ namespace game::systems
                 float randomAngle = angleDist(rng);
                 float randomRadius = radiusDist(rng);
 
+
                 sf::Vector2f spawnOffset(std::cos(randomAngle) * randomRadius, std::sin(randomAngle) * randomRadius);
-                rolledPos = targetPlayer->position + spawnOffset;
+                rolledPos = targetPlayer_transform->position + spawnOffset;
             }
             else
             {
@@ -120,7 +123,7 @@ namespace game::systems
         // fallback to the player's current known safe position so the game doesn't crash.
         if (!valid && targetPlayer != nullptr)
         {
-            return targetPlayer->position;
+            return targetPlayer_transform->position;
         }
 
         return rolledPos;
@@ -137,7 +140,8 @@ namespace game::systems
         sf::Vector2f safeSpawnPos = getRandomValidPosition(true);
 
         auto enemy = mutantFactory.createMutant(nextDNA, targetPlayer);
-        enemy->position = safeSpawnPos;
+        auto* enemy_transform = enemy->getComponent<game::components::TransformComponent>(); if (!enemy_transform) return;
+        enemy_transform->position = safeSpawnPos;
 
         activeEnemies.push_back(std::move(enemy));
     }

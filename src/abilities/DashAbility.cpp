@@ -3,6 +3,8 @@
 #include "DashAbility.h"
 
 #include "../entities/Entity.h"
+#include "../components/ProjectileComponent.h"
+#include "../components/TransformComponent.h"
 
 #include <cmath>
 
@@ -43,16 +45,18 @@ namespace game::components
             return;
         }
 
+        auto* owner_transform = owner_->getComponent<TransformComponent>();
+
         const sf::Vector2f dashDirection =
             calculateDashDirection(
                 origin,
                 targetPosition,
                 ownerVelocity);
 
-        owner_->velocity +=
+        owner_transform->velocity +=
             (dashDirection * dashForce_);
 
-        owner_->actionTimer =
+        owner_transform->actionTimer =
             ACTION_UNLOCK_DURATION;
 
         cooldownTimer_ = cooldown_;

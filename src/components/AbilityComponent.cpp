@@ -1,6 +1,7 @@
 // --- AbilityComponent.cpp ---
 
 #include "AbilityComponent.h"
+#include "TransformComponent.h"
 #include "../entities/Entity.h"
 
 namespace game::components
@@ -74,10 +75,11 @@ namespace game::components
         {
             return;
         }
+        auto* transform = owner->getComponent<TransformComponent>();
 
         ability->execute(
-            owner->position,
+            transform->position,
             targetWorldPos,
-            owner->velocity);
+            transform->velocity);
     }
 }

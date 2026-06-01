@@ -30,6 +30,8 @@ namespace game::components
 
     class Component
     {
+        friend class game::entities::Entity;
+
     protected:
         game::entities::Entity* owner = nullptr;
 

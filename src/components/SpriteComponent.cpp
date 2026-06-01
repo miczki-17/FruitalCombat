@@ -1,35 +1,21 @@
-// --- SpriteComponent.cpp ---
-
 #include "SpriteComponent.h"
+#include "StatsComponent.h"
+#include "TransformComponent.h"
 #include "../entities/Entity.h"
 
 namespace game::components
 {
     namespace
     {
-        constexpr float BASE_SPRITE_SCALE =
-            2.0f;
+        constexpr float BASE_SPRITE_SCALE = 2.0f;
+        constexpr float BASE_RADIUS = 25.0f;
+        constexpr float OUTLINE_THICKNESS = 3.0f;
+        constexpr float HIT_FLASH_DURATION = 0.08f;
+        constexpr float SPIN_SPEED = 450.0f;
 
-        constexpr float BASE_RADIUS =
-            25.0f;
-
-        constexpr float OUTLINE_THICKNESS =
-            3.0f;
-
-        constexpr float HIT_FLASH_DURATION =
-            0.08f;
-
-        constexpr float SPIN_SPEED =
-            450.0f;
-
-        constexpr float HEALTH_BAR_WIDTH =
-            40.0f;
-
-        constexpr float HEALTH_BAR_HEIGHT =
-            6.0f;
-
-        constexpr float HEALTH_BAR_OFFSET_Y =
-            35.0f;
+        constexpr float HEALTH_BAR_WIDTH = 40.0f;
+        constexpr float HEALTH_BAR_HEIGHT = 6.0f;
+        constexpr float HEALTH_BAR_OFFSET_Y = 35.0f;
     }
 
     SpriteComponent::SpriteComponent(
@@ -38,122 +24,186 @@ namespace game::components
         sf::Texture* walkTexture,
         int walkFrames)
     {
-        initializeTextures(
-            idleTexture,
-            idleFrames,
-            walkTexture,
-            walkFrames);
-
+        initializeTextures(idleTexture, idleFrames, walkTexture, walkFrames);
         initializeFallbackShape();
         initializeHealthBar();
     }
 
-    void SpriteComponent::update(
-        float deltaTime)
+    void SpriteComponent::addAnimation(AnimState state, sf::Texture& texture, int frames, float duration, bool loop)
     {
-        updateHitFlash(
-            deltaTime);
+        animations_[state] = { &texture, frames, duration, loop };
+    }
 
-        updateVisual();
-
+    void SpriteComponent::update(float deltaTime)
+    {
+        updateHitFlash(deltaTime);
+        updateVisual(deltaTime);
         updateHealthBar();
     }
 
-    void SpriteComponent::render(
-        sf::RenderWindow& window)
+    void SpriteComponent::render(sf::RenderWindow& window)
     {
+        if (hasSprite() && sprite_.has_value())
+        {
+            auto* transform = owner->getComponent<TransformComponent>();
+            if (transform) {
+                sprite_->setPosition(transform->position);
+                sprite_->setRotation(sf::degrees(transform->rotation));
+                sprite_->setScale(transform->scale);
+            }
+            window.draw(*sprite_);
+        }
+
         if (hasSprite())
-        {
-            window.draw(
-                *sprite_);
-        }
+            window.draw(*sprite_);
         else
+            window.draw(fallbackShape_);
+
+        auto* stats = owner->getComponent<StatsComponent>();
+        auto* transform = owner->getComponent<TransformComponent>();
+        if (transform && !owner->isDead() && stats)
         {
-            window.draw(
-                fallbackShape_);
-        }
-
-        auto* stats =
-            owner->getComponent<
-            StatsComponent>();
-
-        if (
-            owner &&
-            !owner->isDead &&
-            stats)
-        {
-            window.draw(
-                hpBarBackground_);
-
-            window.draw(
-                hpBarFill_);
+            window.draw(hpBarBackground_);
+            window.draw(hpBarFill_);
         }
     }
 
-    void SpriteComponent::setTint(
-        sf::Color color)
+    void SpriteComponent::updateVisual(float deltaTime)
     {
-        geneticColor_ =
-            color;
-
         if (hasSprite())
-        {
-            sprite_->setColor(
-                color);
+            updateSprite(deltaTime);
+        else
+            updateFallbackShape();
+    }
 
-            return;
+    void SpriteComponent::updateSprite(float deltaTime)
+    {
+        auto* transform = owner->getComponent<TransformComponent>();
+        sprite_->setPosition(transform->position);
+
+        // 1. Obsluga rotacji (zdolnoœci specjalne typu RindRoll)
+        if (transform->actionTimer > 0.0f)
+        {
+            sprite_->rotate(sf::degrees(SPIN_SPEED * deltaTime));
+        }
+        else
+        {
+            sprite_->setRotation(sf::degrees(0.f));
         }
 
-        fallbackShape_
-            .setFillColor(color);
+        // 2. Wybor odpowiedniego stanu na podstawie flag Entity
+        AnimState requiredState = AnimState::Idle;
+        if (owner->isDead())         requiredState = AnimState::Dead;
+        else if (owner->isAttacking()) requiredState = AnimState::Attack;
+        else if (transform->isMoving)    requiredState = AnimState::Walk;
+
+        // Jesli stan sie zmienil, resetujemy licznik klatek
+        if (currentState_ != requiredState)
+        {
+            currentState_ = requiredState;
+            currentFrame_ = 0;
+            animationTimer_ = 0.0f;
+            animationFinished_ = false;
+        }
+
+        // 3. Logika wewnetrznej aktualizacji animacji
+        auto it = animations_.find(currentState_);
+        if (it != animations_.end() && it->second.texture)
+        {
+            const AnimationData& data = it->second;
+            sprite_->setTexture(*(data.texture), true);
+
+            if (!animationFinished_)
+            {
+                animationTimer_ += deltaTime;
+                if (animationTimer_ >= data.frameDuration)
+                {
+                    animationTimer_ -= data.frameDuration;
+                    currentFrame_++;
+
+                    if (currentFrame_ >= data.totalFrames)
+                    {
+                        if (data.loop)
+                        {
+                            currentFrame_ = 0;
+                        }
+                        else
+                        {
+                            currentFrame_ = data.totalFrames - 1;
+                            animationFinished_ = true;
+                        }
+                    }
+                }
+            }
+
+            // 4. Obliczanie wycinka tekstury i obsluga odbicia lustrzanego (facingRight)
+            int rectLeftX = currentFrame_ * frameSize_.x;
+
+            if (transform->facingRight)
+            {
+                sprite_->setTextureRect(sf::IntRect({ rectLeftX, 0 }, frameSize_));
+            }
+            else
+            {
+                sprite_->setTextureRect(sf::IntRect({ rectLeftX + frameSize_.x, 0 }, { -frameSize_.x, frameSize_.y }));
+            }
+        }
+    }
+
+    void SpriteComponent::updateFallbackShape()
+    {
+        auto* transform = owner->getComponent<TransformComponent>();
+        fallbackShape_.setPosition(transform->position);
+    }
+
+    void SpriteComponent::updateHitFlash(float deltaTime)
+    {
+        if (hitFlashTimer_ <= 0.0f)
+            return;
+
+        hitFlashTimer_ -= deltaTime;
+
+        if (hitFlashTimer_ <= 0.0f)
+            restoreGeneticColor();
+    }
+
+    void SpriteComponent::setTint(sf::Color color)
+    {
+        geneticColor_ = color;
+
+        if (hasSprite())
+            sprite_->setColor(color);
+        else
+            fallbackShape_.setFillColor(color);
     }
 
     void SpriteComponent::triggerHitFlash()
     {
-        hitFlashTimer_ =
-            HIT_FLASH_DURATION;
+        hitFlashTimer_ = HIT_FLASH_DURATION;
 
         if (hasSprite())
-        {
-            sprite_->setColor(
-                sf::Color::White);
-
-            return;
-        }
-
-        fallbackShape_
-            .setFillColor(
-                sf::Color::White);
+            sprite_->setColor(sf::Color::White);
+        else
+            fallbackShape_.setFillColor(sf::Color::White);
     }
 
-    void SpriteComponent::setCustomScale(
-        float scaleModifier)
+    void SpriteComponent::setCustomScale(float scaleModifier)
     {
-        currentScale_ =
-            scaleModifier;
+        currentScale_ = scaleModifier;
 
         if (hasSprite())
         {
             sprite_->setScale({
-                BASE_SPRITE_SCALE *
-                    scaleModifier,
-                BASE_SPRITE_SCALE *
-                    scaleModifier
+                BASE_SPRITE_SCALE * scaleModifier,
+                BASE_SPRITE_SCALE * scaleModifier
                 });
         }
 
-        fallbackShape_
-            .setRadius(
-                BASE_RADIUS *
-                scaleModifier);
-
-        fallbackShape_
-            .setOrigin({
-                BASE_RADIUS *
-                    scaleModifier,
-                BASE_RADIUS *
-                    scaleModifier
-                });
+        fallbackShape_.setRadius(BASE_RADIUS * scaleModifier);
+        fallbackShape_.setOrigin({
+            BASE_RADIUS * scaleModifier,
+            BASE_RADIUS * scaleModifier
+            });
     }
 
     void SpriteComponent::initializeTextures(
@@ -162,245 +212,100 @@ namespace game::components
         sf::Texture* walkTexture,
         int walkFrames)
     {
-        const bool validTextures =
+        const bool valid =
             idleTexture &&
             walkTexture &&
-            idleTexture
-            ->getSize()
-            .x > 0 &&
-            walkTexture
-            ->getSize()
-            .x > 0;
+            idleTexture->getSize().x > 0 &&
+            walkTexture->getSize().x > 0;
 
-        if (!validTextures)
-        {
+        if (!valid)
             return;
-        }
 
-        animator_.setTextures(
-            *idleTexture,
-            idleFrames,
-            *walkTexture,
-            walkFrames);
+        // Wstrzykujemy animacje bezposrednio do mapy komponentu
+        addAnimation(AnimState::Idle, *idleTexture, idleFrames, 0.15f, true);
+        addAnimation(AnimState::Walk, *walkTexture, walkFrames, 0.10f, true);
 
-        sprite_.emplace(
-            animator_
-            .getDefaultTexture());
-
-        sprite_->setOrigin({
-            32.f,
-            32.f
-            });
-
-        sprite_->setScale({
-            BASE_SPRITE_SCALE,
-            BASE_SPRITE_SCALE
-            });
+        sprite_.emplace(*idleTexture);
+        sprite_->setOrigin({ 32.f, 32.f });
+        sprite_->setScale({ BASE_SPRITE_SCALE, BASE_SPRITE_SCALE });
 
         hasTextures_ = true;
     }
 
     void SpriteComponent::initializeFallbackShape()
     {
-        fallbackShape_
-            .setRadius(
-                BASE_RADIUS);
-
-        fallbackShape_
-            .setOrigin({
-                BASE_RADIUS,
-                BASE_RADIUS
-                });
-
-        fallbackShape_
-            .setOutlineThickness(
-                OUTLINE_THICKNESS);
-
-        fallbackShape_
-            .setOutlineColor(
-                sf::Color(
-                    0,
-                    0,
-                    0,
-                    150));
+        fallbackShape_.setRadius(BASE_RADIUS);
+        fallbackShape_.setOrigin({ BASE_RADIUS, BASE_RADIUS });
+        fallbackShape_.setOutlineThickness(OUTLINE_THICKNESS);
+        fallbackShape_.setOutlineColor(sf::Color(0, 0, 0, 150));
     }
 
     void SpriteComponent::initializeHealthBar()
     {
-        hpBarBackground_
-            .setFillColor(
-                sf::Color(
-                    50,
-                    50,
-                    50,
-                    200));
-
-        hpBarFill_
-            .setFillColor(
-                sf::Color(
-                    255,
-                    50,
-                    50,
-                    255));
-    }
-
-    void SpriteComponent::updateHitFlash(
-        float deltaTime)
-    {
-        if (
-            hitFlashTimer_ <=
-            0.0f)
-        {
-            return;
-        }
-
-        hitFlashTimer_ -=
-            deltaTime;
-
-        if (
-            hitFlashTimer_ <=
-            0.0f)
-        {
-            restoreGeneticColor();
-        }
-    }
-
-    void SpriteComponent::updateVisual()
-    {
-        if (hasSprite())
-        {
-            updateSprite(
-                0.0f);
-
-            return;
-        }
-
-        updateFallbackShape();
-    }
-
-    void SpriteComponent::updateSprite(
-        float deltaTime)
-    {
-        sprite_->setPosition(
-            owner->position);
-
-        if (
-            owner->actionTimer >
-            0.0f)
-        {
-            sprite_->rotate(
-                sf::degrees(
-                    SPIN_SPEED *
-                    deltaTime));
-
-            return;
-        }
-
-        sprite_->setRotation(
-            sf::degrees(
-                0.f));
-
-        animator_
-            .setMovementState(
-                owner->isMoving,
-                owner->facingRight);
-
-        animator_
-            .updateAndApply(
-                *sprite_,
-                deltaTime);
-    }
-
-    void SpriteComponent::updateFallbackShape()
-    {
-        fallbackShape_
-            .setPosition(
-                owner->position);
+        hpBarBackground_.setFillColor(sf::Color(50, 50, 50, 200));
+        hpBarFill_.setFillColor(sf::Color(255, 50, 50, 255));
     }
 
     void SpriteComponent::updateHealthBar()
     {
-        auto* stats =
-            owner->getComponent<
-            StatsComponent>();
+        auto* stats = owner->getComponent<StatsComponent>();
+        if (!stats) return;
+        auto* transform = owner->getComponent<TransformComponent>();
+        if (!transform) return;
 
-        if (!stats)
-        {
-            return;
-        }
+        const float width = HEALTH_BAR_WIDTH * currentScale_;
 
-        const float width =
-            HEALTH_BAR_WIDTH *
-            currentScale_;
+        hpBarBackground_.setSize({ width, HEALTH_BAR_HEIGHT });
+        hpBarBackground_.setOrigin({ width / 2.f, HEALTH_BAR_HEIGHT / 2.f });
 
-        hpBarBackground_
-            .setSize({
-                width,
-                HEALTH_BAR_HEIGHT
-                });
+        hpBarBackground_.setPosition({
+            transform->position.x,
+            transform->position.y - HEALTH_BAR_OFFSET_Y * currentScale_
+            });
 
-        hpBarBackground_
-            .setOrigin({
-                width / 2.0f,
-                HEALTH_BAR_HEIGHT /
-                    2.0f
-                });
+        hpBarFill_.setSize({
+            width * stats->getHpPercentage(),
+            HEALTH_BAR_HEIGHT
+            });
 
-        hpBarBackground_
-            .setPosition({
-                owner->position.x,
-                owner->position.y -
-                    (
-                        HEALTH_BAR_OFFSET_Y *
-                        currentScale_
-                    )
-                });
+        hpBarFill_.setOrigin({ width / 2.f, HEALTH_BAR_HEIGHT / 2.f });
 
-        hpBarFill_
-            .setSize({
-                width *
-                    stats
-                        ->getHpPercentage(),
-                HEALTH_BAR_HEIGHT
-                });
-
-        hpBarFill_
-            .setOrigin({
-                width / 2.0f,
-                HEALTH_BAR_HEIGHT /
-                    2.0f
-                });
-
-        hpBarFill_
-            .setPosition({
-                owner->position.x,
-                owner->position.y -
-                    (
-                        HEALTH_BAR_OFFSET_Y *
-                        currentScale_
-                    )
-                });
+        hpBarFill_.setPosition({
+            transform->position.x,
+            transform->position.y - HEALTH_BAR_OFFSET_Y * currentScale_
+            });
     }
 
     void SpriteComponent::restoreGeneticColor()
     {
         if (hasSprite())
-        {
-            sprite_->setColor(
-                geneticColor_);
-
-            return;
-        }
-
-        fallbackShape_
-            .setFillColor(
-                geneticColor_);
+            sprite_->setColor(geneticColor_);
+        else
+            fallbackShape_.setFillColor(geneticColor_);
     }
 
     bool SpriteComponent::hasSprite() const
     {
-        return
-            hasTextures_ &&
-            sprite_.has_value();
+        return hasTextures_;
+    }
+
+
+    void SpriteComponent::setAlpha(uint8_t alpha) {
+        if (sprite_.has_value())
+        {
+            sf::Color c = sprite_->getColor();
+            c.a = alpha;
+            sprite_->setColor(c);
+        }
+    }
+
+    void SpriteComponent::setTexture(std::shared_ptr<sf::Texture> tex) {
+        texture_ = tex;
+        sprite_.emplace(*texture_);
+
+        auto size = texture_->getSize();
+        sprite_->setOrigin({ size.x / 2.0f, size.y / 2.0f });
+
+        hasTextures_ = true;
     }
 }

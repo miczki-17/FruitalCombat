@@ -5,6 +5,7 @@
 #include "../entities/Entity.h"
 #include "../components/ProjectileComponent.h"
 #include "../components/StatsComponent.h"
+#include "../components/TransformComponent.h"
 #include <cmath>
 
 namespace game::systems
@@ -16,13 +17,15 @@ namespace game::systems
 
     void CollisionSystem::updateJuiceCollection(game::entities::Entity* player, float dt)
     {
-        if (!player || player->isDead) return;
+        if (!player || player->isDead()) return;
 
         auto& drops = context_.juiceDrops;
 
         for (int i = static_cast<int>(drops.size()) - 1; i >= 0; --i)
         {
-            sf::Vector2f diff = player->position - drops[i].position;
+            auto* player_transform = player->getComponent<game::components::TransformComponent>(); if (!player_transform) return;
+
+            sf::Vector2f diff = player_transform->position - drops[i].position;
             float dist = diff.length();
 
             if (dist < 180.0f && dist > 0.001f)
@@ -40,26 +43,33 @@ namespace game::systems
 
     void CollisionSystem::updateBulletIntersections(float dt, const sf::Image& collisionMask, float mapScale)
     {
-        auto& bullets = context_.bullets;
+        auto& entities = context_.entities;
 
-        for (int i = static_cast<int>(bullets.size()) - 1; i >= 0; --i)
+        for (int i = static_cast<int>(entities.size()) - 1; i >= 0; --i)
         {
-            bullets[i].update(dt, collisionMask, mapScale);
+            // Interesuj¹ nas tylko encje posiadaj¹ce komponent pocisku
+            auto* proj = entities[i]->getComponent<game::components::ProjectileComponent>();
+            if (!proj) continue;
 
-            if (!bullets[i].getIsActive()) continue;
+            proj->update(dt, collisionMask, mapScale);
 
-            sf::Vector2f bulletPos = bullets[i].getPosition();
+            if (!proj->getIsActive()) continue;
+
+            sf::Vector2f bulletPos = proj->getPosition();
 
             for (auto& enemy : enemies_)
             {
-                if (enemy->isDead) continue;
+                if (enemy->isDead()) continue;
 
-                float combinedRadius = bullets[i].getRadius() + 30.0f;
-                sf::Vector2f diff = bulletPos - enemy->position;
+                auto* enemy_transform = enemy->getComponent<game::components::TransformComponent>();
+                if (!enemy_transform) continue;
+
+                float combinedRadius = proj->getRadius() + 30.0f;
+                sf::Vector2f diff = bulletPos - enemy_transform->position;
 
                 if (diff.lengthSquared() < (combinedRadius * combinedRadius))
                 {
-                    bullets[i].destroy();
+                    proj->destroy();
                     break;
                 }
             }

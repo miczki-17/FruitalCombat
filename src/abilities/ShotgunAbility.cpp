@@ -2,6 +2,10 @@
 
 #include "ShotgunAbility.h"
 
+#include "../entities/Entity.h"
+#include "../components/TransformComponent.h"
+#include "../core/ArenaContext.h"
+
 #include <cmath>
 #include <numbers>
 
@@ -23,8 +27,8 @@ namespace game::components
     }
 
     ShotgunAbility::ShotgunAbility(
-        std::vector<Bullet>& bulletContainer)
-        : bullets_(bulletContainer)
+        game::ArenaContext* context)
+        : context_(context)
     {
     }
 
@@ -90,6 +94,8 @@ namespace game::components
         const sf::Vector2f& direction,
         const sf::Vector2f& ownerVelocity)
     {
+        if (!context_) return;
+
         const float baseAngle =
             std::atan2(
                 direction.y,
@@ -136,20 +142,32 @@ namespace game::components
                     PELLET_SPAWN_OFFSET
                     );
 
-            bullets_.emplace_back(
+            // Budujemy prawdziwa encje ECS
+            auto pelletEntity = std::make_unique<game::entities::Entity>();
+
+            // 1. Nadpisujemy jej pozycje w automatycznie wygenerowanym TransformComponent
+            if (auto* transform = pelletEntity->getComponent<game::components::TransformComponent>())
+            {
+                transform->position = spawnPosition;
+            }
+
+            // 2. Tworzymy pocisk i dorzucamy go do encji
+            auto projectile = std::make_unique<game::components::ProjectileComponent>(
                 spawnPosition,
                 pelletDirection);
 
-            auto& pellet =
-                bullets_.back();
-
-            pellet.addVelocity(
+            projectile->addVelocity(
                 ownerVelocity *
                 SHOOTER_VELOCITY_FACTOR);
 
-            pellet.setAppearance(
+            projectile->setAppearance(
                 PELLET_RADIUS,
                 PELLET_COLOR);
+
+            pelletEntity->addComponent(std::move(projectile));
+
+            // 3. Rejestrujemy gotow¹ encjê w glownym swiecie
+            context_->spawnEntity(std::move(pelletEntity));
         }
     }
 

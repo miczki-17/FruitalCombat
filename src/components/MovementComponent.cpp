@@ -3,6 +3,7 @@
 #include "MovementComponent.h"
 #include "../entities/Entity.h"
 #include "PlayerInputComponent.h"
+#include "TransformComponent.h"
 #include <cmath>
 
 namespace game::components
@@ -38,15 +39,16 @@ namespace game::components
     void MovementComponent::update(float deltaTime)
     {
         if (!owner) return;
+        auto* transform = owner->getComponent<TransformComponent>();
+        if (!transform) return;
 
         updateFacingDirection(desiredDirection_);
 
-        owner->isMoving = (desiredDirection_ != sf::Vector2f(0.f, 0.f));
+        transform->isMoving = (desiredDirection_ != sf::Vector2f(0.f, 0.f));
 
-        // P?ynne wyg?adzanie wektora ruchu (wyg?adza zwroty postaci)
+        // Wygladzeniue wektora ruchu postaci
         smoothedInput_ += (desiredDirection_ - smoothedInput_) * turnSpeed_ * deltaTime;
 
-        // NOWO?? SFML 3: Bezpo?rednie pobranie d?ugo?ci wektora
         float smoothedLength = smoothedInput_.length();
 
         if (smoothedLength > INPUT_THRESHOLD)
@@ -60,55 +62,58 @@ namespace game::components
 
         updateRollingState(deltaTime);
 
-        // Bardzo wa?ne: Czy?cimy intencj? na koniec klatki. 
-        // W nast?pnej klatce Input (gracz lub AI) musi znowu ustawi? kierunek.
         desiredDirection_ = { 0.f, 0.f };
     }
 
     void MovementComponent::updateFacingDirection(const sf::Vector2f& direction)
     {
-        if (direction.x > LOOK_THRESHOLD)       owner->facingRight = true;
-        else if (direction.x < -LOOK_THRESHOLD) owner->facingRight = false;
+        auto* transform = owner->getComponent<TransformComponent>();
+        if (direction.x > LOOK_THRESHOLD)       transform->facingRight = true;
+        else if (direction.x < -LOOK_THRESHOLD) transform->facingRight = false;
     }
 
     void MovementComponent::applyMovement(const sf::Vector2f& direction, float deltaTime)
     {
-        owner->velocity += direction * acceleration_ * deltaTime;
-        owner->velocity -= owner->velocity * activeDrag_ * deltaTime;
+        auto* transform = owner->getComponent<TransformComponent>();
+        transform->velocity += direction * acceleration_ * deltaTime;
+        transform->velocity -= transform->velocity * activeDrag_ * deltaTime;
     }
 
     void MovementComponent::applyStopping(float deltaTime)
     {
-        owner->velocity -= owner->velocity * stopDrag_ * deltaTime;
+        auto* transform = owner->getComponent<TransformComponent>();
+        transform->velocity -= transform->velocity * stopDrag_ * deltaTime;
 
-        if (owner->velocity.length() < STOP_THRESHOLD)
+        if (transform->velocity.length() < STOP_THRESHOLD)
         {
-            owner->velocity = { 0.f, 0.f };
+            transform->velocity = { 0.f, 0.f };
         }
     }
 
     void MovementComponent::updateRollingState(float deltaTime)
     {
-        if (owner->actionTimer > 0.0f)
+        auto* transform = owner->getComponent<TransformComponent>();
+        if (transform->actionTimer > 0.0f)
         {
-            owner->actionTimer -= deltaTime;
-            if (owner->isRolling)
+            transform->actionTimer -= deltaTime;
+            if (transform->isRolling)
             {
-                limitSpeed(owner->overrideSpeedLimit);
+                limitSpeed(transform->overrideSpeedLimit);
             }
             return;
         }
 
-        owner->isRolling = false;
+        transform->isRolling = false;
         limitSpeed(maxSpeed_);
     }
 
     void MovementComponent::limitSpeed(float maxSpeed)
     {
-        float speed = owner->velocity.length(); // SFML 3
+        auto* transform = owner->getComponent<TransformComponent>();
+        float speed = transform->velocity.length(); // SFML 3
         if (speed <= maxSpeed || speed <= 0.001f) return;
 
-        owner->velocity = owner->velocity.normalized() * maxSpeed;
+        transform->velocity = transform->velocity.normalized() * maxSpeed;
     }
 
     void MovementComponent::setFriction(const float friction)

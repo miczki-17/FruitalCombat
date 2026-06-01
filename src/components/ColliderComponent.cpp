@@ -1,6 +1,7 @@
 // --- ColliderComponent.cpp --- 
 
 #include "ColliderComponent.h"
+#include "TransformComponent.h"
 #include "../entities/Entity.h"
 
 #include <cmath>
@@ -46,10 +47,12 @@ namespace game::components
         {
             return;
         }
+        auto* transform = owner->getComponent<TransformComponent>();
+        if (!transform) return;
 
         sf::Vector2f nextPosition =
-            owner->position +
-            owner->velocity *
+            transform->position +
+            transform->velocity *
             deltaTime;
 
         resolveWallCollision(
@@ -59,7 +62,7 @@ namespace game::components
         pushOutsideWalls(
             nextPosition);
 
-        owner->position =
+        transform->position =
             nextPosition;
     }
 
@@ -157,6 +160,7 @@ namespace game::components
         sf::Vector2f& nextPosition,
         float deltaTime)
     {
+        auto* transform = owner->getComponent<TransformComponent>();
         int hitCount = 0;
 
         const sf::Vector2f pushVector =
@@ -185,25 +189,25 @@ namespace game::components
             pushLength;
 
         const float velocityDot =
-            owner->velocity.x *
+            transform->velocity.x *
             normal.x +
-            owner->velocity.y *
+            transform->velocity.y *
             normal.y;
 
         if (velocityDot < 0.f)
         {
-            owner->velocity -=
+            transform->velocity -=
                 normal *
                 velocityDot;
 
-            owner->velocity -=
-                owner->velocity *
+            transform->velocity -=
+                transform->velocity *
                 WALL_FRICTION;
         }
 
         nextPosition =
-            owner->position +
-            owner->velocity *
+            transform->position +
+            transform->velocity *
             deltaTime;
     }
 

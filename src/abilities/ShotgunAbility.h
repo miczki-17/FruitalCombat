@@ -3,9 +3,13 @@
 #pragma once
 
 #include "Ability.h"
-#include "../projectiles/Bullet.h"
+#include "../components/ProjectileComponent.h"
+#include "../core/ArenaContext.h"
 
 #include <vector>
+
+//namespace game { struct Arenacontext; }
+//namespace game::entities { class Entity; }
 
 namespace game::components
 {
@@ -13,7 +17,7 @@ namespace game::components
     {
     public:
         explicit ShotgunAbility(
-            std::vector<Bullet>& bulletContainer);
+            game::ArenaContext* context);
 
         void update(float deltaTime) override;
 
@@ -23,7 +27,7 @@ namespace game::components
             const sf::Vector2f& ownerVelocity) override;
 
     private:
-        std::vector<Bullet>& bullets_;
+        game::ArenaContext* context_;
 
         float cooldown_ = 0.75f;
         float cooldownTimer_ = 0.0f;

@@ -51,6 +51,10 @@ namespace game::factories
         entity->addComponent(std::make_unique<game::components::AiInputComponent>(
             targetPlayer, dna.behavior, dna.speed));
 
+        // MOVEMENT
+        entity->addComponent(std::make_unique<game::components::MovementComponent>(
+            nullptr, dna.speed));
+
         // COLLIDER
         float baseRadius = 25.0f;
         entity->addComponent(std::make_unique<game::components::ColliderComponent>(
@@ -86,7 +90,7 @@ namespace game::factories
             if (abName == "AcidSquirt")
             {
                 abilities->setWeapon(std::make_unique<game::components::AcidSquirtAbility>(
-                    context.bullets,
+                    &context,
                     entity.get(), 
                     "assets/textures/default_bullet.png",
                     "acid_splash",

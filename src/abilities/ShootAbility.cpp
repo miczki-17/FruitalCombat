@@ -2,6 +2,10 @@
 
 #include "ShootAbility.h"
 
+#include "../entities/Entity.h"
+#include "../components/TransformComponent.h"
+#include "../core/ArenaContext.h"
+
 #include <cmath>
 
 namespace game::components
@@ -12,8 +16,8 @@ namespace game::components
     }
 
     ShootAbility::ShootAbility(
-        std::vector<Bullet>& bulletContainer)
-        : bullets_(bulletContainer)
+        game::ArenaContext* context)
+        : context_(context)
     {
     }
 
@@ -78,12 +82,24 @@ namespace game::components
         const sf::Vector2f& direction,
         const sf::Vector2f& ownerVelocity)
     {
-        bullets_.emplace_back(
+        if (!context_) return;
+
+        auto bulletEntity = std::make_unique<game::entities::Entity>();
+
+        if (auto* transform = bulletEntity->getComponent<game::components::TransformComponent>())
+        {
+            transform->position = origin;
+        }
+
+        auto projectile = std::make_unique<game::components::ProjectileComponent>(
             origin,
             direction);
 
-        bullets_.back()
-            .addVelocity(ownerVelocity);
+        projectile->addVelocity(ownerVelocity);
+
+        bulletEntity->addComponent(std::move(projectile));
+
+        context_->spawnEntity(std::move(bulletEntity));
     }
 
     bool ShootAbility::isOnCooldown() const

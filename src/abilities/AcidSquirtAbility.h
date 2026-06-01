@@ -3,16 +3,12 @@
 #pragma once
 
 #include "Ability.h"
-#include "../projectiles/Bullet.h"
-
 #include <memory>
 #include <string>
 #include <vector>
 
-namespace game::entities
-{
-    class Entity;
-}
+namespace game { struct ArenaContext; }
+namespace game::entities { class Entity; }
 
 namespace game::components
 {
@@ -20,7 +16,7 @@ namespace game::components
     {
     public:
         AcidSquirtAbility(
-            std::vector<Bullet>& bulletContainer,
+            game::ArenaContext* context,
             game::entities::Entity* owner,
             const std::string& texturePath,
             const std::string& splashKeyBase,
@@ -34,7 +30,7 @@ namespace game::components
             const sf::Vector2f& ownerVelocity) override;
 
     private:
-        std::vector<Bullet>* bullets_;
+        game::ArenaContext* context_;
         game::entities::Entity* owner_;
         std::shared_ptr<sf::Texture> projectileTexture_;
         std::string splashKeyBase_;

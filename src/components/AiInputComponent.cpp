@@ -1,9 +1,9 @@
-// ==========================================
-// components/AiInputComponent.cpp
-// ==========================================
+// --- AiInputComponent.cpp ---
+
 #include "AiInputComponent.h"
 #include "AbilityComponent.h"
 #include "MovementComponent.h"
+#include "TransformComponent.h"
 #include "../entities/Entity.h"
 #include "../utils/MathUtils.h"
 #include <cmath>
@@ -31,9 +31,15 @@ namespace game::components
 
     void AiInputComponent::update(float deltaTime)
     {
-        if (!owner || !targetPlayer_ || targetPlayer_->isDead) return;
+        if (!owner || !targetPlayer_ || targetPlayer_->isDead()) return;
 
-        sf::Vector2f toPlayer = targetPlayer_->position - owner->position;
+        auto* targetPlayer_transform = targetPlayer_->getComponent<TransformComponent>();
+        if (!targetPlayer_transform) return;
+
+        auto* owner_transform = owner->getComponent<TransformComponent>();
+        if (!owner_transform) return;
+
+        sf::Vector2f toPlayer = targetPlayer_transform->position - owner_transform->position;
         const float distance = toPlayer.length(); // SFML 3
 
         toPlayer = game::utils::math::safeNormalize(toPlayer);
@@ -42,10 +48,12 @@ namespace game::components
 
         sf::Vector2f movementDirection = calculateDesiredDirection(toPlayer, distance);
 
-        // Przekazujemy deltaTime na wypadek wywo?ania fizyki awaryjnej
-        applyMovement(game::utils::math::safeNormalize(movementDirection), deltaTime);
+        // Przekazanie decyzji o kierunku do komponentu ruchu
+        if (auto* moveComp = owner->getComponent<MovementComponent>())
+        {
+            moveComp->setDesiredDirection(game::utils::math::safeNormalize(movementDirection));
+        }
 
-        updateFacingDirection(toPlayer);
         tryAttack(distance);
     }
 
@@ -98,39 +106,44 @@ namespace game::components
         return evadeDirection - directionToPlayer * 0.5f;
     }
 
-    void AiInputComponent::applyMovement(const sf::Vector2f& direction, float deltaTime)
-    {
-        // 1. DROGA ECS: Je?li wróg ma dedykowany komponent ruchu, zlecamy mu zadanie
-        if (auto* moveComp = owner->getComponent<MovementComponent>())
-        {
-            moveComp->setDesiredDirection(direction);
-            return;
-        }
+    //void AiInputComponent::applyMovement(const sf::Vector2f& direction, float deltaTime)
+    //{
+    //    // 1. DROGA ECS: Je?li wróg ma dedykowany komponent ruchu, zlecamy mu zadanie
+    //    if (auto* moveComp = owner->getComponent<MovementComponent>())
+    //    {
+    //        moveComp->setDesiredDirection(direction);
+    //        return;
+    //    }
 
-        // 2. DROGA LEGACY: Je?li mutant nie ma jeszcze komponentu ruchu, liczymy fizyk? bezpo?rednio (Etap 2 fallback)
-        owner->isMoving = (direction != sf::Vector2f(0.f, 0.f));
-        owner->velocity += direction * acceleration_ * deltaTime;
-        owner->velocity -= owner->velocity * drag_ * deltaTime;
+    //    auto* owner_transform = owner->getComponent<TransformComponent>(); if (!owner_transform) return;
 
-        float speed = owner->velocity.length(); // SFML 3
-        if (speed > movementSpeed_ && !owner->isRolling && owner->actionTimer <= 0.0f)
-        {
-            owner->velocity = owner->velocity.normalized() * movementSpeed_; // SFML 3
-        }
-    }
+    //    // 2. DROGA LEGACY: Je?li mutant nie ma jeszcze komponentu ruchu, liczymy fizyk? bezpo?rednio (Etap 2 fallback)
+    //    owner_transform->isMoving = (direction != sf::Vector2f(0.f, 0.f));
+    //    owner_transform->velocity += direction * acceleration_ * deltaTime;
+    //    owner_transform->velocity -= owner_transform->velocity * drag_ * deltaTime;
 
-    void AiInputComponent::updateFacingDirection(const sf::Vector2f& directionToPlayer)
-    {
-        if (directionToPlayer.x > LOOK_THRESHOLD)       owner->facingRight = true;
-        else if (directionToPlayer.x < -LOOK_THRESHOLD) owner->facingRight = false;
-    }
+    //    float speed = owner_transform->velocity.length(); // SFML 3
+    //    if (speed > movementSpeed_ && !owner_transform->isRolling && owner_transform->actionTimer <= 0.0f)
+    //    {
+    //        owner_transform->velocity = owner_transform->velocity.normalized() * movementSpeed_; // SFML 3
+    //    }
+    //}
+
+    //void AiInputComponent::updateFacingDirection(const sf::Vector2f& directionToPlayer)
+    //{
+    //    auto* owner_transform = owner->getComponent<TransformComponent>(); if (!owner_transform) return;
+
+    //    if (directionToPlayer.x > LOOK_THRESHOLD)       owner_transform->facingRight = true;
+    //    else if (directionToPlayer.x < -LOOK_THRESHOLD) owner_transform->facingRight = false;
+    //}
 
     void AiInputComponent::tryAttack(float distanceToPlayer)
     {
         if (distanceToPlayer > ATTACK_RANGE) return;
         if (auto* abilityComponent = owner->getComponent<AbilityComponent>())
         {
-            abilityComponent->useWeapon(targetPlayer_->position);
+            auto* targetPlayer_transform = targetPlayer_->getComponent<TransformComponent>(); if (!targetPlayer_transform) return;
+            abilityComponent->useWeapon(targetPlayer_transform->position);
         }
     }
 
@@ -138,7 +151,8 @@ namespace game::components
     {
         if (auto* abilityComponent = owner->getComponent<AbilityComponent>())
         {
-            abilityComponent->useSkill(targetPlayer_->position);
+            auto* targetPlayer_transform = targetPlayer_->getComponent<TransformComponent>(); if (!targetPlayer_transform) return;
+            abilityComponent->useSkill(targetPlayer_transform->position);
         }
     }
 }

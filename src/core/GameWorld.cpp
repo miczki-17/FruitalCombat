@@ -25,7 +25,8 @@ namespace game::core
         player = factory.createFruit(game_->selectedFruitType);
 
         if (player) {
-            player->position = startPos;
+            auto* player_transform = player->getComponent<game::components::TransformComponent>(); if (!player_transform) return;
+            player_transform->position = startPos;
             lastPlayerPos_ = startPos;
             game_->arenaContext.playerStats = player->getComponent<game::components::StatsComponent>();
 

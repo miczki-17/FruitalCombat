@@ -9,7 +9,13 @@
 #include "../components/StatsComponent.h"
 #include "../components/SpriteComponent.h"
 #include "../components/DNAComponent.h"
+#include "../components/ProjectileComponent.h"
+#include "../components/TransformComponent.h"
+#include "../components/TextComponent.h"
+#include "../components/LifespanComponent.h"
+#include "../components/PopAnimationComponent.h"
 #include "EvolutionManager.h"
+
 #include <algorithm>
 #include <cstdlib>
 #include <string>
@@ -24,13 +30,12 @@ namespace game::systems
 
     void CombatSystem::processJuiceCollection(game::entities::Entity* player)
     {
-        if (!player || player->isDead) return;
+        if (!player || player->isDead()) return;
 
         auto& drops = context_.juiceDrops;
 
         for (int i = static_cast<int>(drops.size()) - 1; i >= 0; --i)
         {
-            // check if player is close enough to collect the juice drop
             if (drops[i].isCollected)
             {
                 float juiceValue = drops[i].value;
@@ -41,7 +46,6 @@ namespace game::systems
                     stats->addUltCharge(juiceValue * 0.5f);
                 }
 
-                // safety check to prevent out-of-range access, should never trigger due to loop structure
                 drops.erase(drops.begin() + i);
             }
         }
@@ -49,190 +53,223 @@ namespace game::systems
 
     void CombatSystem::processBulletDamage(game::entities::Entity* player)
     {
-        auto& bullets = context_.bullets;
-        std::vector<game::components::Bullet> newShards;
+        auto& entities = context_.entities;
 
-        for (int i = static_cast<int>(bullets.size()) - 1; i >= 0; --i)
+        for (int i = static_cast<int>(entities.size()) - 1; i >= 0; --i)
         {
-            if (!bullets[i].getIsActive())
+            auto* proj = entities[i]->getComponent<game::components::ProjectileComponent>();
+            if (!proj) continue;
+
+            if (proj->getIsActive()) continue;
+
+            sf::Vector2f explodePos = proj->getPosition();
+            float explosionRadius = 70.0f;
+            float actualDamage = proj->getDamage();
+
+            // 1. AREA DAMAGE: WROGOWIE
+            for (auto& enemy : enemies_)
             {
-                sf::Vector2f explodePos = bullets[i].getPosition();
-                float explosionRadius = 70.0f;
-                float actualDamage = bullets[i].getDamage();
+                if (enemy->isDead()) continue;
 
-                // 1. AREA DAMAGE: WROGOWIE
-                for (auto& enemy : enemies_)
+                auto* enemy_transform = enemy->getComponent<game::components::TransformComponent>();
+                if (!enemy_transform) continue;
+
+                sf::Vector2f diff = explodePos - enemy_transform->position;
+
+                if (diff.x * diff.x + diff.y * diff.y < (explosionRadius * explosionRadius))
                 {
-                    if (enemy->isDead) continue;
-                    sf::Vector2f diff = explodePos - enemy->position;
-
-                    if (diff.lengthSquared() < (explosionRadius * explosionRadius))
+                    if (auto* stats = enemy->getComponent<game::components::StatsComponent>())
                     {
-                        if (auto* stats = enemy->getComponent<game::components::StatsComponent>())
-                        {
-                            stats->takeDamage(actualDamage);
-                            if (auto* sprite = enemy->getComponent<game::components::SpriteComponent>()) {
-                                sprite->triggerHitFlash();
-                            }
-                            context_.floatingTexts.emplace_back(
-                                game_->mainFont, "-" + std::to_string(static_cast<int>(actualDamage)),
-                                enemy->position, sf::Color::Red
-                            );
+                        stats->takeDamage(actualDamage);
+
+                        if (auto* sprite = enemy->getComponent<game::components::SpriteComponent>()) {
+                            sprite->triggerHitFlash();
                         }
+
+                        auto textEntity = std::make_unique<game::entities::Entity>();
+                        if (auto* transform = textEntity->getComponent<game::components::TransformComponent>()) {
+                            transform->position = enemy_transform->position;
+                            transform->velocity = sf::Vector2f(static_cast<float>((rand() % 100) - 50), -140.0f);
+                        }
+
+                        textEntity->addComponent(std::make_unique<game::components::TextComponent>(
+                            game_->mainFont, "-" + std::to_string(static_cast<int>(actualDamage)), 22, sf::Color::Red));
+                        textEntity->addComponent(std::make_unique<game::components::LifespanComponent>(0.6f, true));
+                        context_.spawnEntity(std::move(textEntity));
                     }
                 }
+            }
 
-                // 2. AREA DAMAGE: GRACZ (Je?li pocisk by? wrogi!)
-                if (!bullets[i].getIsFriendly() && player && !player->isDead)
+            // 2. AREA DAMAGE: GRACZ
+            if (!proj->getIsFriendly() && player && !player->isDead())
+            {
+                auto* player_transform = player->getComponent<game::components::TransformComponent>();
+                if (player_transform)
                 {
-                    sf::Vector2f diffToPlayer = explodePos - player->position;
-                    if (diffToPlayer.lengthSquared() < (explosionRadius * explosionRadius))
+                    sf::Vector2f diffToPlayer = explodePos - player_transform->position;
+                    if (diffToPlayer.x * diffToPlayer.x + diffToPlayer.y * diffToPlayer.y < (explosionRadius * explosionRadius))
                     {
                         if (auto* stats = player->getComponent<game::components::StatsComponent>())
                         {
                             stats->takeDamage(actualDamage);
+
                             if (auto* sprite = player->getComponent<game::components::SpriteComponent>()) {
                                 sprite->triggerHitFlash();
                             }
-                            context_.floatingTexts.emplace_back(
-                                game_->mainFont, "-" + std::to_string(static_cast<int>(actualDamage)),
-                                player->position, sf::Color::Red
-                            );
+
+                            auto textEntity = std::make_unique<game::entities::Entity>();
+                            if (auto* transform = textEntity->getComponent<game::components::TransformComponent>()) {
+                                transform->position = player_transform->position;
+                                transform->velocity = sf::Vector2f(static_cast<float>((rand() % 100) - 50), -140.0f);
+                            }
+
+                            textEntity->addComponent(std::make_unique<game::components::TextComponent>(
+                                game_->mainFont, "-" + std::to_string(static_cast<int>(actualDamage)), 22, sf::Color::Red));
+                            textEntity->addComponent(std::make_unique<game::components::LifespanComponent>(0.6f, true));
+                            context_.spawnEntity(std::move(textEntity));
                         }
                     }
                 }
-
-                // 3. WIZUALNY EFEKT ROZPRYSKU (SPLASH)
-                if (bullets[i].getStatusEffect() != game::components::StatusEffect::IceShatter &&
-                    bullets[i].getStatusEffect() != game::components::StatusEffect::SporePoison)
-                {
-                    std::string baseKey = bullets[i].getSplashKeyBase();
-                    if (!baseKey.empty())
-                    {
-                        std::string splashKey = baseKey + "_" + std::to_string((std::rand() % 3) + 1);
-                        auto& rm = game::core::ResourceManager::get();
-
-                        if (rm.hasTexture(splashKey)) {
-                            context_.acidSplashes.emplace_back(explodePos, rm.getTextureShared(splashKey));
-                        }
-                    }
-                }
-
-                // 4. AOE DLA TRUCIZNY 
-                if (bullets[i].getStatusEffect() == game::components::StatusEffect::Poison)
-                {
-                    AoEZone puddle;
-                    puddle.radius = 80.0f;
-                    puddle.dps = 25.0f;
-                    puddle.shape.setRadius(puddle.radius);
-                    puddle.shape.setOrigin({ puddle.radius, puddle.radius });
-                    puddle.shape.setPosition(explodePos);
-                    puddle.shape.setFillColor(sf::Color(50, 205, 50, 100)); // Zielona, toksyczna chmura
-                    puddle.shape.setOutlineThickness(0.0f);
-                    puddle.lifetime = 5.0f;
-                    puddle.maxLifetime = 5.0f;
-                    puddle.appliesPoison = true;
-
-                    context_.zones.push_back(puddle);
-                }
-
-                if (bullets[i].getStatusEffect() == game::components::StatusEffect::SporePoison)
-                {
-                    // A) TWORZYMY STREF? (Wi?ksza ka?u?a)
-                    AoEZone puddle;
-                    puddle.radius = 120.0f;
-                    puddle.dps = 5.0f;
-                    puddle.shape.setRadius(puddle.radius);
-                    puddle.shape.setOrigin({ puddle.radius, puddle.radius });
-                    puddle.shape.setPosition(explodePos);
-                    puddle.shape.setFillColor(sf::Color(50, 205, 50, 130)); // Toksyczna ziele?, lekko ciemniejsza
-                    puddle.shape.setOutlineThickness(0.0f);
-                    puddle.lifetime = 6.0f;
-                    puddle.maxLifetime = 6.0f;
-                    puddle.appliesPoison = true;
-
-                    context_.zones.push_back(puddle);
-
-                    std::string baseKey = bullets[i].getSplashKeyBase();
-                    if (!baseKey.empty())
-                    {
-                        std::string splashKey = baseKey;
-                        auto& rm = game::core::ResourceManager::get();
-
-                        if (rm.hasTexture(splashKey)) {
-                            context_.acidSplashes.emplace_back(explodePos, rm.getTextureShared(splashKey));
-                        }
-                    }
-                }
-
-                // 5. EXPLOSION LOGIC: ICE SHATTER (Sopel lodowy z Lodówki)
-                if (bullets[i].getStatusEffect() == game::components::StatusEffect::IceShatter)
-                {
-                    AoEZone iceZone;
-                    iceZone.radius = 120.0f;
-                    iceZone.shape.setRadius(120.0f);
-                    iceZone.shape.setOrigin({ 120.0f, 120.0f });
-                    iceZone.shape.setPosition(explodePos);
-                    iceZone.shape.setFillColor(sf::Color(100, 200, 255, 80));
-                    iceZone.lifetime = 3.0f;
-                    iceZone.maxLifetime = 3.0f;
-                    iceZone.dps = 40.0f;
-                    iceZone.appliesSlow = true;
-                    iceZone.slowMultiplier = 0.4f;
-
-                    context_.zones.push_back(iceZone);
-
-                    auto& rm = game::core::ResourceManager::get();
-                    std::shared_ptr<sf::Texture> shardTex = nullptr;
-                    if (rm.hasTexture("hazard_icicle_shard")) {
-                        shardTex = rm.getTextureShared("hazard_icicle_shard");
-                    }
-
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    std::uniform_real_distribution<float> angleDist(0.f, 3.14159f * 2.f);
-                    std::uniform_real_distribution<float> speedDist(400.f, 750.f);
-
-                    for (int s = 0; s < 6; ++s)
-                    {
-                        float angle = angleDist(gen);
-                        sf::Vector2f dir(std::cos(angle), std::sin(angle));
-
-                        game::components::Bullet shard(explodePos, dir);
-                        shard.setAppearance(12.0f, sf::Color(150, 220, 255)); // Kolizja zwi?kszona do 12
-
-                        // Od?amki dziedzicz? to, czy rani? gracza, z g?ównego sopla
-                        shard.setFriendly(bullets[i].getIsFriendly());
-                        shard.setDamage(actualDamage * 0.25f);
-                        shard.setSplashKeyBase(""); // Od?amki nie bryzgaj? mazi? przy upadku
-
-                        sf::Vector2f targetPos = explodePos + (dir * 180.0f);
-                        shard.setupParabolic(explodePos, targetPos, speedDist(gen));
-
-                        if (shardTex) {
-                            auto size = shardTex->getSize();
-                            shard.setAnimation(shardTex, 1, 1.0f, { static_cast<int>(size.x), static_cast<int>(size.y) });
-                            shard.setSpriteScale(3.0f, 3.0f); // Grafika od?amków x3
-                            shard.setWobble(false, true);
-                        }
-
-                        newShards.push_back(shard);
-                    }
-                }
-
-                // Sounds
-                if (!bullets[i].getImpactSound().empty())
-                {
-                    game::core::AudioManager::get().playSoundVolume(bullets[i].getImpactSound(), 75.f);
-                }
-
-                bullets.erase(bullets.begin() + i);
             }
-        }
 
-        // Dodajemy nowo powsta?e od?amki z powrotem do g?ównej puli pocisków areny
-        for (const auto& shard : newShards) {
-            bullets.push_back(shard);
+            // 3. WIZUALNY EFEKT ROZPRYSKU (SPLASH - ECS!)
+            if (proj->getStatusEffect() != game::components::StatusEffect::IceShatter &&
+                proj->getStatusEffect() != game::components::StatusEffect::SporePoison)
+            {
+                std::string baseKey = proj->getSplashKeyBase();
+                if (!baseKey.empty())
+                {
+                    std::string splashKey = baseKey + "_" + std::to_string((std::rand() % 3) + 1);
+                    auto& rm = game::core::ResourceManager::get();
+
+                    if (rm.hasTexture(splashKey)) {
+                        auto splashEntity = std::make_unique<game::entities::Entity>();
+                        if (auto* transform = splashEntity->getComponent<game::components::TransformComponent>()) {
+                            transform->position = explodePos;
+                            // Generowanie losowego k¹ta w stopniach
+                            transform->rotation = static_cast<float>(rand() % 360);
+
+                            float baseScale = 0.55f + static_cast<float>(rand() % 40) / 100.0f;
+                            transform->scale = { baseScale * 1.35f, baseScale * 0.7f };
+
+                            splashEntity->addComponent(std::make_unique<game::components::PopAnimationComponent>(
+                                transform->scale, sf::Vector2f(baseScale, baseScale), 10.0f));
+                        }
+
+                        auto spriteComp = std::make_unique<game::components::SpriteComponent>();
+                        spriteComp->setTexture(rm.getTextureShared(splashKey));
+                        splashEntity->addComponent(std::move(spriteComp));
+                        splashEntity->addComponent(std::make_unique<game::components::LifespanComponent>(1.5f, true));
+
+                        context_.spawnEntity(std::move(splashEntity));
+                    }
+                }
+            }
+
+            // 4. AOE DLA TRUCIZNY 
+            if (proj->getStatusEffect() == game::components::StatusEffect::Poison ||
+                proj->getStatusEffect() == game::components::StatusEffect::SporePoison)
+            {
+                AoEZone puddle;
+                puddle.radius = (proj->getStatusEffect() == game::components::StatusEffect::SporePoison) ? 120.0f : 80.0f;
+                puddle.dps = (proj->getStatusEffect() == game::components::StatusEffect::SporePoison) ? 5.0f : 25.0f;
+                puddle.shape.setRadius(puddle.radius);
+                puddle.shape.setOrigin({ puddle.radius, puddle.radius });
+                puddle.shape.setPosition(explodePos);
+                puddle.shape.setFillColor(sf::Color(50, 205, 50, 130));
+                puddle.shape.setOutlineThickness(0.0f);
+                puddle.lifetime = 5.0f;
+                puddle.maxLifetime = 5.0f;
+                puddle.appliesPoison = true;
+
+                context_.zones.push_back(puddle);
+
+                if (proj->getStatusEffect() == game::components::StatusEffect::SporePoison)
+                {
+                    std::string baseKey = proj->getSplashKeyBase();
+                    auto& rm = game::core::ResourceManager::get();
+                    if (!baseKey.empty() && rm.hasTexture(baseKey)) {
+                        auto splashEntity = std::make_unique<game::entities::Entity>();
+                        if (auto* transform = splashEntity->getComponent<game::components::TransformComponent>()) {
+                            transform->position = explodePos;
+                            transform->rotation = static_cast<float>(rand() % 360);
+
+                            float baseScale = 0.55f + static_cast<float>(rand() % 40) / 100.0f;
+                            transform->scale = { baseScale * 1.35f, baseScale * 0.7f };
+
+                            splashEntity->addComponent(std::make_unique<game::components::PopAnimationComponent>(
+                                transform->scale, sf::Vector2f(baseScale, baseScale), 10.0f));
+                        }
+
+                        auto spriteComp = std::make_unique<game::components::SpriteComponent>();
+                        spriteComp->setTexture(rm.getTextureShared(baseKey));
+                        splashEntity->addComponent(std::move(spriteComp));
+                        splashEntity->addComponent(std::make_unique<game::components::LifespanComponent>(1.5f, true));
+
+                        context_.spawnEntity(std::move(splashEntity));
+                    }
+                }
+            }
+
+            // 5. EXPLOSION LOGIC: ICE SHATTER (Sople jako encje)
+            if (proj->getStatusEffect() == game::components::StatusEffect::IceShatter)
+            {
+                AoEZone iceZone;
+                iceZone.radius = 120.0f;
+                iceZone.shape.setRadius(120.0f);
+                iceZone.shape.setOrigin({ 120.0f, 120.0f });
+                iceZone.shape.setPosition(explodePos);
+                iceZone.shape.setFillColor(sf::Color(100, 200, 255, 80));
+                iceZone.lifetime = 3.0f;
+                iceZone.maxLifetime = 3.0f;
+                iceZone.dps = 40.0f;
+                iceZone.appliesSlow = true;
+                iceZone.slowMultiplier = 0.4f;
+
+                context_.zones.push_back(iceZone);
+
+                auto& rm = game::core::ResourceManager::get();
+                std::shared_ptr<sf::Texture> shardTex = rm.hasTexture("hazard_icicle_shard") ? rm.getTextureShared("hazard_icicle_shard") : nullptr;
+
+                std::random_device rd; std::mt19937 gen(rd());
+                std::uniform_real_distribution<float> angleDist(0.f, 3.14159f * 2.f);
+                std::uniform_real_distribution<float> speedDist(400.f, 750.f);
+
+                for (int s = 0; s < 6; ++s)
+                {
+                    float angle = angleDist(gen);
+                    sf::Vector2f dir(std::cos(angle), std::sin(angle));
+
+                    auto shardEntity = std::make_unique<game::entities::Entity>();
+                    if (auto* t = shardEntity->getComponent<game::components::TransformComponent>()) t->position = explodePos;
+
+                    auto shardProj = std::make_unique<game::components::ProjectileComponent>(explodePos, dir);
+                    shardProj->setAppearance(12.0f, sf::Color(150, 220, 255));
+                    shardProj->setFriendly(proj->getIsFriendly());
+                    shardProj->setDamage(actualDamage * 0.25f);
+                    shardProj->setSplashKeyBase("");
+
+                    sf::Vector2f targetPos = explodePos + (dir * 180.0f);
+                    shardProj->setupParabolic(explodePos, targetPos, speedDist(gen));
+
+                    if (shardTex) {
+                        auto size = shardTex->getSize();
+                        shardProj->setAnimation(shardTex, 1, 1.0f, { static_cast<int>(size.x), static_cast<int>(size.y) });
+                        shardProj->setSpriteScale(3.0f, 3.0f);
+                        shardProj->setWobble(false, true);
+                    }
+
+                    shardEntity->addComponent(std::move(shardProj));
+                    context_.spawnEntity(std::move(shardEntity));
+                }
+            }
+
+            if (!proj->getImpactSound().empty())
+            {
+                game::core::AudioManager::get().playSoundVolume(proj->getImpactSound(), 75.f);
+            }
+
+            entities.erase(entities.begin() + i);
         }
     }
 
@@ -240,32 +277,23 @@ namespace game::systems
     {
         for (int i = static_cast<int>(enemies_.size()) - 1; i >= 0; --i)
         {
-            if (auto* stats = enemies_[i]->getComponent<game::components::StatsComponent>())
-            {
-                if (stats->getHealth() <= 0.0f)
-                {
-                    enemies_[i]->isDead = true;
-                }
-            }
-
-            if (enemies_[i]->isDead)
+            if (enemies_[i]->isDead())
             {
                 if (auto* dnaComp = enemies_[i]->getComponent<game::components::DNAComponent>())
                 {
-                    const auto& dnaData = dnaComp->getDNA();
+                    auto* enemies_transform = enemies_[i]->getComponent<game::components::TransformComponent>();
+                    if (!enemies_transform) continue;
 
-                    // genetic algorithm feeding
+                    const auto& dnaData = dnaComp->getDNA();
                     evolutionManager.onEnemyDeath(dnaData);
 
-                    // random chance to drop juice based on enemy's DNA dropChance
                     float randomRoll = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
                     if (randomRoll <= dnaData.dropChance)
                     {
-                        context_.juiceDrops.emplace_back(enemies_[i]->position, dnaData.baseJuice * dnaData.sizeScale);
+                        context_.juiceDrops.emplace_back(enemies_transform->position, dnaData.baseJuice * dnaData.sizeScale);
                     }
                 }
 
-                // Removing dead enemy from the game loop
                 enemies_.erase(enemies_.begin() + i);
             }
         }

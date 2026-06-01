@@ -178,7 +178,6 @@ namespace game::states
             {"achievements", "assets/textures/ui/achievements.png"},
             {"left_arrow", "assets/textures/ui/left_arrow.png"},
             {"right_arrow", "assets/textures/ui/right_arrow.png"},
-            {"back", "assets/textures/ui/back_button.png"},
             {"log_platform", "assets/textures/ui/log_platform.png"},
             {"select_bg", "assets/textures/ui/select_bg.png"},
             {"hp_icon", "assets/textures/ui/health_icon.png"},
@@ -195,6 +194,7 @@ namespace game::states
             {"settings", "assets/textures/ui/settings_button.png"},
             {"cursor", "assets/textures/ui/cursor.png" },
             {"crosshair", "assets/textures/ui/crosshairV3.png"},
+            {"back", "assets/textures/ui/back_button.png"}
         };
 
         int uiIndex = 0;

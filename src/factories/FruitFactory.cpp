@@ -130,10 +130,10 @@ namespace game::factories
         if (!abilities) return; // Safety check
 
         if (name == "Shoot") {
-            abilities->setWeapon(std::make_unique<game::components::ShootAbility>(context.bullets));
+            abilities->setWeapon(std::make_unique<game::components::ShootAbility>(&context));
         }
         else if (name == "Shotgun") {
-            abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(context.bullets));
+            abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(&context));
         }
         else if (name == "Dash") {
             abilities->setSkill(std::make_unique<game::components::DashAbility>(entity));
@@ -144,7 +144,7 @@ namespace game::factories
             std::string splashKey = fruitData.value("splashKey", "acid_splash");
 
             abilities->setWeapon(std::make_unique<game::components::AcidSquirtAbility>(
-                context.bullets,
+                &context,
                 entity,
                 texPath,
                 splashKey,

@@ -216,7 +216,7 @@ namespace game::states
                 }
             }
 
-            if (rm.hasTexture(jsonKey + "_start"))
+            /*if (rm.hasTexture(jsonKey + "_start"))
             {
                 savedFruit.hasStartAnimation = true;
 
@@ -228,7 +228,7 @@ namespace game::states
                 for (int i = 0; i < initFramesCount; ++i) {
                     savedFruit.startAnimationFrames.push_back(sf::IntRect({ i * frameWidth, 0 }, { frameWidth, frameHeight }));
                 }
-            }
+            }*/
         }
     }
 

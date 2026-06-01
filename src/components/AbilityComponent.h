@@ -22,6 +22,9 @@ namespace game::components
         void useSkill(sf::Vector2f targetWorldPos);
         void useUltimate(sf::Vector2f targetWorldPos);
 
+        bool isAttacking() const { return isAttacking_; }
+        void setAttacking(bool attacking) { isAttacking_ = attacking; }
+
     private:
         std::unique_ptr<Ability> weapon_;
         std::unique_ptr<Ability> skill_;
@@ -30,5 +33,7 @@ namespace game::components
         void executeAbility(
             const std::unique_ptr<Ability>& ability,
             sf::Vector2f targetWorldPos) const;
+
+        bool isAttacking_ = false;
     };
 }

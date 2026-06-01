@@ -3,6 +3,10 @@
 #include "ParticleSystem.h"
 #include "../core/ArenaContext.h"
 #include "../entities/Entity.h"
+#include "../components/TransformComponent.h"
+#include "../components/TextComponent.h"
+#include "../components/LifespanComponent.h"
+#include "../components/PopAnimationComponent.h"
 #include <algorithm>
 #include <random>
 #include <cmath>
@@ -16,18 +20,7 @@ namespace game::systems
 
     void ParticleSystem::updateEffects(float dt)
     {
-		// 1. Acctualization of floating texts (damage numbers, healing, etc.)
-        auto& texts = context_.floatingTexts;
-        for (int i = static_cast<int>(texts.size()) - 1; i >= 0; --i)
-        {
-            texts[i].update(dt);
-            if (texts[i].isDead())
-            {
-                texts.erase(texts.begin() + i);
-            }
-        }
-
-		// 2. Actualization of AoE zones (poison clouds, slow fields, etc.)
+        // 1. Aktualizacja stref AoE
         auto& zones = context_.zones;
         for (int i = static_cast<int>(zones.size()) - 1; i >= 0; --i)
         {
@@ -38,16 +31,32 @@ namespace game::systems
             }
         }
 
-		// 3. Actualization of acid splashes (visual effect on the ground after acid attacks)
-        auto& splashes = context_.acidSplashes;
-        for (auto& splash : splashes)
+        // 2. O¿ywianie i sprz¹tanie encji wizualnych (ECS)
+        auto& entities = context_.entities;
+        for (int i = static_cast<int>(entities.size()) - 1; i >= 0; --i)
         {
-            splash.update(dt);
-        }
+            auto& entity = entities[i];
 
-        // Cleanup
-        splashes.erase(std::remove_if(splashes.begin(), splashes.end(),
-            [](const auto& s) { return !s.isActive(); }), splashes.end());
+            if (auto* pop = entity->getComponent<game::components::PopAnimationComponent>()) {
+                pop->update(dt);
+            }
+
+            if (auto* lifespan = entity->getComponent<game::components::LifespanComponent>()) {
+                lifespan->update(dt);
+            }
+
+            if (auto* text = entity->getComponent<game::components::TextComponent>()) {
+                if (auto* transform = entity->getComponent<game::components::TransformComponent>()) {
+                    transform->position += transform->velocity * dt;
+                }
+                text->update(dt);
+            }
+
+            // Œmieciarka: usuwa encje przeznaczone do usuniêcia
+            if (entity->isPendingDestroy) {
+                entities.erase(entities.begin() + i);
+            }
+        }
     }
 
     void ParticleSystem::updateParticles(game::entities::Entity* player, float dt, sf::Vector2f& lastPlayerPos, float& playerDustSpawnTimer)
@@ -55,8 +64,9 @@ namespace game::systems
         if (!player) return;
 
         auto& particles = context_.walkParticles;
+        auto* player_transform = player->getComponent<game::components::TransformComponent>();
+        if (!player_transform) return;
 
-		// 1. Actualization of existing walk dust particles (movement, fading, etc.)
         for (int i = static_cast<int>(particles.size()) - 1; i >= 0; --i)
         {
             particles[i].lifetime -= dt;
@@ -67,14 +77,13 @@ namespace game::systems
             else
             {
                 particles[i].position += particles[i].velocity * dt;
-				particles[i].velocity *= 0.95f; // effect of friction slowing down the dust over time
+                particles[i].velocity *= 0.95f;
             }
         }
 
-		// 2. Generate new walk dust particles based on player movement
-        sf::Vector2f moveDelta = player->position - lastPlayerPos;
-        bool isMoving = moveDelta.lengthSquared() > 0.1f;
-        lastPlayerPos = player->position;
+        sf::Vector2f moveDelta = player_transform->position - lastPlayerPos;
+        bool isMoving = (moveDelta.x * moveDelta.x + moveDelta.y * moveDelta.y) > 0.1f;
+        lastPlayerPos = player_transform->position;
 
         if (isMoving)
         {
@@ -89,7 +98,7 @@ namespace game::systems
                 std::uniform_real_distribution<float> sizeDist(4.0f, 8.0f);
 
                 particles.emplace_back(
-                    player->position + sf::Vector2f(offsetDist(gen), offsetDist(gen) + 18.0f),
+                    player_transform->position + sf::Vector2f(offsetDist(gen), offsetDist(gen) + 18.0f),
                     sf::Vector2f(velDist(gen), velDist(gen) - 10.0f),
                     0.4f, sizeDist(gen), context_.mapDustColor
                 );

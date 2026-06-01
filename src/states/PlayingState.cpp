@@ -5,6 +5,7 @@
 #include "../core/AudioManager.h"
 #include "../components/AbilityComponent.h"
 #include "../components/StatsComponent.h"
+#include "../components/TransformComponent.h"
 #include "../systems/EvolutionManager.h"
 #include <algorithm>
 #include <iostream>
@@ -129,9 +130,7 @@ namespace game::states
         game->arenaContext.entities.clear();
         //game->arenaContext.splashTextures.clear();
         game->arenaContext.zones.clear();
-        game->arenaContext.acidSplashes.clear();
-        game->arenaContext.bullets.clear();
-        game->arenaContext.floatingTexts.clear();
+        //game->arenaContext.acidSplashes.clear();
         game->arenaContext.juiceDrops.clear();
         game->arenaContext.walkParticles.clear();
 
@@ -249,7 +248,8 @@ namespace game::states
                     if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
                         if (stats->isUltReady()) {
                             if (auto* ab = player->getComponent<game::components::AbilityComponent>()) {
-                                ab->useUltimate(player->position);
+                                auto* player_transform = player->getComponent<game::components::TransformComponent>(); if (!player_transform) return;
+                                ab->useUltimate(player_transform->position);
                                 stats->resetUlt();
                                 shakeIntensity = 15.0f;
                             }
@@ -329,12 +329,13 @@ namespace game::states
 
     void PlayingState::updateCamera(float dt)
     {
-        auto* player = world->getPlayer();
-        if (!player) return;
+        auto* player = world->getPlayer();  if (!player) return;
+        auto* player_transform = player->getComponent<game::components::TransformComponent>();  if (!player_transform) return;
+
 
         sf::Vector2f viewSize = cameraView.getSize();
         float hW = viewSize.x / 2.0f, hH = viewSize.y / 2.0f;
-        sf::Vector2f center = player->position;
+        sf::Vector2f center = player_transform->position;
         center.x = std::clamp(center.x, hW, mapLimits.x - hW);
         center.y = std::clamp(center.y, hH, mapLimits.y - hH);
         cameraView.setCenter(center);

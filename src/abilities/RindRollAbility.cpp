@@ -1,84 +1,110 @@
-// --- RindRollAbility.cpp ---
-
 #include "RindRollAbility.h"
+
 #include "../entities/Entity.h"
 #include "../components/StatsComponent.h"
+#include "../components/TransformComponent.h"
+#include "../core/ArenaContext.h"
+
 #include <cmath>
 #include <random>
 
 namespace game::components
 {
-    RindRollAbility::RindRollAbility(game::entities::Entity* targetEntity, game::ArenaContext* ctx, std::vector<std::unique_ptr<game::entities::Entity>>* targetsList, float kRadius, float kForce)
-        : entity(targetEntity), context(ctx), enemies(targetsList), singleTarget(nullptr), knockbackRadius(kRadius), knockbackForce(kForce) {}
+    RindRollAbility::RindRollAbility(
+        game::entities::Entity* owner,
+        game::ArenaContext* ctx,
+        std::vector<std::unique_ptr<game::entities::Entity>>* targetsList,
+        float kRadius,
+        float kForce)
+        : owner_(owner), context_(ctx), enemies_(targetsList), singleTarget_(nullptr), knockbackRadius_(kRadius), knockbackForce_(kForce)
+    {
+    }
 
-    RindRollAbility::RindRollAbility(game::entities::Entity* targetEntity, game::ArenaContext* ctx, game::entities::Entity* playerTarget, float kRadius, float kForce)
-        : entity(targetEntity), context(ctx), enemies(nullptr), singleTarget(playerTarget), knockbackRadius(kRadius), knockbackForce(kForce) {}
+    RindRollAbility::RindRollAbility(
+        game::entities::Entity* owner,
+        game::ArenaContext* ctx,
+        game::entities::Entity* playerTarget,
+        float kRadius,
+        float kForce)
+        : owner_(owner), context_(ctx), enemies_(nullptr), singleTarget_(playerTarget), knockbackRadius_(kRadius), knockbackForce_(kForce)
+    {
+    }
 
     void RindRollAbility::update(float dt)
     {
-        if (currentTimer > 0.0f) currentTimer -= dt;
+        if (currentTimer_ > 0.0f) currentTimer_ -= dt;
 
-        if (entity != nullptr && entity->isRolling && entity->actionTimer > 0.0f)
+        if (!owner_ || !context_) return;
+
+        auto* owner_transform = owner_->getComponent<TransformComponent>();
+        if (!owner_transform) return;
+
+        if (owner_transform->isRolling && owner_transform->actionTimer > 0.0f)
         {
-            // 1. CZ¥STECZKI KURZU
-            if (context != nullptr)
-            {
-                std::random_device rd; std::mt19937 gen(rd());
-                std::uniform_real_distribution<float> offset(-15.0f, 15.0f);
-                std::uniform_real_distribution<float> velSpread(-30.0f, 30.0f);
+            // 1. CZ¥STECZKI KURZU (Tymczasowo zostawiamy w starym systemie, to tylko efekt wizualny)
+            std::random_device rd; std::mt19937 gen(rd());
+            std::uniform_real_distribution<float> offset(-15.0f, 15.0f);
+            std::uniform_real_distribution<float> velSpread(-30.0f, 30.0f);
 
-                sf::Vector2f backDir = -entity->velocity;
-                float length = std::sqrt(backDir.x * backDir.x + backDir.y * backDir.y);
-                if (length > 0.001f) backDir /= length;
+            sf::Vector2f backDir = -owner_transform->velocity;
+            float length = std::sqrt(backDir.x * backDir.x + backDir.y * backDir.y);
+            if (length > 0.001f) backDir /= length;
 
-                for (int i = 0; i < 4; ++i) {
-                    context->walkParticles.emplace_back(
-                        entity->position + sf::Vector2f(offset(gen), offset(gen) + 15.0f),
-                        (backDir * 150.0f) + sf::Vector2f(velSpread(gen), velSpread(gen)),
-                        0.4f, 5.0f, sf::Color(255, 120, 20, 220)
-                    );
-                }
+            for (int i = 0; i < 4; ++i) {
+                context_->walkParticles.emplace_back(
+                    owner_transform->position + sf::Vector2f(offset(gen), offset(gen) + 15.0f),
+                    (backDir * 150.0f) + sf::Vector2f(velSpread(gen), velSpread(gen)),
+                    0.4f, 5.0f, sf::Color(255, 120, 20, 220)
+                );
             }
 
-            // 2. OBRA¯ENIA I PROMIEÑ ODRZUTU (Dla Gracza)
-            if (enemies != nullptr)
+            // 2. OBRAZENIA I PROMIEN ODRZUTU (Dla Gracza walcz¹cego z grupa)
+            if (enemies_ != nullptr)
             {
-                for (auto& enemy : *enemies)
+                for (auto& enemy : *enemies_)
                 {
-                    if (enemy->isDead) continue;
-                    sf::Vector2f diff = enemy->position - entity->position;
+                    if (enemy->isDead()) continue;
+
+                    auto* enemy_transform = enemy->getComponent<TransformComponent>();
+                    if (!enemy_transform) continue; // continue
+
+                    sf::Vector2f diff = enemy_transform->position - owner_transform->position;
                     float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
 
-                    // Sprawdzamy czy wróg jest w promieniu odrzutu
-                    if (dist < knockbackRadius)
+                    if (dist < knockbackRadius_)
                     {
-                        // Im bli¿ej œrodka, tym mocniejszy efekt (od 1.0 w œrodku do 0.0 na krawêdzi)
-                        float effectMulti = 1.0f - (dist / knockbackRadius);
+                        float effectMulti = 1.0f - (dist / knockbackRadius_);
 
                         if (auto* stats = enemy->getComponent<StatsComponent>()) {
                             stats->takeDamage(60.0f * effectMulti * dt);
                         }
 
-                        // Zastosowanie si³y odrzutu (Knockback)
                         if (dist > 0.001f) {
-                            enemy->position += (diff / dist) * (knockbackForce * effectMulti) * dt;
+                            enemy_transform->position += (diff / dist) * (knockbackForce_ * effectMulti) * dt;
                         }
                     }
                 }
             }
-            // 3. OBRA¯ENIA I PROMIEÑ ODRZUTU (Dla Mutanta uderzaj¹cego w Gracza)
-            else if (singleTarget != nullptr && !singleTarget->isDead)
+            // 3. OBRAZENIA I PROMIEN ODRZUTU (Dla Mutanta uderzajacego w Gracza)
+            else if (singleTarget_ != nullptr && !singleTarget_->isDead())
             {
-                sf::Vector2f diff = singleTarget->position - entity->position;
-                float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+                auto* singleTarget_transform = singleTarget_->getComponent<TransformComponent>();
+                if (singleTarget_transform)
+                {
+                    sf::Vector2f diff = singleTarget_transform->position - owner_transform->position;
+                    float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
 
-                if (dist < knockbackRadius) {
-                    float effectMulti = 1.0f - (dist / knockbackRadius);
-                    if (auto* stats = singleTarget->getComponent<StatsComponent>()) {
-                        stats->takeDamage(20.0f * dt);
-                    }
-                    if (dist > 0.001f) {
-                        singleTarget->position += (diff / dist) * (knockbackForce * effectMulti) * dt;
+                    if (dist < knockbackRadius_)
+                    {
+                        float effectMulti = 1.0f - (dist / knockbackRadius_);
+
+                        if (auto* stats = singleTarget_->getComponent<StatsComponent>()) {
+                            stats->takeDamage(20.0f * dt);
+                        }
+
+                        if (dist > 0.001f) {
+                            singleTarget_transform->position += (diff / dist) * (knockbackForce_ * effectMulti) * dt;
+                        }
                     }
                 }
             }
@@ -87,18 +113,22 @@ namespace game::components
 
     void RindRollAbility::execute(const sf::Vector2f& startPos, const sf::Vector2f& targetWorldPos, const sf::Vector2f& shooterVelocity)
     {
-        if (currentTimer <= 0.0f && entity != nullptr)
+        if (currentTimer_ <= 0.0f && owner_ != nullptr)
         {
+            auto* owner_transform = owner_->getComponent<TransformComponent>();
+            if (!owner_transform) return;
+
             sf::Vector2f aimDir = targetWorldPos - startPos;
             float length = std::sqrt(aimDir.x * aimDir.x + aimDir.y * aimDir.y);
+
             if (length > 0.001f)
             {
                 aimDir /= length;
-                entity->velocity = aimDir * rollSpeed;
-                entity->overrideSpeedLimit = rollSpeed;
-                entity->isRolling = true;
-                entity->actionTimer = rollDuration;
-                currentTimer = cooldown;
+                owner_transform->velocity = aimDir * rollSpeed_;
+                owner_transform->overrideSpeedLimit = rollSpeed_;
+                owner_transform->isRolling = true;
+                owner_transform->actionTimer = rollDuration_;
+                currentTimer_ = cooldown_;
             }
         }
     }

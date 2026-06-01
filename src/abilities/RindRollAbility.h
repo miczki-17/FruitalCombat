@@ -1,11 +1,12 @@
-
 // --- RindRollAbility.h ---
+
 #pragma once
 #include "Ability.h"
 #include "../core/ArenaContext.h"
 #include <vector>
 #include <memory>
 
+namespace game { struct ArenaContext; }
 namespace game::entities { class Entity; }
 
 namespace game::components
@@ -13,28 +14,41 @@ namespace game::components
     class RindRollAbility : public Ability
     {
     private:
-        game::entities::Entity* entity;
-        game::ArenaContext* context;
-        std::vector<std::unique_ptr<game::entities::Entity>>* enemies;
-        game::entities::Entity* singleTarget;
+        game::entities::Entity* owner_;
+        game::ArenaContext* context_;
+        std::vector<std::unique_ptr<game::entities::Entity>>* enemies_;
+        game::entities::Entity* singleTarget_;
 
-        float cooldown = 5.0f;
-        float currentTimer = 0.0f;
-        float rollDuration = 1.0f;
-        float rollSpeed = 450.0f;
+        float cooldown_ = 5.0f;
+        float currentTimer_ = 0.0f;
+        float rollDuration_ = 1.0f;
+        float rollSpeed_ = 450.0f;
 
-        // --- NOWE ZMIENNE ODRZUTU ---
-        float knockbackRadius;
-        float knockbackForce;
+        float knockbackRadius_;
+        float knockbackForce_;
 
     public:
-        // Konstruktor dla gracza
-        RindRollAbility(game::entities::Entity* targetEntity, game::ArenaContext* ctx, std::vector<std::unique_ptr<game::entities::Entity>>* targetsList, float kRadius = 120.0f, float kForce = 350.0f);
+        // Konstruktor dla gracza (bije wielu wrogow)
+        RindRollAbility(
+            game::entities::Entity* owner,
+            game::ArenaContext* ctx,
+            std::vector<std::unique_ptr<game::entities::Entity>>* targetsList,
+            float kRadius = 120.0f,
+            float kForce = 350.0f);
 
-        // Konstruktor dla mutanta
-        RindRollAbility(game::entities::Entity* targetEntity, game::ArenaContext* ctx, game::entities::Entity* playerTarget, float kRadius = 80.0f, float kForce = 200.0f);
+        // Konstruktor dla mutanta (bije tylko gracza)
+        RindRollAbility(
+            game::entities::Entity* owner,
+            game::ArenaContext* ctx,
+            game::entities::Entity* playerTarget,
+            float kRadius = 80.0f,
+            float kForce = 200.0f);
 
         void update(float dt) override;
-        void execute(const sf::Vector2f& startPos, const sf::Vector2f& targetWorldPos, const sf::Vector2f& shooterVelocity) override;
+
+        void execute(
+            const sf::Vector2f& startPos,
+            const sf::Vector2f& targetWorldPos,
+            const sf::Vector2f& shooterVelocity) override;
     };
 }

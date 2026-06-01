@@ -28,7 +28,8 @@
     "damage": 18,
     "maxSpeed": 440.0,
     "attackSpeed": 1.1,
-    "lobbyTexturePath": "",
+    "idleTexturePath": "assets/textures/entities/characters/twin-kaze/twin-kaze_idle_animation.png",
+    "idleFrames": 4,
     "walkTexturePath": "",
     "abilities": [ "Gatling Pits", "Cherry Bomb" ]
   },
@@ -39,7 +40,8 @@
     "damage": 15,
     "maxSpeed": 500.0,
     "attackSpeed": 1.0,
-    "lobbyTexturePath": "",
+    "idleTexturePath": "assets/textures/entities/characters/juice_lee/juice_lee_idle_animation.png",
+    "idleFrames": 4,
     "walkTexturePath": "",
     "abilities": [ "Seed Burst", "Jam Flurry" ]
   },

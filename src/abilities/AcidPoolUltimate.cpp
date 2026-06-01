@@ -3,6 +3,7 @@
 #include "AcidPoolUltimate.h"
 
 #include "../components/StatsComponent.h"
+#include "../components/TransformComponent.h"
 
 namespace game::components
 {
@@ -61,6 +62,8 @@ namespace game::components
     {
         AoEZone acidPool;
 
+        auto* owner_transform = owner_->getComponent<TransformComponent>(); if (!owner_transform) return;
+
         acidPool.radius = ACID_POOL_RADIUS;
         acidPool.dps = 0.0f;
 
@@ -77,7 +80,7 @@ namespace game::components
         acidPool.shape.setOrigin(
             { acidPool.radius, acidPool.radius });
 
-        acidPool.shape.setPosition(owner_->position);
+        acidPool.shape.setPosition(owner_transform->position);
         acidPool.shape.setFillColor(ACID_POOL_COLOR);
 
         arenaContext_->zones.push_back(acidPool);

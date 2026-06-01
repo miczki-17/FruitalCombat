@@ -46,12 +46,9 @@ add_executable(FruitalCombat
     "src/abilities/DashAbility.cpp"
     "src/abilities/ShootAbility.h"
     "src/abilities/ShootAbility.cpp"
-    "src/projectiles/Bullet.h"
     
     "src/abilities/ShotgunAbility.cpp"
     src/utils/VideoPlayer.h
-    "src/utils/AnimationController.h"
-    "src/utils/AnimationController.cpp"
     src/states/CharacterSelectState.h
     src/states/CharacterSelectState.cpp
     src/states/PauseState
@@ -60,7 +57,14 @@ add_executable(FruitalCombat
     src/states/MapSelectState.cpp
     src/components/ProjectileComponent.h
     src/components/ProjectileComponent.cpp
- "src/abilities/AcidSquirtAbility.h" "src/abilities/AcidSquirtAbility.cpp" "src/abilities/RindRollAbility.h" "src/abilities/RindRollAbility.cpp" "src/effects/AcidSplash.h" "src/effects/AcidSplash.cpp" "src/core/ResourceManager.h" "src/components/Component.h" "src/components/MovementComponent.h" "src/components/ColliderComponent.h" "src/components/SpriteComponent.h" "src/components/AbilityComponent.h" "src/components/StatsComponent.h" "src/genetics/DNA.h" "src/components/DNAComponent.h" "src/components/AiInputComponent.h" "src/factories/MutantFactory.h" "src/factories/MutantFactory.cpp" "src/systems/EvolutionManager.h" "src/systems/EvolutionManager.cpp" "src/effects/FloatingText.h" "src/entities/JuiceDrop.h" "src/states/ShopState.h" "src/states/ShopState.cpp" "src/components/StatsComponent.cpp" "src/abilities/AcidPoolUltimate.h" "src/abilities/AcidPoolUltimate.cpp" "src/components/AbilityComponent.cpp" "src/components/MovementComponent.cpp" "src/components/AiInputComponent.cpp" "src/components/ColliderComponent.cpp" "src/components/SpriteComponent.cpp" "src/components/DNAComponent.cpp" "src/core/ResourceManager.cpp" "src/utils/MathUtils.h" "src/components/PlayerInputComponent.h" "src/components/PlayerInputComponent.cpp" "src/components/ProjectileComponent.h" "src/components/ProjectileComponent.cpp" "src/systems/CollisionSystem.h" "src/systems/CollisionSystem.cpp" "src/systems/CombatSystem.h" "src/systems/CombatSystem.cpp" "src/systems/ParticleSystem.h" "src/systems/ParticleSystem.cpp" "src/systems/RenderSystem.h" "src/systems/RenderSystem.cpp" "src/core/PlayerProfile.h" "src/systems/MapHazardSystem.h" "src/systems/MapHazardSystem.cpp" "src/core/GameWorld.h" "src/core/GameWorld.cpp" "src/core/AudioManager.h" "src/core/AudioManager.cpp" "src/core/AssetsGroup.h")
+    src/components/LifespanComponent.h
+    src/components/LifespanComponent.cpp
+    src/components/TextComponent.h
+    src/components/TextComponent.cpp
+    src/components/TransformComponent.h
+    src/components/TransformComponent.cpp
+    src/core/AssetGroup.h
+ "src/abilities/AcidSquirtAbility.h" "src/abilities/AcidSquirtAbility.cpp" "src/abilities/RindRollAbility.h" "src/abilities/RindRollAbility.cpp" "src/core/ResourceManager.h" "src/components/Component.h" "src/components/MovementComponent.h" "src/components/ColliderComponent.h" "src/components/SpriteComponent.h" "src/components/AbilityComponent.h" "src/components/StatsComponent.h" "src/genetics/DNA.h" "src/components/DNAComponent.h" "src/components/AiInputComponent.h" "src/factories/MutantFactory.h" "src/factories/MutantFactory.cpp" "src/systems/EvolutionManager.h" "src/systems/EvolutionManager.cpp" "src/entities/JuiceDrop.h" "src/states/ShopState.h" "src/states/ShopState.cpp" "src/components/StatsComponent.cpp" "src/abilities/AcidPoolUltimate.h" "src/abilities/AcidPoolUltimate.cpp" "src/components/AbilityComponent.cpp" "src/components/MovementComponent.cpp" "src/components/AiInputComponent.cpp" "src/components/ColliderComponent.cpp" "src/components/SpriteComponent.cpp" "src/components/DNAComponent.cpp" "src/core/ResourceManager.cpp" "src/utils/MathUtils.h" "src/components/PlayerInputComponent.h" "src/components/PlayerInputComponent.cpp" "src/components/ProjectileComponent.h" "src/components/ProjectileComponent.cpp" "src/systems/CollisionSystem.h" "src/systems/CollisionSystem.cpp" "src/systems/CombatSystem.h" "src/systems/CombatSystem.cpp" "src/systems/ParticleSystem.h" "src/systems/ParticleSystem.cpp" "src/systems/RenderSystem.h" "src/systems/RenderSystem.cpp" "src/core/PlayerProfile.h" "src/systems/MapHazardSystem.h" "src/systems/MapHazardSystem.cpp" "src/core/GameWorld.h" "src/core/GameWorld.cpp" "src/core/AudioManager.h" "src/core/AudioManager.cpp" "src/core/AssetGroup.h" "src/components/TransformComponent.h" "src/components/TransformComponent.cpp" "src/components/TextComponent.h" "src/components/PopAnimationComponent.h" "src/components/PopAnimationComponent.cpp")
 
 
 # --- 3. NAG?ÓWKI I LINKOWANIE ---
