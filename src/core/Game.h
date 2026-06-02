@@ -23,6 +23,14 @@
 
 namespace game
 {
+	// results container
+	struct SessionResults
+	{
+		std::string killerNameKey;
+		int wavesSurvived = 0;
+		int biomassCollected = 0;
+	};
+
 	class Game
 	{
 	private:
@@ -76,5 +84,7 @@ namespace game
 		int upgrade_maxHpBonus = 0;       // Pasywny bonus do HP
 		float upgrade_atkSpeedMod = 0.0f; // Pasywny bonus do szybkostrzelno?ci
 		int upgrade_uniqueCount = 0;      // Licznik unikalnych umiej?tno?ci
+	
+		SessionResults lastSessionResults;
 	};
 }

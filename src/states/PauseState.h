@@ -1,6 +1,5 @@
-// ==========================================
-// PauseState.h
-// ==========================================
+// --- PauseState.h ---
+
 #pragma once
 #include "State.h"
 #include <SFML/Graphics.hpp>
@@ -22,14 +21,16 @@ namespace game::states
 
         bool showExitConfirm = false;
 
-        void setupButton(const std::string& key, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize);
-        void updateHover(std::optional<sf::Sprite>& btn, sf::Vector2f targetSize, sf::Vector2f mousePos, std::optional<sf::Text>* linkedText = nullptr);
-        void setupButtonText(std::optional<sf::Text>& textObj, const std::string& str, sf::Vector2f pos, int fontSize = 24);
+        void initUI();
+
+        std::string lastLangCode;
+        void refreshTexts();
 
     public:
         PauseState(game::Game* game);
+        ~PauseState() override = default;
 
-        StateType getType() const override;
+        StateType getType() const override { return StateType::Pause; }
         void handleEvent(const sf::Event& event) override;
         void update(float dt) override;
         void render(sf::RenderWindow& window) override;

@@ -321,4 +321,16 @@ namespace game::components
     {
         ultimateChargeRate_ += amount;
     }
+
+
+    void StatsComponent::setLastDamageSourceKey(
+        const std::string& key)
+    {
+        lastDamageSourceKey_ = key;
+    }
+
+    std::string StatsComponent::getLastDamageSourceKey() const
+    {
+        return lastDamageSourceKey_;
+    }
 }

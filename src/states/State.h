@@ -1,6 +1,8 @@
 // -- State.h ---
 
 
+// --- State.h ---
+
 #pragma once
 
 #include <iostream>
@@ -28,7 +30,8 @@ namespace game::states
 		CharacterSelect,
 		MapSelect,
 		Pause,
-		Shop
+		Shop,
+		Death
 	};
 
 
@@ -38,6 +41,12 @@ namespace game::states
 	{
 	protected:
 		game::Game* game;
+
+		void setupButtonText(std::optional<sf::Text>& textObj, const sf::String& str, sf::Vector2f pos, int fontSize = 24);
+		void setupButton(const std::string& key, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize);
+		void updateHover(std::optional<sf::Sprite>& btn, sf::Vector2f targetSize, sf::Vector2f mousePos, std::optional<sf::Text>* linkedText = nullptr);
+
+		const float GLOBAL_FONT_SCALE = 1.0f;
 
 	public:
 		// constructor

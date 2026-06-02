@@ -78,6 +78,11 @@ namespace game::components
         void increaseUltChargeRate(
             float amount);
 
+        void setLastDamageSourceKey(
+            const std::string& key);
+
+        std::string getLastDamageSourceKey() const;
+
     private:
         float maxHealth_;
         float currentHealth_;
@@ -91,6 +96,9 @@ namespace game::components
 
         float baseMovementSpeed_;
         float currentMovementSpeed_;
+
+        // what gave dmg as last
+        std::string lastDamageSourceKey_ = "";
 
         std::vector<ActiveEffect>
             activeEffects_;

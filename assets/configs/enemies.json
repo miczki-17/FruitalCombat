@@ -10,7 +10,7 @@
 		"abilities": [
 			"Dash"
 		],
-		"baseJuice": 10.0,
+		"baseJuice": 3.0,
 		"dropChance": 0.5
 	},
 	"Carrot": {
@@ -24,7 +24,7 @@
 		"abilities": [
 			"AcidSquirt"
 		],
-		"baseJuice": 4.0,
+		"baseJuice": 1.0,
 		"dropChance": 0.5
 	}
 }

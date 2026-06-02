@@ -19,6 +19,9 @@ namespace game::core
 
     bool ResourceManager::loadTexture(const std::string& id, const std::string& filepath, AssetGroup group)
     {
+        if (getTexture(id) != nullptr)
+            return false;
+
         auto texture = std::make_shared<sf::Texture>();
 
         if (!texture->loadFromFile(filepath))

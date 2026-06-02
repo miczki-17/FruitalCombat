@@ -1,71 +1,58 @@
-// --- PauseState.cpp --- 
-
+// --- PauseState.cpp ---
 
 #include "PauseState.h"
 #include "../core/ResourceManager.h"
 #include "../core/Game.h"
+#include "../core/LocalizationManager.h"
 #include <iostream>
-#include <cmath> // Do std::round
+#include <cmath> 
 
 namespace game::states
 {
+    using namespace game::core;
+
     PauseState::PauseState(game::Game* game) : State(game)
     {
+        initUI();
+    }
+
+    void PauseState::initUI()
+    {
         sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
-        darkOverlay.setSize(viewSize);
-        darkOverlay.setFillColor(sf::Color(0, 0, 0, 180));
-
-        confirmText.emplace(game->mainFont, "Are you sure you want to exit?", 36);
-        confirmText->setFillColor(sf::Color::White);
-        sf::FloatRect textBounds = confirmText->getLocalBounds();
-        confirmText->setOrigin({ textBounds.position.x + textBounds.size.x / 2.0f,
-                                 textBounds.position.y + textBounds.size.y / 2.0f });
-        confirmText->setPosition({ viewSize.x / 2.0f, viewSize.y / 2.0f - 100.0f });
-
         float centerX = viewSize.x / 2.0f;
         float centerY = viewSize.y / 2.0f;
 
+        // overlay
+        darkOverlay.setSize(viewSize);
+        darkOverlay.setFillColor(sf::Color(0, 0, 0, 180));
 
+        // --- EXIT TEXT ---
+        confirmText.emplace(game->mainFont, LocUTF8("ui_exit_confirm"), static_cast<int>(36 * GLOBAL_FONT_SCALE));
+        confirmText->setFillColor(sf::Color::White);
+        sf::FloatRect textBounds = confirmText->getLocalBounds();
+        confirmText->setOrigin({
+            std::round(textBounds.size.x / 2.0f),
+            std::round(textBounds.position.y + textBounds.size.y / 2.0f)
+            });
+        confirmText->setPosition({ centerX, centerY - 100.0f });
+
+        // --- G£OWNE PRZYCISKI MENU PAUZY ---
         setupButton("ui_empty_button", resumeBtn, { centerX, centerY - 80.0f }, { 200.0f, 60.0f });
         setupButton("ui_empty_button", settingsBtn, { centerX, centerY }, { 200.0f, 60.0f });
         setupButton("ui_empty_button", exitBtn, { centerX, centerY + 80.0f }, { 200.0f, 60.0f });
 
+        setupButtonText(resumeText, LocUTF8("ui_resume"), { centerX, centerY - 80.0f });
+        setupButtonText(settingsText, LocUTF8("ui_settings"), { centerX, centerY });
+        setupButtonText(exitText, LocUTF8("ui_exit"), { centerX, centerY + 80.0f });
+
+        // --- PRZYCISKI POTWIERDZENIA WYJSCIA ---
         setupButton("ui_empty_button", yesBtn, { centerX - 120.0f, centerY }, { 150.0f, 60.0f });
         setupButton("ui_empty_button", noBtn, { centerX + 120.0f, centerY }, { 150.0f, 60.0f });
 
-        setupButtonText(resumeText, "RESUME", { centerX, centerY - 80.0f });
-        setupButtonText(settingsText, "SETTINGS", { centerX, centerY });
-        setupButtonText(exitText, "EXIT", { centerX, centerY + 80.0f });
-        setupButtonText(yesText, "YES", { centerX - 120.0f, centerY });
-        setupButtonText(noText, "NO", { centerX + 120.0f, centerY });
-    }
+        setupButtonText(yesText, LocUTF8("ui_yes"), { centerX - 120.0f, centerY });
+        setupButtonText(noText, LocUTF8("ui_no"), { centerX + 120.0f, centerY });
 
-    void PauseState::setupButtonText(std::optional<sf::Text>& textObj, const std::string& str, sf::Vector2f pos, int fontSize)
-    {
-        textObj.emplace(game->mainFont, str, fontSize);
-        textObj->setFillColor(sf::Color::White);
-        sf::FloatRect bounds = textObj->getLocalBounds();
-        textObj->setOrigin({ std::round(bounds.position.x + bounds.size.x / 2.0f),
-                             std::round(bounds.position.y + bounds.size.y / 2.0f) });
-        textObj->setPosition(pos);
-    }
-
-    void PauseState::setupButton(const std::string& key, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
-    {
-        auto& rm = game::core::ResourceManager::get();
-        if (rm.hasTexture(key))
-        {
-            spr.emplace(*rm.getTexture(key));
-            sf::Vector2f originalSize(spr->getTexture().getSize());
-            spr->setScale({ targetSize.x / originalSize.x, targetSize.y / originalSize.y });
-            spr->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
-            spr->setPosition(pos);
-        }
-    }
-
-    StateType PauseState::getType() const
-    {
-        return StateType::Pause;
+        lastLangCode = game::core::LocalizationManager::get().getCurrentLanguageCode();
     }
 
     void PauseState::handleEvent(const sf::Event& event)
@@ -75,10 +62,10 @@ namespace game::states
             if (keyPressed->code == sf::Keyboard::Key::Escape)
             {
                 if (showExitConfirm) {
-                    showExitConfirm = false; // reset question
+                    showExitConfirm = false; // Reset pytania, wracamy do g³ownego menu pauzy
                 }
                 else {
-                    game->getStateMachine().popState(); // return game
+                    game->getStateMachine().popState(); // Zdjecie nakladki return into game
                 }
                 return;
             }
@@ -88,37 +75,39 @@ namespace game::states
         {
             if (mousePressed->button == sf::Mouse::Button::Left)
             {
-                sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
-                sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
+                sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(
+                    sf::Mouse::getPosition(game->getWindow()),
+                    game->getWindow().getDefaultView());
 
                 if (showExitConfirm)
                 {
-                    if (yesBtn.has_value() && yesBtn->getGlobalBounds().contains(worldPos)) {
+                    if (yesBtn && yesBtn->getGlobalBounds().contains(worldPos)) {
                         game->playUIClick();
+                        game->getStateMachine().popState();
                         game->getStateMachine().changeState(StateType::Intro);
                         return;
                     }
-                    if (noBtn.has_value() && noBtn->getGlobalBounds().contains(worldPos)) {
+                    if (noBtn && noBtn->getGlobalBounds().contains(worldPos)) {
                         game->playUIClick();
-                        showExitConfirm = false; // return pause screen
+                        showExitConfirm = false; // Wroc do standardowej pauzy
                         return;
                     }
                 }
                 else
                 {
-                    if (resumeBtn.has_value() && resumeBtn->getGlobalBounds().contains(worldPos)) {
+                    if (resumeBtn && resumeBtn->getGlobalBounds().contains(worldPos)) {
                         game->playUIClick();
-                        game->getStateMachine().popState();
+                        game->getStateMachine().popState(); // Zdejmujemy pauze
                         return;
                     }
-                    if (settingsBtn.has_value() && settingsBtn->getGlobalBounds().contains(worldPos)) {
+                    if (settingsBtn && settingsBtn->getGlobalBounds().contains(worldPos)) {
                         game->playUIClick();
                         game->getStateMachine().pushState(StateType::Settings);
                         return;
                     }
-                    if (exitBtn.has_value() && exitBtn->getGlobalBounds().contains(worldPos)) {
+                    if (exitBtn && exitBtn->getGlobalBounds().contains(worldPos)) {
                         game->playUIClick();
-                        showExitConfirm = true;
+                        showExitConfirm = true; // Prze³acz na widok zapytania
                         return;
                     }
                 }
@@ -126,10 +115,17 @@ namespace game::states
         }
     }
 
-    void PauseState::update(float dt)
+    void PauseState::update(float /*dt*/)
     {
-        sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
-        sf::Vector2f mousePos = game->getWindow().mapPixelToCoords(pixelPos, game->getWindow().getDefaultView());
+        std::string currentLang = game::core::LocalizationManager::get().getCurrentLanguageCode();
+        if (lastLangCode != currentLang) {
+            lastLangCode = currentLang;
+            refreshTexts();
+        }
+
+        sf::Vector2f mousePos = game->getWindow().mapPixelToCoords(
+            sf::Mouse::getPosition(game->getWindow()),
+            game->getWindow().getDefaultView());
 
         if (showExitConfirm) {
             updateHover(yesBtn, { 150.0f, 60.0f }, mousePos, &yesText);
@@ -142,66 +138,61 @@ namespace game::states
         }
     }
 
-    void PauseState::updateHover(std::optional<sf::Sprite>& btn, sf::Vector2f targetSize, sf::Vector2f mousePos, std::optional<sf::Text>* linkedText)
-    {
-        if (!btn) return;
-
-        sf::Vector2f texSize(btn->getTexture().getSize());
-        float baseScaleX = targetSize.x / texSize.x;
-        float baseScaleY = targetSize.y / texSize.y;
-
-        if (btn->getGlobalBounds().contains(mousePos)) {
-            btn->setColor(sf::Color(255, 255, 255));
-            btn->setScale({ baseScaleX * 1.1f, baseScaleY * 1.1f });
-
-            if (linkedText && linkedText->has_value()) {
-                (*linkedText)->setFillColor(sf::Color(255, 255, 255));
-                (*linkedText)->setScale({ 1.1f, 1.1f });
-            }
-        }
-        else {
-            btn->setColor(sf::Color(210, 210, 210));
-            btn->setScale({ baseScaleX, baseScaleY });
-
-            if (linkedText && linkedText->has_value()) {
-                (*linkedText)->setFillColor(sf::Color(210, 210, 210));
-                (*linkedText)->setScale({ 1.0f, 1.0f });
-            }
-        }
-    }
-
     void PauseState::render(sf::RenderWindow& window)
     {
+        // Upewniamy sie, ze renderujemy UI bez wplywu kamery poruszajacego siê gracza
         window.setView(window.getDefaultView());
 
         window.draw(darkOverlay);
 
         if (showExitConfirm) {
-            if (confirmText.has_value()) window.draw(*confirmText);
+            if (confirmText) window.draw(*confirmText);
 
-            if (yesBtn.has_value()) {
+            if (yesBtn) {
                 window.draw(*yesBtn);
                 if (yesText) window.draw(*yesText);
             }
-            if (noBtn.has_value()) {
+            if (noBtn) {
                 window.draw(*noBtn);
                 if (noText) window.draw(*noText);
             }
         }
         else {
-            if (resumeBtn.has_value()) {
+            if (resumeBtn) {
                 window.draw(*resumeBtn);
                 if (resumeText) window.draw(*resumeText);
             }
-            if (settingsBtn.has_value()) {
+            if (settingsBtn) {
                 window.draw(*settingsBtn);
                 if (settingsText) window.draw(*settingsText);
             }
-            if (exitBtn.has_value()) {
+            if (exitBtn) {
                 window.draw(*exitBtn);
                 if (exitText) window.draw(*exitText);
             }
         }
         game->drawMenuCursor();
+    }
+
+
+    /////////////////////////////////
+
+    void PauseState::refreshTexts()
+    {
+        // Lambda pomocnicza do b³yskawicznego aktualizowania i centrowania tekstu
+        auto updateText = [](std::optional<sf::Text>& optText, const sf::String& str) {
+            if (optText) {
+                optText->setString(str);
+                sf::FloatRect bounds = optText->getLocalBounds();
+                optText->setOrigin({ std::round(bounds.size.x / 2.0f), std::round(bounds.position.y + bounds.size.y / 2.0f) });
+            }
+        };
+
+        updateText(confirmText, LocUTF8("ui_exit_confirm"));
+        updateText(resumeText, LocUTF8("ui_resume"));
+        updateText(settingsText, LocUTF8("ui_settings"));
+        updateText(exitText, LocUTF8("ui_exit"));
+        updateText(yesText, LocUTF8("ui_yes"));
+        updateText(noText, LocUTF8("ui_no"));
     }
 }

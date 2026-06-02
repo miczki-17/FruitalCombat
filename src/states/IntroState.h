@@ -1,5 +1,4 @@
-// --- IntroState.h --- 
-
+// --- IntroState.h ---
 
 #pragma once
 
@@ -13,40 +12,44 @@
 
 namespace game::states
 {
-	class IntroState : public State
-	{
-	private:
-		// Intro background
-		sf::Texture introTexture;
-		std::optional<sf::Sprite> introSprite;
-		//sf::Music introMusic;
+    class IntroState : public State
+    {
+    public:
+        IntroState(game::Game* game);
+        ~IntroState() override;
 
-		// Progress bar elements
-		sf::RectangleShape progressBarBg;
-		sf::RectangleShape progressBarFill;
+        StateType getType() const override { return StateType::Intro; }
 
-		// Async loading thread and flags
-		std::unique_ptr<std::thread> workerThread;
+        void handleEvent(const sf::Event& event) override;
+        void update(float dt) override;
+        void render(sf::RenderWindow& window) override;
 
-		// Loading progress (0 - 100)
-		std::atomic<int> loadProgress{ 0 };
-		std::atomic<bool> isFinished{ false };
+    private:
+        void initUI();
 
-		// Helper variables to prevent skipping too fast
-		float minDisplayTime{ 1.0f };
-		float elapsedTime{ 0.f };
+        // --- ASYNC LOADING ---
+        void loadAssetsInBg();
 
-		// Background worker function
-		void loadAssetsInBg();
+        // Helpers
+        void loadCharactersConfig();
+        void loadEnemiesConfig();
+        void loadMapsConfig();
+        void loadFontsAndUI();
+        void loadAudio();
 
-	public:
-		IntroState(game::Game* game);
-		~IntroState();
+        // --- UI ELEMENTS ---
+        sf::Texture introTexture;
+        std::optional<sf::Sprite> introSprite;
 
-		StateType getType() const override;
+        sf::RectangleShape progressBarBg;
+        sf::RectangleShape progressBarFill;
 
-		void handleEvent(const sf::Event& event) override;
-		void update(float dt) override;
-		void render(sf::RenderWindow& window) override;
-	};
+        // --- THREAD & PROGRESS ---
+        std::unique_ptr<std::thread> workerThread;
+        std::atomic<int> loadProgress{ 0 };
+        std::atomic<bool> isFinished{ false };
+
+        float minDisplayTime{ 1.0f };
+        float elapsedTime{ 0.f };
+    };
 }

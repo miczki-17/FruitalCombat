@@ -13,7 +13,7 @@ namespace game::components
     JuiceComponent::JuiceComponent(float xpValue, const sf::Vector2f& initialVelocity)
         : value(xpValue), velocity(initialVelocity)
     {
-        static std::random_device rd;
+        /*static std::random_device rd;
         static std::mt19937 gen(rd());
         std::uniform_int_distribution<int> texDist(1, 4);
         int textureNumber = texDist(gen);
@@ -29,7 +29,31 @@ namespace game::components
         else
         {
             std::cerr << "[B£¥D] JuiceComponent: Nie uda³o siê wczytaæ tekstury 'juice_drop_" << textureNumber << "'!\n";
+        }*/
+
+        auto tex = game::core::ResourceManager::get().getTextureShared("magic_bean_base");
+
+        if (tex)
+        {
+            sprite.emplace(*tex);
+            sprite->setOrigin({ tex->getSize().x * 0.5f, tex->getSize().y * 0.5f });
+
+            if (value <= 1.0f) {
+                // Zwyk³a, zielona fasolka (ma³y drop)
+                sprite->setColor(sf::Color(100, 255, 100));
+            }
+            else if (value <= 5.0f) {
+                // Pikantna, czerwona fasolka (œredni drop)
+                sprite->setColor(sf::Color(255, 60, 40));
+            }
+            else {
+                // Kosmiczna, fioletowa fasolka (du¿y drop)
+                sprite->setColor(sf::Color(180, 50, 255));
+            }
+
+            glowSprite = *sprite;
         }
+
     }
 
     void JuiceComponent::update(float dt)
@@ -58,7 +82,7 @@ namespace game::components
 
         // IDLE PHASE (Animacje falowania i pulsowania nad ziemi¹)
         float bob = std::sin(animationTimer * 4.f) * 4.f;
-        float pulse = 1.f + std::sin(animationTimer * 6.f) * 0.12f;
+        float pulse = 1.f + std::sin(animationTimer * 5.f) * 0.12f;
 
         // Bierzemy prawdziw¹ pozycjê encji i dodajemy podskakiwanie tylko do renderowania
         sf::Vector2f renderPos = { transform->position.x, transform->position.y + bob };
@@ -66,14 +90,14 @@ namespace game::components
         if (sprite)
         {
             sprite->setPosition(renderPos);
-            sprite->setScale({ spawnScale * pulse * 2.f, spawnScale * pulse * 2.f });
+            sprite->setScale({ spawnScale * pulse * 1.7f, spawnScale * pulse * 1.7f });
             sprite->rotate(sf::degrees(dt * 40.f)); // SFML 3
         }
 
         if (glowSprite)
         {
             glowSprite->setPosition(renderPos);
-            glowSprite->setScale({ spawnScale * pulse * 3.f, spawnScale * pulse * 3.f });
+            glowSprite->setScale({ spawnScale * pulse * 2.0f, spawnScale * pulse * 2.0f });
 
             float alpha = 140.f + std::sin(animationTimer * 8.f) * 60.f;
             glowSprite->setColor(sf::Color(100, 255, 255, static_cast<std::uint8_t>(alpha)));

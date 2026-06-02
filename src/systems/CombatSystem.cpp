@@ -113,6 +113,7 @@ namespace game::systems
                         if (auto* stats = player->getComponent<game::components::StatsComponent>())
                         {
                             stats->takeDamage(actualDamage);
+                            //stats->setLastDamageSourceKey();
 
                             if (auto* sprite = player->getComponent<game::components::SpriteComponent>()) {
                                 sprite->triggerHitFlash();

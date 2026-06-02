@@ -4,21 +4,40 @@
 #include "../core/Game.h"
 #include "../core/ResourceManager.h"
 #include "../core/AudioManager.h"
+#include "../core/LocalizationManager.h"
 #include <format>
 #include <iostream>
 #include <cmath> 
 
 namespace game::states
 {
+    using namespace game::core;
+
     MenuState::MenuState(game::Game* game)
         : State(game), currentFrame(1), totalFrames(6), elapsedTime(0.f)
     {
-        auto& rm = game::core::ResourceManager::get();
+        initBackground();
+        initButtons();
 
-        // bg can animate
-        frameDuration = 1.0f / 10.0f;
+        // Ustawienia Audio
+        sf::Listener::setGlobalVolume(35.0f);
+        auto& audio = AudioManager::get();
+        if (!audio.isMusicPlaying("bg_music")) {
+            audio.playMusic("bg_music");
+        }
 
-        // take animation frames
+        // language
+        lastLangCode = LocalizationManager::get().getCurrentLanguageCode();
+    }
+
+    void MenuState::initBackground()
+    {
+        auto& rm = ResourceManager::get();
+        sf::Vector2f viewSize = game->getWindow().getView().getSize();
+
+        frameDuration = 1.0f / 10.0f; // 10 FPS dla t³a
+
+        // Pobieranie wszystkich dostepnych klatek do wektora
         for (int i = 1; ; ++i) {
             std::string key = "bg_" + std::to_string(i);
             if (rm.hasTexture(key)) {
@@ -29,76 +48,44 @@ namespace game::states
             }
         }
 
-        auto setupButton = [&](const std::string& key, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
-            {
-                if (rm.hasTexture(key))
-                {
-                    spr.emplace(*rm.getTexture(key));
-                    sf::Vector2f originalSize(spr->getTexture().getSize());
-                    float scaleX = targetSize.x / originalSize.x;
-                    float scaleY = targetSize.y / originalSize.y;
-                    spr->setScale({ scaleX, scaleY });
-                    spr->setOrigin({ originalSize.x / 2.0f, originalSize.y / 2.0f });
-                    spr->setPosition(pos);
-                }
-                else {
-                    std::cerr << "[MENU ERROR] cannot find " << key << " in ResourceManager\n";
-                }
-            };
-
-        sf::Vector2f viewSize = game->getWindow().getView().getSize();
-        float centerX = viewSize.x / 2.0f;
-        float margin = 20.0f;
-
-        setupButton("ui_empty_button", startBtnSprite, { centerX, 600.0f }, { 300.0f, 120.0f });
-
-        startText.emplace(game->mainFont, "Start", 60);
-        startText->setFillColor(sf::Color::White);
-        startText->setOutlineColor(sf::Color::Black);
-        startText->setOutlineThickness(7.5f);
-
-        sf::FloatRect textRect = startText->getLocalBounds();
-        startText->setOrigin({ textRect.position.x + textRect.size.x / 2.0f,
-                               textRect.position.y + textRect.size.y / 2.0f });
-        startText->setPosition({ centerX, 600.0f });
-
-        setupButton("ui_settings", settingsBtnSprite, { 0.0f, 0.0f }, { 60.0f, 60.0f });
-
-        if (settingsBtnSprite.has_value()) {
-            sf::FloatRect bounds = settingsBtnSprite->getGlobalBounds();
-            settingsBtnSprite->setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f), margin + (bounds.size.y / 2.0f) });
-        }
-
-        setupButton("ui_shop", shopBtnSprite, { 0.0f, 0.0f }, { 80.0f, 80.0f });
-        if (shopBtnSprite.has_value()) {
-            sf::FloatRect bounds = shopBtnSprite->getGlobalBounds();
-            shopBtnSprite->setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f), viewSize.y - margin - (bounds.size.y / 2.0f) });
-        }
-
-        setupButton("ui_achievements", achievementsBtnSprite, { 0.0f, 0.0f }, { 80.0f, 80.0f });
-        if (achievementsBtnSprite.has_value()) {
-            sf::FloatRect bounds = achievementsBtnSprite->getGlobalBounds();
-            achievementsBtnSprite->setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f) - 120.0f, viewSize.y - margin - (bounds.size.y / 2.0f) });
-        }
-
         if (!bgTextures.empty()) {
             frameSprite.emplace(*bgTextures[0]);
             sf::Vector2f introSize(bgTextures[0]->getSize());
             frameSprite->setScale({ viewSize.x / introSize.x, viewSize.y / introSize.y });
             frameSprite->setPosition({ 0.f, 0.f });
         }
-
-        sf::Listener::setGlobalVolume(35.0f);
-
-        // bg music
-        auto& audio = game::core::AudioManager::get();
-        if (!audio.isMusicPlaying("bg_music"))
-        {
-            audio.playMusic("bg_music");
-        }
     }
 
-    StateType MenuState::getType() const { return StateType::Menu; }
+    void MenuState::initButtons()
+    {
+        sf::Vector2f viewSize = game->getWindow().getView().getSize();
+        float centerX = viewSize.x / 2.0f;
+        float margin = 20.0f;
+
+        // setupButton , setupButtonText -> State.h
+        setupButton("ui_empty_button", startBtnSprite, { centerX, 600.0f }, { 300.0f, 120.0f });
+        setupButtonText(startText, LocUTF8("ui_start"), { centerX + 5.0f, 595.0f }, 60);
+        startText->setOutlineColor(sf::Color::Black);
+        startText->setOutlineThickness(5.8f);
+
+        setupButton("ui_settings", settingsBtnSprite, { 0.0f, 0.0f }, { 60.0f, 60.0f });
+        if (settingsBtnSprite) {
+            sf::FloatRect bounds = settingsBtnSprite->getGlobalBounds();
+            settingsBtnSprite->setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f), margin + (bounds.size.y / 2.0f) });
+        }
+
+        setupButton("ui_shop", shopBtnSprite, { 0.0f, 0.0f }, { 80.0f, 80.0f });
+        if (shopBtnSprite) {
+            sf::FloatRect bounds = shopBtnSprite->getGlobalBounds();
+            shopBtnSprite->setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f), viewSize.y - margin - (bounds.size.y / 2.0f) });
+        }
+
+        setupButton("ui_achievements", achievementsBtnSprite, { 0.0f, 0.0f }, { 80.0f, 80.0f });
+        if (achievementsBtnSprite) {
+            sf::FloatRect bounds = achievementsBtnSprite->getGlobalBounds();
+            achievementsBtnSprite->setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f) - 120.0f, viewSize.y - margin - (bounds.size.y / 2.0f) });
+        }
+    }
 
     void MenuState::handleEvent(const sf::Event& event)
     {
@@ -106,30 +93,33 @@ namespace game::states
         {
             if (mousePressed->button == sf::Mouse::Button::Left)
             {
-                sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
-                sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(pixelPos);
+                sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(
+                    sf::Mouse::getPosition(game->getWindow()),
+                    game->getWindow().getDefaultView());
 
-                if (startBtnSprite.has_value() && startBtnSprite->getGlobalBounds().contains(worldPos)) {
+                if (startBtnSprite && startBtnSprite->getGlobalBounds().contains(worldPos)) {
                     game->playUIClick();
                     game->getStateMachine().changeState(StateType::CharacterSelect);
                     return;
                 }
-                if (settingsBtnSprite.has_value() && settingsBtnSprite->getGlobalBounds().contains(worldPos)) {
+                if (settingsBtnSprite && settingsBtnSprite->getGlobalBounds().contains(worldPos)) {
                     game->playUIClick();
                     game->getStateMachine().pushState(StateType::Settings);
                     return;
                 }
-                if (achievementsBtnSprite.has_value() && achievementsBtnSprite->getGlobalBounds().contains(worldPos)) {
+                if (achievementsBtnSprite && achievementsBtnSprite->getGlobalBounds().contains(worldPos)) {
                     game->playUIClick();
+                    // game->getStateMachine().pushState(StateType::Achievements);
                 }
-                if (shopBtnSprite.has_value() && shopBtnSprite->getGlobalBounds().contains(worldPos)) {
+                if (shopBtnSprite && shopBtnSprite->getGlobalBounds().contains(worldPos)) {
                     game->playUIClick();
+                    // game->getStateMachine().pushState(StateType::Shop);
                 }
             }
         }
     }
 
-    void MenuState::update(float dt)
+    void MenuState::updateBackgroundAnimation(float dt)
     {
         if (bgTextures.empty() || !frameSprite.has_value()) return;
 
@@ -137,7 +127,6 @@ namespace game::states
         sf::Vector2f viewSize = game->getWindow().getView().getSize();
         static bool isReverse = false;
 
-        // Ping-pong bg animation
         while (elapsedTime >= frameDuration) {
             elapsedTime -= frameDuration;
 
@@ -156,76 +145,83 @@ namespace game::states
             sf::Vector2f introSize(nextTex.getSize());
             frameSprite->setScale({ viewSize.x / introSize.x, viewSize.y / introSize.y });
         }
+    }
 
-        sf::Vector2i pixelPos = sf::Mouse::getPosition(game->getWindow());
-        sf::Vector2f worldPos = game->getWindow().mapPixelToCoords(pixelPos);
+    void MenuState::update(float dt)
+    {
+        std::string currentLang = game::core::LocalizationManager::get().getCurrentLanguageCode();
+        if (lastLangCode != currentLang) {
+            lastLangCode = currentLang;
+            refreshTexts();
+        }
 
-        // Lambda hover - lighter
-        auto updateHover = [&](std::optional<sf::Sprite>& btn, sf::Vector2f targetSize, std::optional<sf::Text>* txt = nullptr) {
-            if (!btn) return;
+        updateBackgroundAnimation(dt);
 
-            sf::Vector2f texSize(btn->getTexture().getSize());
-            float baseScaleX = targetSize.x / texSize.x;
-            float baseScaleY = targetSize.y / texSize.y;
+        sf::Vector2f mousePos = game->getWindow().mapPixelToCoords(
+            sf::Mouse::getPosition(game->getWindow()),
+            game->getWindow().getDefaultView());
 
-            if (btn->getGlobalBounds().contains(worldPos)) {
-                btn->setColor(sf::Color(255, 255, 255));
-                btn->setScale({ baseScaleX * 1.1f, baseScaleY * 1.1f });
+        // Hover -> State.cpp
+        updateHover(settingsBtnSprite, { 60.0f, 60.0f }, mousePos);
+        updateHover(shopBtnSprite, { 80.0f, 80.0f }, mousePos);
+        updateHover(achievementsBtnSprite, { 80.0f, 80.0f }, mousePos);
 
-                if (txt && txt->has_value()) {
-                    (*txt)->setFillColor(sf::Color(255, 255, 255));
-                }
-            }
-            else {
-                btn->setColor(sf::Color(210, 210, 210));
-                btn->setScale({ baseScaleX, baseScaleY });
-
-                if (txt && txt->has_value()) {
-                    (*txt)->setFillColor(sf::Color(210, 210, 210));
-                }
-            }
-            };
-
-        // btns acctual hover
-        updateHover(startBtnSprite, { 320.0f, 140.0f }, &startText);
-        updateHover(settingsBtnSprite, { 70.0f, 70.0f });
-        updateHover(shopBtnSprite, { 90.0f, 90.0f });
-        updateHover(achievementsBtnSprite, { 90.0f, 90.0f });
-
-        // Pulse start btn
-        if (startBtnSprite.has_value()) {
+        // Zapobieganie konfliktom - Hover dla StartButton
+        if (startBtnSprite && startBtnSprite->getGlobalBounds().contains(mousePos)) {
+            // Jesli myszka jest na przycisku, niech Hover (z State.cpp) przejmie pelna kontrole
+            updateHover(startBtnSprite, { 300.0f, 120.0f }, mousePos, &startText);
+        }
+        else {
+            // Jesli myszka zjechala z przycisku, wlaczamy ciagle pulsowanie
             buttonPulse(startBtnSprite, { 300.0f, 120.0f }, &startText);
+        }
+    }
+
+    void MenuState::buttonPulse(std::optional<sf::Sprite>& btnSprite, sf::Vector2f targetSizeInPixels, std::optional<sf::Text>* linkedText)
+    {
+        if (!btnSprite) return;
+
+        float time = clock.getElapsedTime().asSeconds();
+        float pulse = 1.0f + pulseAmplitude * std::sin(time * pulseSpeed);
+
+        sf::Vector2f originalSize(btnSprite->getTexture().getSize());
+        btnSprite->setScale({
+            (targetSizeInPixels.x / originalSize.x) * pulse,
+            (targetSizeInPixels.y / originalSize.y) * pulse
+            });
+
+        // Zapewniamy powrot koloru do pierwotnego, jesli gracz zjechal z przycisku, ale Hover nie zdazyl sie wycofac
+        btnSprite->setColor(sf::Color(210, 210, 210));
+
+        if (linkedText && linkedText->has_value()) {
+            (*linkedText)->setScale({ pulse, pulse });
+            (*linkedText)->setFillColor(sf::Color::White); // Wycofujemy zolty kolor
         }
     }
 
     void MenuState::render(sf::RenderWindow& window)
     {
-        if (frameSprite.has_value()) window.draw(*frameSprite);
+        if (frameSprite) window.draw(*frameSprite);
 
-        if (startBtnSprite.has_value()) {
-            window.draw(*startBtnSprite);
-            if (startText.has_value()) {
-                window.draw(*startText);
-            }
-        }
+        if (startBtnSprite) window.draw(*startBtnSprite);
+        if (startText) window.draw(*startText);
 
-        if (settingsBtnSprite.has_value()) window.draw(*settingsBtnSprite);
-        if (shopBtnSprite.has_value()) window.draw(*shopBtnSprite);
-        if (achievementsBtnSprite.has_value()) window.draw(*achievementsBtnSprite);
+        if (settingsBtnSprite) window.draw(*settingsBtnSprite);
+        if (shopBtnSprite) window.draw(*shopBtnSprite);
+        if (achievementsBtnSprite) window.draw(*achievementsBtnSprite);
 
         game->drawMenuCursor();
     }
 
-    void MenuState::buttonPulse(std::optional<sf::Sprite>& btnSprite, sf::Vector2f targetSizeInPixels, std::optional<sf::Text>* linkedText)
+
+
+    //////////////////////////////////////////
+    void MenuState::refreshTexts()
     {
-        float time = clock.getElapsedTime().asSeconds();
-        float pulse = 1.0f + pulseAmplitude * std::sin(time * pulseSpeed);
-
-        sf::Vector2f originalSize(btnSprite->getTexture().getSize());
-        btnSprite->setScale({ (targetSizeInPixels.x / originalSize.x) * pulse, (targetSizeInPixels.y / originalSize.y) * pulse });
-
-        if (linkedText && linkedText->has_value()) {
-            (*linkedText)->setScale({ pulse, pulse });
+        if (startText) {
+            startText->setString(LocUTF8("ui_start"));
+            sf::FloatRect bounds = startText->getLocalBounds();
+            startText->setOrigin({ std::round(bounds.size.x / 2.0f), std::round(bounds.position.y + bounds.size.y / 2.0f) });
         }
     }
 }

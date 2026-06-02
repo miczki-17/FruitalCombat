@@ -7,6 +7,8 @@
 
 #include <SFML/Graphics.hpp>
 
+// forward declarations
+
 namespace game
 {
     class Game;

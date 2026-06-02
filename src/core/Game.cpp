@@ -41,7 +41,7 @@ namespace game
 			// UPDATE
 			stateMachine.update(dt);
 
-			// AUDIO
+			// AUDIO update
 			game::core::AudioManager::get().update();
 
 			// RENDER

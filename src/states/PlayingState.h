@@ -6,6 +6,7 @@
 #include "../core/GameWorld.h"
 #include <memory>
 #include <optional>
+#include <string>
 #include <SFML/Graphics.hpp>
 
 namespace game::states
@@ -13,6 +14,7 @@ namespace game::states
     class PlayingState : public State
     {
     private:
+        // --- MAP & CAMERA ---
         sf::Texture mapTexture;
         std::optional<sf::Sprite> mapSprite;
         sf::Vector2f mapLimits;
@@ -20,37 +22,40 @@ namespace game::states
         float mapScale = 1.5f;
 
         sf::View cameraView;
-
-        // HUD & UI
-        sf::Font uiFont;
-        sf::Texture coinIconTexture, settingsBtnTex, crosshairTex;
-        std::optional<sf::Sprite> coinIconSprite, settingsBtnSprite, crosshairSprite;
-        sf::RectangleShape hpBarBg, hpBarFill;
-        std::optional<sf::Text> hpText, waveText, biomassText;
-        sf::CircleShape biomassIcon;
-
         float shakeIntensity = 0.0f;
 
-        // --- All logic closed in one pointer ---
+        // --- HUD & UI ---
+        std::optional<sf::Sprite> settingsBtnSprite;
+        std::optional<sf::Sprite> crosshairSprite;
+        std::optional<sf::Sprite> biomassSprite;
+
+        sf::RectangleShape hpBarBg;
+        sf::RectangleShape hpBarFill;
+
+        std::optional<sf::Text> hpText;
+        std::optional<sf::Text> waveText;
+        std::optional<sf::Text> biomassText;
+
+        // --- GAME WORLD ---
         std::unique_ptr<game::core::GameWorld> world;
+
+        // --- HELPERS & RESOURCES ---
+        std::string loadedSplashKey_ = "";
+
+        void loadCharacterAssets();
+        void loadEnemyAssets();
+        void loadMapAssets();
 
         void initHUD();
         void updateHUD();
         void updateCamera(float dt);
-        void handleUIHover();
         void renderHUD(sf::RenderWindow& window);
-
-        void loadingGameAssets();
-
-
-        // Memory clear
-        std::string loadedSplashKey_ = "";
 
     public:
         PlayingState(game::Game* game);
         ~PlayingState() override;
 
-        StateType getType() const override;
+        StateType getType() const override { return StateType::Playing; }
         void handleEvent(const sf::Event& event) override;
         void update(float dt) override;
         void render(sf::RenderWindow& window) override;

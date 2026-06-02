@@ -1,4 +1,4 @@
-// --- ShopState.h --- 
+// --- ShopState.h ---
 
 #pragma once
 #include "State.h"
@@ -19,36 +19,42 @@ namespace game::states
 
     struct UIItem {
         sf::RectangleShape bg;
-        sf::Text name;
-        sf::Text desc;
-        sf::Text cost;
+        std::optional<sf::Text> name;
+        std::optional<sf::Text> desc;
+        std::optional<sf::Text> cost;
         ShopItem data;
         bool soldOut = false;
 
-        UIItem(const sf::Font& font) : name(font), desc(font), cost(font) {}
+        UIItem() = default;
     };
 
     class ShopState : public State
     {
     private:
-        sf::Text titleText;
-        sf::Text biomassText;
-        sf::Text rerollText;
+        sf::RectangleShape darkOverlay;
 
-        sf::RectangleShape rerollButton;
+        std::optional<sf::Text> titleText;
+        std::optional<sf::Text> biomassText;
+
+        std::optional<sf::Sprite> rerollBtnSprite;
+        std::optional<sf::Text> rerollText;
         int rerollCost = 30;
 
         std::vector<ShopItem> allPossibleUpgrades;
         std::vector<ShopItem> currentDisplay;
         std::vector<UIItem> uiSlots;
 
+        void initUI();
         void loadPool();
         void rollItems();
         void applyUpgrade(const ShopItem& item);
 
     public:
         ShopState(game::Game* game);
-        StateType getType() const override;
+        ~ShopState() override = default;
+
+        StateType getType() const override { return StateType::Shop; }
+
         void handleEvent(const sf::Event& event) override;
         void update(float dt) override;
         void render(sf::RenderWindow& window) override;
