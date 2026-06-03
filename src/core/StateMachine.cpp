@@ -4,6 +4,7 @@
 
 #include "../states/IntroState.h"
 #include "../states/MenuState.h"
+#include "../states/LobbyState.h"
 #include "../states/PlayingState.h"
 #include "../states/SettingsState.h"
 #include "../states/CharacterSelectState.h"
@@ -125,6 +126,9 @@ namespace game
 
         case states::StateType::Menu:
             return std::make_unique<states::MenuState>(game_);
+
+        case states::StateType::Lobby:
+            return std::make_unique<states::LobbyState>(game_);
 
         case states::StateType::CharacterSelect:
             return std::make_unique<states::CharacterSelectState>(game_);

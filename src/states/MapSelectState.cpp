@@ -59,7 +59,7 @@ namespace game::states
         setupButton("ui_right_arrow", rightArrowSprite, { centerX + 550.f, centerY }, { 80.f, 80.f });
 
         setupButton("ui_empty_button", selectBtnSprite, { centerX, viewSize.y - 100.f }, { 200.f, 70.f });
-        setupButtonText(selectBtnText, LocUTF8("ui_play"), { centerX, viewSize.y - 100.f - 5.f }, 27);
+        setupButtonText(selectBtnText, LocUTF8("ui_select"), { centerX, viewSize.y - 100.f - 5.f }, 27);
         selectBtnText->setOutlineColor(sf::Color::Black);
         selectBtnText->setOutlineThickness(3.2f);
 
@@ -137,6 +137,14 @@ namespace game::states
                 savedMap.thumbnailSprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
             }
         }
+
+        for (int i = 0; i < roster.size(); ++i) {
+            if (roster[i].jsonKey == game->selectedMapKey) {
+                targetIndex = i;
+                currentScroll = static_cast<float>(i);
+                break;
+            }
+        }
     }
 
     void MapSelectState::handleEvent(const sf::Event& event)
@@ -154,12 +162,12 @@ namespace game::states
                     game->playUIClick();
                     int actualIndex = (targetIndex % N + N) % N;
                     game->selectedMapKey = roster[actualIndex].jsonKey;
-                    game->getStateMachine().changeState(StateType::Playing);
+                    game->getStateMachine().changeState(StateType::Lobby);
                 }
             }
             else if (keyPressed->code == sf::Keyboard::Key::Escape) {
                 game->playUIClick();
-                game->getStateMachine().changeState(StateType::CharacterSelect);
+                game->getStateMachine().changeState(StateType::Lobby);
             }
         }
 
@@ -179,12 +187,12 @@ namespace game::states
                         game->playUIClick();
                         int actualIndex = (targetIndex % N + N) % N;
                         game->selectedMapKey = roster[actualIndex].jsonKey;
-                        game->getStateMachine().changeState(StateType::Playing);
+                        game->getStateMachine().changeState(StateType::Lobby);
                     }
                 }
                 if (backBtnSprite && backBtnSprite->getGlobalBounds().contains(worldPos)) {
                     game->playUIClick();
-                    game->getStateMachine().changeState(StateType::CharacterSelect);
+                    game->getStateMachine().changeState(StateType::Lobby);
                 }
             }
         }

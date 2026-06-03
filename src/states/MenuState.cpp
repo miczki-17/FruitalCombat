@@ -73,18 +73,6 @@ namespace game::states
             sf::FloatRect bounds = settingsBtnSprite->getGlobalBounds();
             settingsBtnSprite->setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f), margin + (bounds.size.y / 2.0f) });
         }
-
-        setupButton("ui_shop", shopBtnSprite, { 0.0f, 0.0f }, { 80.0f, 80.0f });
-        if (shopBtnSprite) {
-            sf::FloatRect bounds = shopBtnSprite->getGlobalBounds();
-            shopBtnSprite->setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f), viewSize.y - margin - (bounds.size.y / 2.0f) });
-        }
-
-        setupButton("ui_achievements", achievementsBtnSprite, { 0.0f, 0.0f }, { 80.0f, 80.0f });
-        if (achievementsBtnSprite) {
-            sf::FloatRect bounds = achievementsBtnSprite->getGlobalBounds();
-            achievementsBtnSprite->setPosition({ viewSize.x - margin - (bounds.size.x / 2.0f) - 120.0f, viewSize.y - margin - (bounds.size.y / 2.0f) });
-        }
     }
 
     void MenuState::handleEvent(const sf::Event& event)
@@ -99,21 +87,15 @@ namespace game::states
 
                 if (startBtnSprite && startBtnSprite->getGlobalBounds().contains(worldPos)) {
                     game->playUIClick();
-                    game->getStateMachine().changeState(StateType::CharacterSelect);
+                    // now game is running!
+                    game->isGameRun = true;
+                    game->getStateMachine().changeState(StateType::Lobby);
                     return;
                 }
                 if (settingsBtnSprite && settingsBtnSprite->getGlobalBounds().contains(worldPos)) {
                     game->playUIClick();
                     game->getStateMachine().pushState(StateType::Settings);
                     return;
-                }
-                if (achievementsBtnSprite && achievementsBtnSprite->getGlobalBounds().contains(worldPos)) {
-                    game->playUIClick();
-                    // game->getStateMachine().pushState(StateType::Achievements);
-                }
-                if (shopBtnSprite && shopBtnSprite->getGlobalBounds().contains(worldPos)) {
-                    game->playUIClick();
-                    // game->getStateMachine().pushState(StateType::Shop);
                 }
             }
         }
@@ -163,8 +145,6 @@ namespace game::states
 
         // Hover -> State.cpp
         updateHover(settingsBtnSprite, { 60.0f, 60.0f }, mousePos);
-        updateHover(shopBtnSprite, { 80.0f, 80.0f }, mousePos);
-        updateHover(achievementsBtnSprite, { 80.0f, 80.0f }, mousePos);
 
         // Zapobieganie konfliktom - Hover dla StartButton
         if (startBtnSprite && startBtnSprite->getGlobalBounds().contains(mousePos)) {
@@ -207,8 +187,6 @@ namespace game::states
         if (startText) window.draw(*startText);
 
         if (settingsBtnSprite) window.draw(*settingsBtnSprite);
-        if (shopBtnSprite) window.draw(*shopBtnSprite);
-        if (achievementsBtnSprite) window.draw(*achievementsBtnSprite);
 
         game->drawMenuCursor();
     }

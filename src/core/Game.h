@@ -19,6 +19,8 @@
 #include "../entities/EntityTypes.h"
 #include "../vendor/nlohmann/json.hpp"
 
+#include <atomic>
+
 #include "PlayerProfile.h"
 
 namespace game
@@ -68,6 +70,7 @@ namespace game
 		game::entities::FruitType::Orange;
 
 		std::string selectedMapKey = "WildOrchard";
+		std::string selectedFruitKey = "Orange";
 
 		// ---------- CONFIGS ----------
 		nlohmann::json fruitsConfig;
@@ -85,6 +88,9 @@ namespace game
 		float upgrade_atkSpeedMod = 0.0f; // Pasywny bonus do szybkostrzelno?ci
 		int upgrade_uniqueCount = 0;      // Licznik unikalnych umiej?tno?ci
 	
+		// logic
+		std::atomic<bool> isGameRun = false;
+
 		SessionResults lastSessionResults;
 	};
 }

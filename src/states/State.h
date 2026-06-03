@@ -25,6 +25,7 @@ namespace game::states
 	{
 		Intro,
 		Menu,
+		Lobby,
 		Playing,
 		Settings,
 		CharacterSelect,

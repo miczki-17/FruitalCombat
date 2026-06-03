@@ -27,8 +27,6 @@ namespace game::states
         std::optional<sf::Text> startText;
 
         std::optional<sf::Sprite> settingsBtnSprite;
-        std::optional<sf::Sprite> shopBtnSprite;
-        std::optional<sf::Sprite> achievementsBtnSprite;
 
         // --- EFFECTS ---
         sf::Clock clock;

@@ -83,6 +83,9 @@ namespace game::states
         loadProgress = 100;
         isFinished = true;
         std::cout << "[ASYNC] All assets safely loaded to RAM.\n";
+
+        if (game->isGameRun)
+            game->getStateMachine().changeState(StateType::Lobby);
     }
 
     void IntroState::loadCharactersConfig()

@@ -186,6 +186,14 @@ namespace game::states
                 }
             }
         }
+
+        for (int i = 0; i < roster.size(); ++i) {
+            if (roster[i].jsonKey == game->selectedFruitKey) {
+                targetIndex = i;
+                currentScroll = static_cast<float>(i);
+                break;
+            }
+        }
     }
 
     void CharacterSelectState::handleEvent(const sf::Event& event)
@@ -203,12 +211,13 @@ namespace game::states
                 if (N > 0) {
                     game->playUIClick();
                     game->selectedFruitType = roster[(targetIndex % N + N) % N].type;
-                    game->getStateMachine().changeState(StateType::MapSelect);
+                    game->selectedFruitKey = roster[(targetIndex % N + N) % N].jsonKey;
+                    game->getStateMachine().changeState(StateType::Lobby);
                 }
             }
             else if (keyPressed->code == sf::Keyboard::Key::Escape) {
                 game->playUIClick();
-                game->getStateMachine().changeState(StateType::Menu);
+                game->getStateMachine().changeState(StateType::Lobby);
             }
         }
 
@@ -229,12 +238,13 @@ namespace game::states
                     if (N > 0) {
                         game->playUIClick();
                         game->selectedFruitType = roster[(targetIndex % N + N) % N].type;
-                        game->getStateMachine().changeState(StateType::MapSelect);
+                        game->selectedFruitKey = roster[(targetIndex % N + N) % N].jsonKey;
+                        game->getStateMachine().changeState(StateType::Lobby);
                     }
                 }
                 if (backBtnSprite && backBtnSprite->getGlobalBounds().contains(worldPos)) {
                     game->playUIClick();
-                    game->getStateMachine().changeState(StateType::Menu);
+                    game->getStateMachine().changeState(StateType::Lobby);
                 }
             }
         }
@@ -247,10 +257,12 @@ namespace game::states
         currentScroll += (targetIndex - currentScroll) * 12.0f * dt;
         updateFireflies(dt);
 
+        float rosterYOffset = 20.f;
+
         float N = static_cast<float>(roster.size());
         sf::Vector2f viewSize = game->getWindow().getView().getSize();
         float centerX = viewSize.x / 2.0f;
-        float centerY = viewSize.y / 2.0f - 50.f;
+        float centerY = viewSize.y / 2.0f - 50.f + rosterYOffset;
 
         auto& rm = ResourceManager::get();
 
@@ -263,7 +275,7 @@ namespace game::states
 
             float xPos = centerX + dist * 320.0f;
             float yPos = centerY;
-            float characterScale = std::max(1.5f, 3.5f - std::abs(dist) * 0.8f);
+            float characterScale = std::max(1.5f, 3.0f - std::abs(dist) * 0.7f);
             float platformScale = characterScale * 0.35f;
 
             float alpha = std::max(0.0f, 255.0f - std::abs(dist) * 120.0f);
