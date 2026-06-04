@@ -40,7 +40,7 @@ namespace game::states
 
         // Ustawienie kamery
         cameraView = game->getWindow().getDefaultView();
-        cameraView.zoom(1.4f);
+        cameraView.zoom(1.1f);
     }
 
     PlayingState::~PlayingState()
@@ -146,7 +146,7 @@ namespace game::states
         }
 
         // 3. Opcje ogolne
-        rm.loadTexture("magic_bean_base", "assets/textures/entities/drops/magic_bean_base.png", AssetGroup::Playing);
+        rm.loadTexture("juice", "assets/textures/entities/drops/juice.png", AssetGroup::Playing);
 
         game->arenaContext.mapDustColor = sf::Color(
             static_cast<std::uint8_t>(mapData.value("dustR", 150)),
@@ -163,42 +163,54 @@ namespace game::states
         auto& rm = ResourceManager::get();
         sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
 
-        // --- Pasek HP ---
-        hpBarBg.setSize({ 200.f, 20.f });
-        hpBarBg.setFillColor(sf::Color(40, 40, 40, 200));
-        hpBarBg.setOutlineThickness(2.f);
-        hpBarBg.setOutlineColor(sf::Color::Black);
+        // --- TEXTURE BARS ---
+        if (rm.hasTexture("ui_stat_bar_frame") && rm.hasTexture("ui_stat_bar_fill")) {
+            // Pasek HP
+            hpBarFrameSprite.emplace(*rm.getTexture("ui_stat_bar_frame"));
+            hpBarFillSprite.emplace(*rm.getTexture("ui_stat_bar_fill"));
+            hpBarFrameSprite->setPosition({ -15.f, -30.f });
+            hpBarFillSprite->setPosition({ -15.f, -30.f });
+            hpBarFillSprite->setColor(sf::Color(220, 40, 40));
+            hpBarFillSprite->setScale({ 1.8f, 1.5f });
+            hpBarFrameSprite->setScale({ 1.8f, 1.5f });
 
-        hpBarFill.setSize({ 200.f, 20.f });
-        hpBarFill.setFillColor(sf::Color(220, 30, 30));
+            // Pasek Many - nizej o 40 pikseli
+            manaBarFrameSprite.emplace(*rm.getTexture("ui_stat_bar_frame"));
+            manaBarFillSprite.emplace(*rm.getTexture("ui_stat_bar_fill"));
+            manaBarFrameSprite->setPosition({ -15.f, 0.f });
+            manaBarFillSprite->setPosition({ -15.f, 0.f });
+            manaBarFillSprite->setColor(sf::Color(255, 215, 0));
+            manaBarFillSprite->setScale({ 1.8f, 1.5f });
+            manaBarFrameSprite->setScale({ 1.8f, 1.5f });
+        }
 
         hpText.emplace(game->mainFont);
-        hpText->setCharacterSize(static_cast<int>(16 * GLOBAL_FONT_SCALE));
+        hpText->setCharacterSize(static_cast<int>(18 * GLOBAL_FONT_SCALE));
         hpText->setFillColor(sf::Color::White);
+        hpText->setOutlineThickness(2.0f);
+        hpText->setOutlineColor(sf::Color::Black);
 
-        // --- Tekst Fali (Wave) ---
-        waveText.emplace(game->mainFont);
-        waveText->setCharacterSize(static_cast<int>(28 * GLOBAL_FONT_SCALE));
-        waveText->setFillColor(sf::Color(237, 224, 221));
-        waveText->setOutlineThickness(7.5f);
-        waveText->setOutlineColor(sf::Color::Black);
-        waveText->setStyle(sf::Text::Bold);
-
-        // --- Biomasa (Fasolka) ---
-        if (rm.hasTexture("magic_bean_base")) {
-            biomassSprite.emplace(*rm.getTexture("magic_bean_base"));
-            auto size = biomassSprite->getTexture().getSize();
-            biomassSprite->setScale({ 2.0f, 2.0f });
-            biomassSprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
-            biomassSprite->setPosition({ 35.0f, 65.0f });
-        }
+        manaText.emplace(game->mainFont);
+        manaText->setCharacterSize(static_cast<int>(18 * GLOBAL_FONT_SCALE));
+        manaText->setFillColor(sf::Color::White);
+        manaText->setOutlineThickness(2.0f);
+        manaText->setOutlineColor(sf::Color::Black);
 
         biomassText.emplace(game->mainFont);
         biomassText->setCharacterSize(static_cast<int>(18 * GLOBAL_FONT_SCALE));
-        biomassText->setFillColor(sf::Color(10, 230, 255));
+        biomassText->setFillColor(sf::Color(255, 200, 0));
         biomassText->setOutlineThickness(1.5f);
         biomassText->setOutlineColor(sf::Color::Black);
-        biomassText->setPosition({ 55.f, 65.f });
+        biomassText->setPosition({ 55.f, 70.f });
+
+        // --- Sok ---
+        if (rm.hasTexture("juice")) {
+            biomassSprite.emplace(*rm.getTexture("juice"));
+            auto size = biomassSprite->getTexture().getSize();
+            biomassSprite->setScale({ 2.0f, 2.0f });
+            biomassSprite->setOrigin({ size.x / 2.0f, size.y / 2.0f });
+            biomassSprite->setPosition({ 35.0f, 85.0f });
+        }
 
         // --- Celownik (Crosshair) ---
         if (rm.hasTexture("ui_crosshair")) {
@@ -326,22 +338,66 @@ namespace game::states
                     return;
                 }
 
-                // --- HP BAR UPDATE ---
+                // --- TEXTURE HP BAR UPDATE ---
                 float currentHp = std::max(0.0f, stats->getHealth());
-                hpBarFill.setSize({ 200.f * (currentHp / stats->getMaxHealth()), 20.f });
-                hpText->setString(std::to_string(static_cast<int>(currentHp)) + " / " + std::to_string(static_cast<int>(stats->getMaxHealth())));
+                float hpPercent = currentHp / stats->getMaxHealth();
 
-                sf::FloatRect bounds = hpText->getLocalBounds();
-                hpText->setOrigin({ std::round(bounds.size.x / 2.0f), std::round(bounds.position.y + bounds.size.y / 2.0f) });
-                hpText->setPosition({ std::round(hpBarBg.getPosition().x + 100.0f), std::round(hpBarBg.getPosition().y + 10.0f) });
+                if (hpBarFillSprite) {
+                    sf::Vector2u texSize = hpBarFillSprite->getTexture().getSize();
+                    int visibleWidth = static_cast<int>(texSize.x * hpPercent);
+                    
+                    hpBarFillSprite->setTextureRect(sf::IntRect({0, 0}, {visibleWidth, static_cast<int>(texSize.y)}));
+                }
+
+                // KLUCZOWE ZABEZPIECZENIE: Sprawdzamy czy optional tekstowy w ogóle istnieje
+                if (hpText) 
+                {
+                    hpText->setString(std::to_string(static_cast<int>(currentHp)) + " / " + std::to_string(static_cast<int>(stats->getMaxHealth())));
+
+                    sf::FloatRect bounds = hpText->getLocalBounds();
+                    hpText->setOrigin({ std::round(bounds.size.x / 2.0f), std::round(bounds.position.y + bounds.size.y / 2.0f) });
+                    
+                    // Ustawienie tekstu poœrodku ramy
+                    if (hpBarFrameSprite) {
+                        float frameMidX = hpBarFrameSprite->getPosition().x + (hpBarFrameSprite->getTexture().getSize().x / 2.0f * hpBarFrameSprite->getScale().x);
+                        float frameMidY = hpBarFrameSprite->getPosition().y + (hpBarFrameSprite->getTexture().getSize().y / 2.0f * hpBarFrameSprite->getScale().y);
+                        hpText->setPosition({ std::round(frameMidX), std::round(frameMidY) });
+                    }
+                }
+
+                // --- TEXTURE MANA BAR UPDATE ---
+                float currentMana = std::max(0.0f, stats->getMana());
+                float manaPercent = currentMana / stats->getMaxMana();
+
+                if (manaBarFillSprite) {
+                    sf::Vector2u texSize = manaBarFillSprite->getTexture().getSize();
+                    int visibleWidth = static_cast<int>(texSize.x * manaPercent);
+                    manaBarFillSprite->setTextureRect(sf::IntRect({ 0, 0 }, { visibleWidth, static_cast<int>(texSize.y) }));
+                }
+
+                if (manaText)
+                {
+                    manaText->setString(std::to_string(static_cast<int>(currentMana)) + " / " + std::to_string(static_cast<int>(stats->getMaxMana())));
+                    sf::FloatRect bounds = manaText->getLocalBounds();
+                    manaText->setOrigin({ std::round(bounds.size.x / 2.0f), std::round(bounds.position.y + bounds.size.y / 2.0f) });
+
+                    if (manaBarFrameSprite) {
+                        float frameMidX = manaBarFrameSprite->getPosition().x + (manaBarFrameSprite->getTexture().getSize().x / 2.0f * manaBarFrameSprite->getScale().x);
+                        float frameMidY = manaBarFrameSprite->getPosition().y + (manaBarFrameSprite->getTexture().getSize().y / 2.0f * manaBarFrameSprite->getScale().y);
+                        manaText->setPosition({ std::round(frameMidX), std::round(frameMidY) });
+                    }
+                }
             }
         }
 
         // --- WAVE UPDATE ---
-        waveText->setString(LocUTF8("ui_wave") + " " + std::to_string(world->getEvolutionManager()->getCurrentWave()));
-        sf::FloatRect waveBounds = waveText->getLocalBounds();
-        waveText->setOrigin({ std::round(waveBounds.size.x / 2.0f), std::round(waveBounds.position.y + waveBounds.size.y / 2.0f) });
-        waveText->setPosition({ std::round(game->getWindow().getView().getSize().x / 2.0f), 60.f });
+        if (waveText)
+        {
+            waveText->setString(LocUTF8("ui_wave") + " " + std::to_string(world->getEvolutionManager()->getCurrentWave()));
+            sf::FloatRect waveBounds = waveText->getLocalBounds();
+            waveText->setOrigin({ std::round(waveBounds.size.x / 2.0f), std::round(waveBounds.position.y + waveBounds.size.y / 2.0f) });
+            waveText->setPosition({ std::round(game->getWindow().getView().getSize().x / 2.0f), 60.f });
+        }
 
         // --- BIOMASS UPDATE ---
         if (biomassText) {
@@ -376,8 +432,13 @@ namespace game::states
 
     void PlayingState::renderHUD(sf::RenderWindow& window)
     {
-        window.draw(hpBarBg);
-        window.draw(hpBarFill);
+        if (hpBarFrameSprite) window.draw(*hpBarFrameSprite);
+        if (hpBarFillSprite) window.draw(*hpBarFillSprite);
+        if (hpText) window.draw(*hpText);
+
+        if (manaBarFrameSprite) window.draw(*manaBarFrameSprite);
+        if (manaBarFillSprite) window.draw(*manaBarFillSprite);
+        if (manaText) window.draw(*manaText);
 
         if (hpText) window.draw(*hpText);
         if (waveText) window.draw(*waveText);

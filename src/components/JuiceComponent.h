@@ -19,7 +19,7 @@ namespace game::components
 
         float animationTimer = 0.f;
         sf::Vector2f velocity;
-        float spawnScale = 0.32f;
+        float spawnScale = 1.0f;
         bool spawning = true;
 
         // Konstruktor przyjmuje wartosc i pocz¹tkowa prêdkosc dropu z wroga

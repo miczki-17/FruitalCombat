@@ -44,8 +44,10 @@ namespace game::systems
                     game_->profile.addJuice(static_cast<int>(juice->value));
                     if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
                         stats->addUltCharge(juice->value * 0.5f);
+
+                        // odnawianie many po podniesieniu
+                        stats->restoreMana(juice->value * 3.0f); // 3 pkt many za ka¿dy 1 pkt biomasy / soku
                     }
-                    // Oznaczamy do usuniêcia
                     entities[i]->destroy();
                 }
             }

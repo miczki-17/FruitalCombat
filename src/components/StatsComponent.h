@@ -83,6 +83,15 @@ namespace game::components
 
         std::string getLastDamageSourceKey() const;
 
+
+        // --- MANA (WATER) ---
+        void consumeMana(float amount);
+        void restoreMana(float amount);
+        float getMana() const;
+        float getMaxMana() const;
+        float getManaPercentage() const;
+
+
     private:
         float maxHealth_;
         float currentHealth_;
@@ -96,6 +105,13 @@ namespace game::components
 
         float baseMovementSpeed_;
         float currentMovementSpeed_;
+
+
+        // --- MANA (WATER) ---
+        float maxWater_ = 100.0f;
+        float currentWater_ = 100.0f;
+        float waterRegenRate_ = 5.0f;
+
 
         // what gave dmg as last
         std::string lastDamageSourceKey_ = "";

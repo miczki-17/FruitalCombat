@@ -30,6 +30,8 @@ namespace game::components
         float cooldownTimer_ = 0.0f;
         float dashForce_ = 1200.0f;
 
+        float manaCost_ = 30.0f;
+
         bool isOnCooldown() const;
 
         sf::Vector2f calculateDashDirection(

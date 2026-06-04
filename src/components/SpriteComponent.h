@@ -4,6 +4,9 @@
 #include <SFML/Graphics.hpp>
 #include <unordered_map>
 #include <optional>
+#include "../utils/RoundedRectangleShape.h"
+
+#include "PlayerInputComponent.h"
 
 namespace game::components
 {
@@ -64,8 +67,13 @@ namespace game::components
 
         sf::CircleShape fallbackShape_;
 
-        sf::RectangleShape hpBarBackground_;
-        sf::RectangleShape hpBarFill_;
+        // HP bar
+        game::utils::RoundedRectangleShape hpBarBackground_;
+        game::utils::RoundedRectangleShape hpBarFill_;
+
+        // mana bar
+        game::utils::RoundedRectangleShape manaBarBackground_;
+        game::utils::RoundedRectangleShape manaBarFill_;
 
         sf::Color geneticColor_ = sf::Color::White;
 

@@ -4,6 +4,7 @@
 
 #include "../components/StatsComponent.h"
 #include "../components/ProjectileComponent.h"
+#include "../components/PlayerInputComponent.h"
 #include "../core/ArenaContext.h"
 #include "../entities/Entity.h"
 
@@ -65,6 +66,16 @@ namespace game::components
             return;
         }
 
+        // 1. SPRAWDZENIE MANY
+        auto* stats = owner_->getComponent<StatsComponent>();
+        bool isPlayer = owner_->getComponent<PlayerInputComponent>() != nullptr;
+
+        if (stats && isPlayer) {
+            if (stats->getMana() < manaCost_) {
+                return;
+            }
+        }
+
         const float attackSpeedModifier =
             getAttackSpeedModifier();
 
@@ -110,6 +121,11 @@ namespace game::components
             spawnProjectile(
                 origin,
                 projectileTarget);
+        }
+
+        // 2. KONSUMPCJA MANY
+        if (stats && isPlayer) {
+            stats->consumeMana(manaCost_);
         }
 
         resetCooldown(attackSpeedModifier);

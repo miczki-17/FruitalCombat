@@ -5,6 +5,7 @@
 #include "../components/TransformComponent.h"
 #include "../components/LifespanComponent.h"
 #include "../components/ParticleComponent.h"
+#include "../components/PlayerInputComponent.h"
 #include "../core/ArenaContext.h"
 
 #include <cmath>
@@ -128,6 +129,14 @@ namespace game::components
 
     void RindRollAbility::execute(const sf::Vector2f& startPos, const sf::Vector2f& targetWorldPos, const sf::Vector2f& shooterVelocity)
     {
+        // SPRAWDZENIE I KONSUMPCJA MANY
+        auto* stats = owner_->getComponent<StatsComponent>();
+        if (stats) {
+            if (owner_->getComponent<PlayerInputComponent>() && stats->getMana() < manaCost_) {
+                return;
+            }
+        }
+
         if (currentTimer_ <= 0.0f && owner_ != nullptr)
         {
             auto* owner_transform = owner_->getComponent<TransformComponent>();
@@ -145,6 +154,11 @@ namespace game::components
                 owner_transform->actionTimer = rollDuration_;
                 currentTimer_ = cooldown_;
             }
+        }
+
+        // Odejmowanie many
+        if (stats && owner_->getComponent<PlayerInputComponent>()) {
+            stats->consumeMana(manaCost_);
         }
     }
 }

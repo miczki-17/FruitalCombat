@@ -117,7 +117,7 @@ namespace game::factories
         const auto& mapData = game->mapsConfig[mapKey];
 
         if (auto* moveComp = entity->getComponent<game::components::MovementComponent>()) {
-            moveComp->setGamePointer(game);
+            //moveComp->setGamePointer(game);
 
             float mapFriction = mapData["physics"].value("friction", 1.0f);
             float mapSpeedMulti = mapData["physics"].value("speedMultiplier", 1.0f);

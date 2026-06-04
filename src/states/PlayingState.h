@@ -29,9 +29,13 @@ namespace game::states
         std::optional<sf::Sprite> crosshairSprite;
         std::optional<sf::Sprite> biomassSprite;
 
-        sf::RectangleShape hpBarBg;
-        sf::RectangleShape hpBarFill;
+        std::optional<sf::Sprite> hpBarFrameSprite;
+        std::optional<sf::Sprite> hpBarFillSprite;
 
+        std::optional<sf::Sprite> manaBarFrameSprite;
+        std::optional<sf::Sprite> manaBarFillSprite;
+
+        std::optional<sf::Text> manaText;
         std::optional<sf::Text> hpText;
         std::optional<sf::Text> waveText;
         std::optional<sf::Text> biomassText;

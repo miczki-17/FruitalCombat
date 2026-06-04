@@ -63,8 +63,15 @@ namespace game::components
         auto* transform = owner->getComponent<TransformComponent>();
         if (transform && !owner->isDead() && stats)
         {
+            // Rysujemy HP dla wszystkich
             window.draw(hpBarBackground_);
             window.draw(hpBarFill_);
+
+            // Rysujemy Mane tylko dla gracza
+            if (owner->getComponent<PlayerInputComponent>() != nullptr) {
+                window.draw(manaBarBackground_);
+                window.draw(manaBarFill_);
+            }
         }
     }
 
@@ -242,38 +249,56 @@ namespace game::components
 
     void SpriteComponent::initializeHealthBar()
     {
+        hpBarBackground_.setRadius(HEALTH_BAR_HEIGHT / 2.0f);
         hpBarBackground_.setFillColor(sf::Color(50, 50, 50, 200));
+        hpBarFill_.setRadius(HEALTH_BAR_HEIGHT / 2.0f);
         hpBarFill_.setFillColor(sf::Color(255, 50, 50, 255));
+
+        manaBarBackground_.setRadius(HEALTH_BAR_HEIGHT / 2.0f);
+        manaBarBackground_.setFillColor(sf::Color(50, 50, 50, 200));
+        manaBarFill_.setRadius(HEALTH_BAR_HEIGHT / 2.0f);
+        manaBarFill_.setFillColor(sf::Color(255, 215, 0, 255));
     }
 
     void SpriteComponent::updateHealthBar()
     {
         auto* stats = owner->getComponent<StatsComponent>();
-        if (!stats) return;
         auto* transform = owner->getComponent<TransformComponent>();
-        if (!transform) return;
+        if (!stats || !transform) return;
 
         const float width = HEALTH_BAR_WIDTH * currentScale_;
 
+        // --- Pasek HP (Rysowany dla kazdego: gracza i wrogow) ---
         hpBarBackground_.setSize({ width, HEALTH_BAR_HEIGHT });
         hpBarBackground_.setOrigin({ width / 2.f, HEALTH_BAR_HEIGHT / 2.f });
-
         hpBarBackground_.setPosition({
             transform->position.x,
             transform->position.y - HEALTH_BAR_OFFSET_Y * currentScale_
             });
 
-        hpBarFill_.setSize({
-            width * stats->getHpPercentage(),
-            HEALTH_BAR_HEIGHT
-            });
-
+        float hpFillWidth = std::max(width * stats->getHpPercentage(), HEALTH_BAR_HEIGHT);
+        hpBarFill_.setSize({ hpFillWidth, HEALTH_BAR_HEIGHT });
         hpBarFill_.setOrigin({ width / 2.f, HEALTH_BAR_HEIGHT / 2.f });
-
         hpBarFill_.setPosition({
             transform->position.x,
             transform->position.y - HEALTH_BAR_OFFSET_Y * currentScale_
             });
+
+        // --- Pasek Many (Rysowany TYLKO dla gracza) ---
+        bool isPlayer = (owner->getComponent<PlayerInputComponent>() != nullptr);
+        if (isPlayer) {
+            // second bar offeset
+            float manaYOffset = (HEALTH_BAR_OFFSET_Y - 8.5f) * currentScale_;
+
+            manaBarBackground_.setSize({ width, HEALTH_BAR_HEIGHT });
+            manaBarBackground_.setOrigin({ width / 2.f, HEALTH_BAR_HEIGHT / 2.f });
+            manaBarBackground_.setPosition({ transform->position.x, transform->position.y - manaYOffset });
+
+            float manaFillWidth = std::max(width * stats->getManaPercentage(), HEALTH_BAR_HEIGHT);
+            manaBarFill_.setSize({ manaFillWidth, HEALTH_BAR_HEIGHT });
+            manaBarFill_.setOrigin({ width / 2.f, HEALTH_BAR_HEIGHT / 2.f });
+            manaBarFill_.setPosition({ transform->position.x, transform->position.y - manaYOffset });
+        }
     }
 
     void SpriteComponent::restoreGeneticColor()

@@ -5,6 +5,7 @@
 #include "../entities/Entity.h"
 #include "../components/ProjectileComponent.h"
 #include "../components/TransformComponent.h"
+#include "../components/PlayerInputComponent.h"
 
 #include <cmath>
 
@@ -45,6 +46,14 @@ namespace game::components
             return;
         }
 
+        // SPRAWDZENIE I KONSUMPCJA MANY
+        auto* stats = owner_->getComponent<StatsComponent>();
+        if (stats) {
+            if (owner_->getComponent<PlayerInputComponent>() && stats->getMana() < manaCost_) {
+                return;
+            }
+        }
+
         auto* owner_transform = owner_->getComponent<TransformComponent>();
 
         const sf::Vector2f dashDirection =
@@ -60,6 +69,11 @@ namespace game::components
             ACTION_UNLOCK_DURATION;
 
         cooldownTimer_ = cooldown_;
+
+        // Odejmowanie many
+        if (stats && owner_->getComponent<PlayerInputComponent>()) {
+            stats->consumeMana(manaCost_);
+        }
     }
 
     bool DashAbility::isOnCooldown() const

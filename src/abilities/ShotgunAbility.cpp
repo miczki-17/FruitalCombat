@@ -4,6 +4,8 @@
 
 #include "../entities/Entity.h"
 #include "../components/TransformComponent.h"
+#include "../components/StatsComponent.h"
+#include "../components/PlayerInputComponent.h"
 #include "../core/ArenaContext.h"
 
 #include <cmath>
@@ -27,8 +29,10 @@ namespace game::components
     }
 
     ShotgunAbility::ShotgunAbility(
-        game::ArenaContext* context)
-        : context_(context)
+        game::ArenaContext* context,
+        game::entities::Entity* owner)
+        : context_(context),
+        owner_(owner)
     {
     }
 
@@ -51,6 +55,12 @@ namespace game::components
             return;
         }
 
+        auto* stats = owner_->getComponent<StatsComponent>();
+        if (stats && owner_->getComponent<PlayerInputComponent>())
+        {
+            if (stats->getMana() < manaCost_) return;
+        }
+
         const sf::Vector2f direction =
             calculateDirection(
                 origin,
@@ -67,6 +77,11 @@ namespace game::components
             ownerVelocity);
 
         resetCooldown();
+
+        // Odejmowanie many
+        if (stats && owner_->getComponent<PlayerInputComponent>()) {
+            stats->consumeMana(manaCost_);
+        }
     }
 
     sf::Vector2f ShotgunAbility::calculateDirection(

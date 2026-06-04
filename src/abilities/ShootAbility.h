@@ -16,7 +16,8 @@ namespace game::components
     {
     public:
         explicit ShootAbility(
-            game::ArenaContext* context);
+            game::ArenaContext* context,
+            game::entities::Entity* owner);
 
         void update(float deltaTime) override;
 
@@ -27,6 +28,10 @@ namespace game::components
 
     private:
         game::ArenaContext* context_;
+        game::entities::Entity* owner_;
+
+        // MANA cost
+        float manaCost_ = 15.0f;
 
         float cooldown_ = 0.2f;
         float cooldownTimer_ = 0.0f;

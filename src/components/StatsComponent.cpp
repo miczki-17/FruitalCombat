@@ -29,14 +29,17 @@ namespace game::components
     {
     }
 
-    void StatsComponent::update(
-        float deltaTime)
+    void StatsComponent::update(float deltaTime)
     {
-        currentMovementSpeed_ =
-            baseMovementSpeed_;
+        currentMovementSpeed_ = baseMovementSpeed_;
 
-        processEffects(
-            deltaTime);
+        // Pasywna regeneracja many
+        if (currentWater_ < maxWater_) {
+            currentWater_ += waterRegenRate_ * deltaTime;
+            if (currentWater_ > maxWater_) currentWater_ = maxWater_;
+        }
+
+        processEffects(deltaTime);
     }
 
     void StatsComponent::takeDamage(
@@ -332,5 +335,27 @@ namespace game::components
     std::string StatsComponent::getLastDamageSourceKey() const
     {
         return lastDamageSourceKey_;
+    }
+
+    // MANA
+    void StatsComponent::consumeMana(float amount)
+    {
+        currentWater_ -= amount;
+        if (currentWater_ < 0.0f) currentWater_ = 0.0f;
+    }
+
+    void StatsComponent::restoreMana(float amount)
+    {
+        currentWater_ += amount;
+        if (currentWater_ > maxWater_) currentWater_ = maxWater_;
+    }
+
+    float StatsComponent::getMana() const { return currentWater_; }
+    float StatsComponent::getMaxMana() const { return maxWater_; }
+
+    float StatsComponent::getManaPercentage() const
+    {
+        if (maxWater_ <= 0.0f) return 0.0f;
+        return std::max(0.0f, currentWater_) / maxWater_;
     }
 }

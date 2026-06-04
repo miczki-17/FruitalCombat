@@ -207,8 +207,6 @@ namespace game::states
             {"dmg_icon", "assets/textures/ui/damage_icon.png"},
             {"star_full_icon", "assets/textures/ui/star_full_icon.png"},
             {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
-            {"stat_bar_frame", "assets/textures/ui/stat_bar_frame.png"},
-            {"stat_bar_fill", "assets/textures/ui/stat_bar_fill.png"}
         };
 
         std::map<std::string, std::string> uiGlobalPaths = {
@@ -218,7 +216,9 @@ namespace game::states
             {"crosshair", "assets/textures/ui/crosshairV3.png"},
             {"back", "assets/textures/ui/back_button.png"},
             {"left_arrow", "assets/textures/ui/left_arrow.png"},
-            {"right_arrow", "assets/textures/ui/right_arrow.png"}
+            {"right_arrow", "assets/textures/ui/right_arrow.png"},
+            {"stat_bar_frame", "assets/textures/ui/stat_bar_frame.png"},
+            {"stat_bar_fill", "assets/textures/ui/stat_bar_fill.png"}
         };
 
         for (const auto& [key, path] : uiPaths) {

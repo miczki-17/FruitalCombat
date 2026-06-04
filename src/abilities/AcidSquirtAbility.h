@@ -38,6 +38,9 @@ namespace game::components
 
         float baseCooldown_ = 0.6f;
         float cooldownTimer_ = 0.0f;
+        
+        // mana cost
+        float manaCost_ = 25.0f;
 
         void spawnProjectile(
             const sf::Vector2f& origin,

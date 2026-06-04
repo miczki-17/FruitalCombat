@@ -4,6 +4,7 @@
 
 #include "../entities/Entity.h"
 #include "../components/TransformComponent.h"
+#include "../components/playerInputComponent.h"
 #include "../core/ArenaContext.h"
 
 #include <cmath>
@@ -16,8 +17,10 @@ namespace game::components
     }
 
     ShootAbility::ShootAbility(
-        game::ArenaContext* context)
-        : context_(context)
+        game::ArenaContext* context,
+        game::entities::Entity* owner)
+        : context_(context),
+        owner_(owner)
     {
     }
 
@@ -34,27 +37,26 @@ namespace game::components
         const sf::Vector2f& targetPosition,
         const sf::Vector2f& ownerVelocity)
     {
-        if (isOnCooldown())
-        {
-            return;
+        if (isOnCooldown()) return;
+
+        // SPRAWDZENIE I KONSUMPCJA MANY
+        auto* stats = owner_->getComponent<StatsComponent>();
+        if (stats) {
+            if (owner_->getComponent<PlayerInputComponent>() && stats->getMana() < manaCost_) {
+                return;
+            }
         }
 
-        const sf::Vector2f direction =
-            calculateDirection(
-                origin,
-                targetPosition);
+        const sf::Vector2f direction = calculateDirection(origin, targetPosition);
+        if (direction == sf::Vector2f(0.f, 0.f)) return;
 
-        if (direction == sf::Vector2f(0.f, 0.f))
-        {
-            return;
-        }
-
-        spawnProjectile(
-            origin,
-            direction,
-            ownerVelocity);
-
+        spawnProjectile(origin, direction, ownerVelocity);
         resetCooldown();
+
+        // Odejmowanie many
+        if (stats && owner_->getComponent<PlayerInputComponent>()) {
+            stats->consumeMana(manaCost_);
+        }
     }
 
     sf::Vector2f ShootAbility::calculateDirection(

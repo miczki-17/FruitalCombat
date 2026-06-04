@@ -104,7 +104,6 @@ namespace game::factories
                 idleTex, idleFrames, walkTex, walkFrames));
 
         // ---------------- ABILITIES ----------------
-        // ---------------- ABILITIES ----------------
         auto abilities = std::make_unique<game::components::AbilityComponent>();
 
         if (data.contains("abilities"))
@@ -130,10 +129,10 @@ namespace game::factories
         if (!abilities) return; // Safety check
 
         if (name == "Shoot") {
-            abilities->setWeapon(std::make_unique<game::components::ShootAbility>(&context));
+            abilities->setWeapon(std::make_unique<game::components::ShootAbility>(&context, entity));
         }
         else if (name == "Shotgun") {
-            abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(&context));
+            abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(&context, entity));
         }
         else if (name == "Dash") {
             abilities->setSkill(std::make_unique<game::components::DashAbility>(entity));

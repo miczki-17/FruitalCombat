@@ -19,6 +19,8 @@ namespace game::components
         std::vector<std::unique_ptr<game::entities::Entity>>* enemies_;
         game::entities::Entity* singleTarget_;
 
+        float manaCost_ = 40.0f;
+
         float cooldown_ = 5.0f;
         float currentTimer_ = 0.0f;
         float rollDuration_ = 1.0f;
