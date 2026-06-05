@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "id": "fert_regular",
+      "name": "Zwykly Nawoz",
+      "desc": "+Predkosc na 5 min.",
+      "cost": 10,
+      "targetStat": "fertilizer_regular"
+    },
+    {
+      "id": "fert_medium",
+      "name": "Sredni Nawoz",
+      "desc": "+Predkosc na 8 min.",
+      "cost": 25,
+      "targetStat": "fertilizer_medium"
+    },
+    {
+      "id": "fert_best",
+      "name": "Najlepszy Nawoz",
+      "desc": "+Predkosc na 12 min.",
+      "cost": 50,
+      "targetStat": "fertilizer_best"
+    }
+  ]
+}

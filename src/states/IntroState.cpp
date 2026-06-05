@@ -77,6 +77,7 @@ namespace game::states
         loadCharactersConfig();
         loadEnemiesConfig();
         loadMapsConfig();
+        loadShopConfig();
         loadFontsAndUI();
         loadAudio();
 
@@ -178,6 +179,25 @@ namespace game::states
         loadProgress = 60;
     }
 
+    void IntroState::loadShopConfig()
+    {
+        std::cout << "[ASYNC] Shop config loading...\n";
+        std::ifstream shopFile("assets/configs/shop.json");
+
+        if (!shopFile.is_open()) {
+            std::cerr << "[ASYNC ERROR] Cannot open shop.json!\n";
+            return;
+        }
+
+        try {
+            shopFile >> (game->shopConfig);
+            std::cout << "[ASYNC] shop.json loaded successfully.\n";
+        }
+        catch (const json::parse_error& e) {
+            std::cerr << "[ASYNC ERROR] shop.json Parse error: " << e.what() << "\n";
+        }
+    }
+
     void IntroState::loadFontsAndUI()
     {
         auto& rm = game::core::ResourceManager::get();
@@ -207,6 +227,9 @@ namespace game::states
             {"dmg_icon", "assets/textures/ui/damage_icon.png"},
             {"star_full_icon", "assets/textures/ui/star_full_icon.png"},
             {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
+            {"fert_regular", "assets/textures/ui/fert.png"},
+          //  {"fert_medium", "assets/textures/ui/fert_medium.png"},
+          //  {"fert_best", "assets/textures/ui/fert_best.png"},
         };
 
         std::map<std::string, std::string> uiGlobalPaths = {

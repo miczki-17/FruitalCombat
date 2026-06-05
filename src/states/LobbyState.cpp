@@ -234,6 +234,11 @@ namespace game::states
                     game->getStateMachine().changeState(StateType::Playing);
                     return;
                 }
+                if (shopBtnSprite && shopBtnSprite->getGlobalBounds().contains(worldPos)) {
+                    game->playUIClick();
+                    game->getStateMachine().pushState(StateType::Shop);
+                    return;
+                }
             }
         }
     }

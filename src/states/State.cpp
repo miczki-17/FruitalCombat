@@ -11,7 +11,7 @@ namespace game::states
     {
         int adjustedSize = static_cast<int>(std::round(fontSize * GLOBAL_FONT_SCALE));
 
-        // Teraz emplace przyjmie sf::String i zachowa 100% polskich znaków!
+        // Teraz emplace przyjmie sf::String i zachowa 100% polskich znakÃ³w!
         textObj.emplace(game->mainFont, str, adjustedSize);
         textObj->setFillColor(sf::Color::White);
 
