@@ -39,6 +39,11 @@ namespace game::states
         sf::Clock animationClock;
         std::optional<sf::Text> charNameText;
 
+        // COINS
+        std::optional<sf::Sprite> coinSprite;
+        std::optional<sf::Text> coinText;
+
+
         struct Firefly {
             sf::Vector2f position;
             float speed = 0.0f, alpha = 0.0f, lifetime = 0.0f, maxLifetime = 0.0f, size = 0.0f, swayOffset = 0.0f;

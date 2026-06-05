@@ -328,9 +328,7 @@ namespace game::systems
                     const auto& dnaData = dnaComp->getDNA();
                     evolutionManager.onEnemyDeath(dnaData);
 
-                    // ==========================================
                     // 1. ZWYK£A BIOMASA (SOK)
-                    // ==========================================
                     float randomRoll = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
                     if (randomRoll <= dnaData.dropChance)
                     {

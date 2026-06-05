@@ -36,12 +36,15 @@ namespace game::states
         sf::RectangleShape darkOverlay;
 
         std::optional<sf::Text> titleText;
-        std::optional<sf::Text> biomassText;
 
         std::optional<sf::Sprite> backBtnSprite; 
         std::vector<ShopItem> allPossibleUpgrades;
         std::vector<ShopItem> currentDisplay;
         std::vector<UIItem> uiSlots;
+
+        // Coins
+        std::optional<sf::Text> coinText;
+        std::optional<sf::Sprite> coinSprite;
 
         void initUI();
         void loadPool();

@@ -252,6 +252,10 @@ namespace game::states
 
         // --- Przycisk Ustawien (Pauza) ---
         setupButton("ui_settings", settingsBtnSprite, { viewSize.x - 50.0f, 50.0f }, { 60.0f, 60.0f });
+
+        if (!rm.hasTexture("coin")) {
+            rm.loadTexture("coin", "assets/textures/entities/drops/juice_coin.png", game::core::AssetGroup::Global);
+        }
     }
 
     // --- GAME LOOP ---

@@ -124,6 +124,29 @@ namespace game::states
         charNameText->setFillColor(sf::Color::White);
         charNameText->setOutlineColor(sf::Color::Black);
         charNameText->setOutlineThickness(5.5f);
+
+
+        // coins
+        if (!rm.hasTexture("coin")) {
+            rm.loadTexture("coin", "assets/textures/entities/drops/juice_coin.png", game::core::AssetGroup::Global);
+        }
+
+        if (rm.hasTexture("coin"))
+        {
+            coinSprite.emplace(*rm.getTexture("coin"));
+            coinSprite->setPosition({ 1080, 35 });
+            coinSprite->setScale({1.8f, 1.8f});
+        }
+        else {
+            std::cerr << "can not load coin texzture\n";
+        }
+
+        coinText.emplace(game->mainFont);
+        coinText->setCharacterSize(static_cast<int>(18 * GLOBAL_FONT_SCALE));
+        coinText->setFillColor(sf::Color(255, 200, 0));
+        coinText->setOutlineThickness(1.5f);
+        coinText->setOutlineColor(sf::Color::Black);
+        coinText->setPosition({ 1120.f, 35.f });
     }
 
     void LobbyState::loadSelectedCharacter()
@@ -245,6 +268,9 @@ namespace game::states
 
     void LobbyState::update(float dt)
     {
+        std::string coinStr = std::to_string(game->profile.coins);
+        coinText->setString(coinStr);
+
         std::string currentLang = game::core::LocalizationManager::get().getCurrentLanguageCode();
         if (lastLangCode != currentLang) {
             lastLangCode = currentLang;
@@ -377,6 +403,10 @@ namespace game::states
 
         if (shopBtnSprite) window.draw(*shopBtnSprite);
         if (achievementsBtnSprite) window.draw(*achievementsBtnSprite);
+
+        // coins
+        if (coinSprite) window.draw(*coinSprite);
+        if (coinText) window.draw(*coinText);
 
         game->drawMenuCursor();
     }

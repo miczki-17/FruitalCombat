@@ -24,13 +24,16 @@ namespace game::states
 
     void ShopState::initUI()
     {
+        auto& rm = game::core::ResourceManager::get();
+
         sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
         float centerX = viewSize.x / 2.0f;
 
         darkOverlay.setSize(viewSize);
         darkOverlay.setFillColor(sf::Color(10, 15, 20, 210));
 
-        titleText.emplace(game->mainFont, LocUTF8("ui_shop_title"), static_cast<int>(50 * GLOBAL_FONT_SCALE));
+        titleText.emplace(game->mainFont, "", static_cast<int>(50 * GLOBAL_FONT_SCALE));
+        titleText->setString(LocUTF8("ui_shop_title"));
         titleText->setFillColor(sf::Color::White);
         titleText->setOutlineColor(sf::Color::Black);
         titleText->setOutlineThickness(4.f);
@@ -43,23 +46,46 @@ namespace game::states
             backBtnSprite->setPosition({ 50.f, 50.f });
         }
 
-        biomassText.emplace(game->mainFont, "", static_cast<int>(24 * GLOBAL_FONT_SCALE));
-        biomassText->setFillColor(sf::Color(255, 215, 0)); 
-        biomassText->setPosition({ centerX, 120.f });
+        if (!rm.hasTexture("coin")) {
+            rm.loadTexture("coin", "assets/textures/entities/drops/juice_coin.png", game::core::AssetGroup::Global);
+        }
+
+        if (rm.hasTexture("coin"))
+        {
+            coinSprite.emplace(*rm.getTexture("coin"));
+            coinSprite->setPosition({ centerX - 45.0f, 95.0f });
+            coinSprite->setScale({ 1.8f, 1.8f });
+        }
+        else {
+            std::cerr << "can not load coin texzture\n";
+        }
+
+
+        coinText.emplace(game->mainFont, "", static_cast<int>(24 * GLOBAL_FONT_SCALE));
+        coinText->setFillColor(sf::Color(255, 215, 0)); 
+        coinText->setPosition({ centerX, 120.f });
     }
 
     void ShopState::loadPool()
     {
         allPossibleUpgrades.clear();
 
+        // 1. Ladowanie ze zwyklego configu sklepu
         if (game->shopConfig.contains("items"))
         {
             for (const auto& itemData : game->shopConfig["items"])
             {
                 ShopItem item;
                 item.id = itemData.value("id", "unknown");
-                item.name = itemData.value("name", "Brak nazwy");
+
+                // TLUMACZENIE KLUCZY NA UTF-8:
+                std::string nameKey = itemData.value("name", "ui_unknown");
+                std::string descKey = itemData.value("desc", "");
+
+                item.name = itemData.value("name", "ui_unknown");
                 item.desc = itemData.value("desc", "");
+                item.desc = descKey.empty() ? "" : LocUTF8(descKey);
+
                 item.cost = itemData.value("cost", 999);
                 item.targetStat = itemData.value("targetStat", "");
                 item.value = itemData.value("value", 0.0f);
@@ -68,7 +94,7 @@ namespace game::states
             }
         }
 
-        std::string fruitName = "Apple"; 
+        std::string fruitName = "Apple";
         switch (game->selectedFruitType) {
         case game::entities::FruitType::Orange: fruitName = "Orange"; break;
         case game::entities::FruitType::Banana: fruitName = "Banana"; break;
@@ -78,14 +104,22 @@ namespace game::states
         default: fruitName = "Apple"; break;
         }
 
+        // 2. Ladowanie z configu owocow
         if (game->fruitsConfig.contains(fruitName) && game->fruitsConfig[fruitName].contains("upgrades"))
         {
             for (const auto& up : game->fruitsConfig[fruitName]["upgrades"])
             {
                 ShopItem item;
                 item.id = up.value("id", "unknown");
-                item.name = up.value("name", "Brak nazwy");
+
+                // TLUMACZENIE KLUCZY NA UTF-8:
+                std::string nameKey = up.value("name", "ui_unknown");
+                std::string descKey = up.value("desc", "");
+
+                item.name = up.value("name", "ui_unknown");
                 item.desc = up.value("desc", "");
+                item.desc = descKey.empty() ? "" : LocUTF8(descKey);
+
                 item.cost = up.value("cost", 99);
                 item.targetStat = up.value("targetStat", "");
                 item.value = up.value("value", 0.0f);
@@ -131,15 +165,20 @@ namespace game::states
                 slot.iconSprite->setScale({ 2.0f, 2.0f });
             }
 
-            slot.name.emplace(game->mainFont, slot.data.name, 26);
+            // NAZWA
+            slot.name.emplace(game->mainFont, "", 26);
+            slot.name->setString(LocUTF8(slot.data.name));
             slot.name->setOrigin({ slot.name->getLocalBounds().size.x / 2.0f, slot.name->getLocalBounds().size.y / 2.0f });
             slot.name->setPosition({ slot.bg.getPosition().x, startY + 40.0f });
 
-            slot.desc.emplace(game->mainFont, slot.data.desc, 18);
+            // OPIS
+            slot.desc.emplace(game->mainFont, "", 18);
+            if (!slot.data.desc.empty()) {
+                slot.desc->setString(LocUTF8(slot.data.desc));
+            }
             slot.desc->setFillColor(sf::Color(180, 180, 180));
-            slot.desc->setOrigin({ slot.desc->getLocalBounds().size.x / 2.0f, slot.desc->getLocalBounds().size.y / 2.0f });
-            slot.desc->setPosition({ slot.bg.getPosition().x, startY + 90.0f });
 
+            // KOSZT
             slot.cost.emplace(game->mainFont, std::to_string(slot.data.cost) + " Coins", 24);
             slot.cost->setFillColor(sf::Color::Yellow);
             slot.cost->setOrigin({ slot.cost->getLocalBounds().size.x / 2.0f, slot.cost->getLocalBounds().size.y / 2.0f });
@@ -209,7 +248,10 @@ namespace game::states
                             slot.bg.setFillColor(sf::Color(30, 30, 30, 200));
                             slot.bg.setOutlineColor(sf::Color(50, 50, 50));
 
-                            if (slot.name) slot.name->setString(LocUTF8("ui_sold"));
+                            if (slot.name) {
+                                slot.name->setString(LocUTF8("ui_sold"));
+                                slot.name->setOrigin({ slot.name->getLocalBounds().size.x / 2.0f, slot.name->getLocalBounds().size.y / 2.0f });
+                            }
                             if (slot.name) slot.name->setFillColor(sf::Color(100, 100, 100));
                             if (slot.desc) slot.desc->setString("");
                             if (slot.cost) slot.cost->setString("");
@@ -232,13 +274,13 @@ namespace game::states
     void ShopState::update(float /*dt*/)
     {
         // ZMIANA: Pobieramy COINS, a nie biomassJuice
-        std::string coinStr = "Coins: " + std::to_string(game->profile.coins);
-        biomassText->setString(coinStr);
+        std::string coinStr = /*"Coins: " +*/ std::to_string(game->profile.coins);
+        coinText->setString(coinStr);
 
-        sf::FloatRect bBounds = biomassText->getLocalBounds();
+        sf::FloatRect bBounds = coinText->getLocalBounds();
         sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
-        biomassText->setOrigin({ std::round(bBounds.size.x / 2.0f), std::round(bBounds.position.y + bBounds.size.y / 2.0f) });
-        biomassText->setPosition({ viewSize.x / 2.0f, 110.f });
+        coinText->setOrigin({ std::round(bBounds.size.x / 2.0f), std::round(bBounds.position.y + bBounds.size.y / 2.0f) });
+        coinText->setPosition({ viewSize.x / 2.0f, 110.f });
 
         sf::Vector2f mousePos = game->getWindow().mapPixelToCoords(
             sf::Mouse::getPosition(game->getWindow()),
@@ -264,7 +306,8 @@ namespace game::states
         window.draw(darkOverlay);
 
         if (titleText) window.draw(*titleText);
-        if (biomassText) window.draw(*biomassText);
+        if (coinText) window.draw(*coinText);
+        if (coinSprite.has_value()) window.draw(*coinSprite);
 
         for (const auto& slot : uiSlots) {
             window.draw(slot.bg);
