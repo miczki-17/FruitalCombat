@@ -19,6 +19,9 @@ namespace game::states
 
         initUI();
 
+        // cursor off
+        game->getWindow().setMouseCursorVisible(false);
+
         // Start the background asset loading thread
         workerThread = std::make_unique<std::thread>(&IntroState::loadAssetsInBg, this);
     }

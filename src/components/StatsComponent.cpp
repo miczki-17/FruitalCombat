@@ -34,9 +34,9 @@ namespace game::components
         currentMovementSpeed_ = baseMovementSpeed_;
 
         // Pasywna regeneracja many
-        if (currentWater_ < maxWater_) {
-            currentWater_ += waterRegenRate_ * deltaTime;
-            if (currentWater_ > maxWater_) currentWater_ = maxWater_;
+        if (currentMana_ < maxMana_) {
+            currentMana_ += manaRegenRate_ * deltaTime;
+            if (currentMana_ > maxMana_) currentMana_ = maxMana_;
         }
 
         processEffects(deltaTime);
@@ -340,22 +340,24 @@ namespace game::components
     // MANA
     void StatsComponent::consumeMana(float amount)
     {
-        currentWater_ -= amount;
-        if (currentWater_ < 0.0f) currentWater_ = 0.0f;
+        currentMana_ -= amount;
+        if (currentMana_ < 0.0f) currentMana_ = 0.0f;
     }
 
     void StatsComponent::restoreMana(float amount)
     {
-        currentWater_ += amount;
-        if (currentWater_ > maxWater_) currentWater_ = maxWater_;
+        currentMana_ += amount;
+        if (currentMana_ > maxMana_) currentMana_ = maxMana_;
     }
 
-    float StatsComponent::getMana() const { return currentWater_; }
-    float StatsComponent::getMaxMana() const { return maxWater_; }
+    float StatsComponent::getMana() const { return currentMana_; }
+    float StatsComponent::getMaxMana() const { return maxMana_; }
 
     float StatsComponent::getManaPercentage() const
     {
-        if (maxWater_ <= 0.0f) return 0.0f;
-        return std::max(0.0f, currentWater_) / maxWater_;
+        if (maxMana_ <= 0.0f) return 0.0f;
+        return std::max(0.0f, currentMana_) / maxMana_;
     }
+
+    void StatsComponent::increaseMaxMana(float newMaxMana) { maxMana_ += newMaxMana; }
 }

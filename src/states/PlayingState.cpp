@@ -8,6 +8,7 @@
 #include "../components/StatsComponent.h"
 #include "../components/TransformComponent.h"
 #include "../systems/EvolutionManager.h"
+#include <fstream>
 #include <algorithm>
 #include <iostream>
 #include <random>
@@ -19,7 +20,7 @@ namespace game::states
 
     PlayingState::PlayingState(game::Game* game) : State(game)
     {
-        std::cout << "[PlayingState] World initialization...\n";
+        std::cout << "[PLAYING] World initialization...\n";
 
         // Zwalniamy RAM z zasobow MENU, INTRO
         AudioManager::get().stopMusic();
@@ -31,6 +32,7 @@ namespace game::states
         loadCharacterAssets();
         loadEnemyAssets();
         loadMapAssets();
+        loadUpgrades();
 
         initHUD();
 
@@ -156,6 +158,26 @@ namespace game::states
         );
     }
 
+    void PlayingState::loadUpgrades()
+    {
+        std::cout << "[PLAYING] loading upgrades...\n";
+
+        std::ifstream configFile("assets/configs/upgrades.json");
+        if (!configFile.is_open()) {
+            std::cerr << "[PLAYING ERROR] Cannot open fruits.json!\n";
+            return;
+        }
+
+        try
+        {
+            configFile >> (game->upgradesConfig);
+            std::cout << "[PLAYING] upgradesConfig.json loaded successfully.\n";
+        }
+        catch (const nlohmann::json::parse_error& e) {
+            std::cerr << "[PLAYING ERROR] upgradesConfig.json Parse error: " << e.what() << "\n";
+        }
+    }
+
     // --- INITIALIZATION ---
 
     void PlayingState::initHUD()
@@ -202,6 +224,14 @@ namespace game::states
         biomassText->setOutlineThickness(1.5f);
         biomassText->setOutlineColor(sf::Color::Black);
         biomassText->setPosition({ 55.f, 70.f });
+
+        // --- Tekst Fali (Wave) ---
+        waveText.emplace(game->mainFont);
+        waveText->setCharacterSize(static_cast<int>(28 * GLOBAL_FONT_SCALE));
+        waveText->setFillColor(sf::Color(237, 224, 221));
+        waveText->setOutlineThickness(7.5f);
+        waveText->setOutlineColor(sf::Color::Black);
+        waveText->setStyle(sf::Text::Bold);
 
         // --- Sok ---
         if (rm.hasTexture("juice")) {

@@ -49,6 +49,7 @@ namespace game::states
         void loadCharacterAssets();
         void loadEnemyAssets();
         void loadMapAssets();
+        void loadUpgrades();
 
         void initHUD();
         void updateHUD();
