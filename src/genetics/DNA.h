@@ -9,7 +9,7 @@
 
 namespace game::genetics
 {
-    // Determines how the AI will move around the player
+    
     enum class AiBehavior {
         Charger,    // Rushes directly at the player
         Sniper,     // Tries to maintain a specific long distance
@@ -33,6 +33,8 @@ namespace game::genetics
         // --- ECONOMY / LOOT GENETICS ---
         float dropChance = 1.0f;  // 1.0 = 100% chance
         float baseJuice = 10.0f;  // Base amount of currency dropped
+
+        bool isMutated = false;
 
         // --- PHENOTYPE RESULTS ---
         // Fitness score determines how "successful" this mutant was in the arena

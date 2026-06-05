@@ -231,11 +231,10 @@ namespace game::states
 
     void ShopState::update(float /*dt*/)
     {
-        // Dynamiczna lokalizacja dostêpnego Juice (dodaj "ui_juice_avail" do JSON)
-        std::string biomassStr = LocUTF8("ui_juice_avail") + " " + std::to_string(game->profile.biomassJuice);
-        biomassText->setString(biomassStr);
+        // ZMIANA: Pobieramy COINS, a nie biomassJuice
+        std::string coinStr = "Coins: " + std::to_string(game->profile.coins);
+        biomassText->setString(coinStr);
 
-        // Wysrodkowanie tekstu biomasy pod tytulem
         sf::FloatRect bBounds = biomassText->getLocalBounds();
         sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
         biomassText->setOrigin({ std::round(bBounds.size.x / 2.0f), std::round(bBounds.position.y + bBounds.size.y / 2.0f) });
@@ -245,8 +244,8 @@ namespace game::states
             sf::Mouse::getPosition(game->getWindow()),
             game->getWindow().getDefaultView());
 
+        updateHover(backBtnSprite, { 60.0f, 60.0f }, mousePos);
 
-        // Subtelny hover dla kart sklepowych (jesli nie wyprzedane)
         for (auto& slot : uiSlots) {
             if (!slot.soldOut) {
                 if (slot.bg.getGlobalBounds().contains(mousePos)) {
@@ -269,6 +268,8 @@ namespace game::states
 
         for (const auto& slot : uiSlots) {
             window.draw(slot.bg);
+
+            if (slot.iconSprite) window.draw(*slot.iconSprite);
             if (slot.name) window.draw(*slot.name);
             if (slot.desc) window.draw(*slot.desc);
             if (slot.cost) window.draw(*slot.cost);

@@ -329,7 +329,7 @@ namespace game::systems
                     evolutionManager.onEnemyDeath(dnaData);
 
                     // ==========================================
-                    // 1. STARA LOGIKA: Wyrzucanie Biomasy (Soku)
+                    // 1. ZWYK£A BIOMASA (SOK)
                     // ==========================================
                     float randomRoll = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
                     if (randomRoll <= dnaData.dropChance)
@@ -354,35 +354,46 @@ namespace game::systems
                         context_.spawnEntity(std::move(juiceEntity));
                     }
 
-                    //Logika wypadania Monet (50% szans)
-                    float coinRoll = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
-                    if (coinRoll <= 0.5f)
-                    {
-                        std::random_device rd; std::mt19937 gen(rd());
-                        std::uniform_real_distribution<float> angleDist(0.f, 6.283185f);
-                        std::uniform_real_distribution<float> speedDist(150.f, 300.f); 
-
-                        float angle = angleDist(gen);
-                        float speed = speedDist(gen);
-                        sf::Vector2f randomVel = { std::cos(angle) * speed, std::sin(angle) * speed - 250.f };
-
-                        auto coinEntity = std::make_unique<game::entities::Entity>();
-
-                        if (auto* transform = coinEntity->getComponent<game::components::TransformComponent>()) {
-                            transform->position = enemies_transform->position;
-                        }
-
-                        auto coinComp = std::make_unique<game::components::JuiceComponent>(1.0f, randomVel);
-                        coinComp->isCoin = true; // Oznaczamy, ¿e to moneta!
-
-                        if (coinComp->glowSprite) {
-                            coinComp->glowSprite->setColor(sf::Color(255, 215, 0, 180));
-                        }
-
-                        coinEntity->addComponent(std::move(coinComp));
-                        context_.spawnEntity(std::move(coinEntity));
-                    }
                     
+                    if (dnaData.isMutated)
+                    {
+                        float coinRoll = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+                        if (coinRoll <= 0.5f)
+                        {
+                            std::random_device rd; std::mt19937 gen(rd());
+                            std::uniform_real_distribution<float> angleDist(0.f, 6.283185f);
+                            std::uniform_real_distribution<float> speedDist(150.f, 300.f);
+
+                            float angle = angleDist(gen);
+                            float speed = speedDist(gen);
+                            sf::Vector2f randomVel = { std::cos(angle) * speed, std::sin(angle) * speed - 250.f };
+
+                            auto coinEntity = std::make_unique<game::entities::Entity>();
+
+                            if (auto* transform = coinEntity->getComponent<game::components::TransformComponent>()) {
+                                transform->position = enemies_transform->position;
+                                transform->scale = { 1.5f, 1.5f }; 
+                            }
+
+                            auto& rm = game::core::ResourceManager::get();
+                            if (rm.hasTexture("coin"))
+                            {
+                                auto spriteComp = std::make_unique<game::components::SpriteComponent>();
+                                spriteComp->setTexture(rm.getTextureShared("coin"));
+                                coinEntity->addComponent(std::move(spriteComp));
+                            }
+
+                            auto coinComp = std::make_unique<game::components::JuiceComponent>(1.0f, randomVel);
+                            coinComp->isCoin = true; 
+
+                            if (coinComp->glowSprite) {
+                                coinComp->glowSprite->setColor(sf::Color(255, 215, 0, 180));
+                            }
+
+                            coinEntity->addComponent(std::move(coinComp));
+                            context_.spawnEntity(std::move(coinEntity));
+                        }
+                    }
                 }
 
                 enemies_.erase(enemies_.begin() + i);

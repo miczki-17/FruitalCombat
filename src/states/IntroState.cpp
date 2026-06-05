@@ -229,10 +229,7 @@ namespace game::states
             {"spd_icon", "assets/textures/ui/speed_icon.png"},
             {"dmg_icon", "assets/textures/ui/damage_icon.png"},
             {"star_full_icon", "assets/textures/ui/star_full_icon.png"},
-            {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
-            {"fert_regular", "assets/textures/ui/fert.png"},
-          //  {"fert_medium", "assets/textures/ui/fert_medium.png"},
-          //  {"fert_best", "assets/textures/ui/fert_best.png"},
+            {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"}
         };
 
         std::map<std::string, std::string> uiGlobalPaths = {
@@ -244,7 +241,11 @@ namespace game::states
             {"left_arrow", "assets/textures/ui/left_arrow.png"},
             {"right_arrow", "assets/textures/ui/right_arrow.png"},
             {"stat_bar_frame", "assets/textures/ui/stat_bar_frame.png"},
-            {"stat_bar_fill", "assets/textures/ui/stat_bar_fill.png"}
+            {"stat_bar_fill", "assets/textures/ui/stat_bar_fill.png"},
+            {"fert_regular", "assets/textures/ui/fert.png"},
+            {"fert_medium", "assets/textures/ui/fert_medium.png"},
+            {"fert_best", "assets/textures/ui/fert_best.png"},
+            {"coin", "assets/textures/ui/nectar_coin.png"},
         };
 
         for (const auto& [key, path] : uiPaths) {
