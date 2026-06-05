@@ -32,6 +32,7 @@ namespace game::states
 		MapSelect,
 		Pause,
 		Shop,
+		ShopInGame,
 		Death
 	};
 

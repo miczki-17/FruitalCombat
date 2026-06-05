@@ -338,7 +338,7 @@ namespace game::states
         if (world->requiresShop()) {
             world->resolveShopBreak();
             game->getWindow().setMouseCursorVisible(true);
-            game->getStateMachine().pushState(StateType::Shop);
+            game->getStateMachine().pushState(StateType::ShopInGame);
         }
     }
 

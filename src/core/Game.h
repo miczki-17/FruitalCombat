@@ -77,6 +77,7 @@ namespace game
 		nlohmann::json mapsConfig;
 		nlohmann::json enemiesConfig;
 		nlohmann::json shopConfig;
+		nlohmann::json upgradesConfig;
 
 		// ---------- SHARED ARENA CONTEXT ----------
 		ArenaContext arenaContext;
