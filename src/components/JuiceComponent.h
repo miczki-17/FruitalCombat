@@ -14,6 +14,8 @@ namespace game::components
         float value;
         bool isCollected = false;
 
+        bool isCoin = false;
+
         std::optional<sf::Sprite> sprite;
         std::optional<sf::Sprite> glowSprite;
 

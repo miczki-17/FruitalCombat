@@ -29,5 +29,28 @@ namespace game::components
         {
             moveComp->setDesiredDirection(game::utils::math::safeNormalize(input));
         }
+        if (auto* stats = owner->getComponent<game::components::StatsComponent>())
+        {
+            auto& profile = game_->profile;
+
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Num1) && profile.regularFertilizerCount > 0)
+            {
+                stats->addEffect(game::components::StatusType::SpeedBuff, 300.0f, 1.4f); 
+                profile.regularFertilizerCount--;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Num2) && profile.mediumFertilizerCount > 0)
+            {
+                stats->addEffect(game::components::StatusType::SpeedBuff, 480.0f, 1.7f); 
+                profile.mediumFertilizerCount--;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Num3) && profile.bestFertilizerCount > 0)
+            {
+                stats->addEffect(game::components::StatusType::SpeedBuff, 720.0f, 2.2f); 
+                profile.bestFertilizerCount--;
+            }
+        }
     }
 }

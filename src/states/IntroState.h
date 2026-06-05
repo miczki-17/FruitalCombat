@@ -34,6 +34,7 @@ namespace game::states
         void loadCharactersConfig();
         void loadEnemiesConfig();
         void loadMapsConfig();
+        void loadShopConfig();
         void loadFontsAndUI();
         void loadAudio();
 

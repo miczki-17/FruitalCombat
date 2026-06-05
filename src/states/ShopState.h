@@ -1,9 +1,10 @@
 // --- ShopState.h ---
-
 #pragma once
+
 #include "State.h"
 #include <vector>
 #include <string>
+#include <optional>
 #include <SFML/Graphics.hpp>
 
 namespace game::states
@@ -22,6 +23,7 @@ namespace game::states
         std::optional<sf::Text> name;
         std::optional<sf::Text> desc;
         std::optional<sf::Text> cost;
+        std::optional<sf::Sprite> iconSprite; 
         ShopItem data;
         bool soldOut = false;
 
@@ -36,10 +38,7 @@ namespace game::states
         std::optional<sf::Text> titleText;
         std::optional<sf::Text> biomassText;
 
-        std::optional<sf::Sprite> rerollBtnSprite;
-        std::optional<sf::Text> rerollText;
-        int rerollCost = 30;
-
+        std::optional<sf::Sprite> backBtnSprite; 
         std::vector<ShopItem> allPossibleUpgrades;
         std::vector<ShopItem> currentDisplay;
         std::vector<UIItem> uiSlots;

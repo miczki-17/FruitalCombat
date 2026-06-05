@@ -41,13 +41,26 @@ namespace game::systems
             {
                 if (juice->isCollected)
                 {
-                    game_->profile.addJuice(static_cast<int>(juice->value));
-                    if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
-                        stats->addUltCharge(juice->value * 0.5f);
-
-                        // odnawianie many po podniesieniu
-                        stats->restoreMana(juice->value * 3.0f); // 3 pkt many za ka¿dy 1 pkt biomasy / soku
+                    // Sprawdzamy, czy to MONETA do sklepu
+                    if (juice->isCoin)
+                    {
+                        // Moneta idzie tylko do portfela z monetami
+                        game_->profile.addCoins(static_cast<int>(juice->value));
                     }
+                    // Jeœli to nie moneta, to znaczy, ¿e to zwyk³y SOK (Biomasa)
+                    else
+                    {
+                        game_->profile.addJuice(static_cast<int>(juice->value));
+
+                        if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
+                            stats->addUltCharge(juice->value * 0.5f);
+
+                            // odnawianie many po podniesieniu
+                            stats->restoreMana(juice->value * 3.0f); // 3 pkt many za ka¿dy 1 pkt biomasy / soku
+                        }
+                    }
+
+                    // Niezale¿nie od tego czy to moneta czy sok, po zebraniu niszczymy encjê
                     entities[i]->destroy();
                 }
             }
@@ -315,6 +328,9 @@ namespace game::systems
                     const auto& dnaData = dnaComp->getDNA();
                     evolutionManager.onEnemyDeath(dnaData);
 
+                    // ==========================================
+                    // 1. STARA LOGIKA: Wyrzucanie Biomasy (Soku)
+                    // ==========================================
                     float randomRoll = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
                     if (randomRoll <= dnaData.dropChance)
                     {
@@ -337,6 +353,36 @@ namespace game::systems
 
                         context_.spawnEntity(std::move(juiceEntity));
                     }
+
+                    //Logika wypadania Monet (50% szans)
+                    float coinRoll = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+                    if (coinRoll <= 0.5f)
+                    {
+                        std::random_device rd; std::mt19937 gen(rd());
+                        std::uniform_real_distribution<float> angleDist(0.f, 6.283185f);
+                        std::uniform_real_distribution<float> speedDist(150.f, 300.f); 
+
+                        float angle = angleDist(gen);
+                        float speed = speedDist(gen);
+                        sf::Vector2f randomVel = { std::cos(angle) * speed, std::sin(angle) * speed - 250.f };
+
+                        auto coinEntity = std::make_unique<game::entities::Entity>();
+
+                        if (auto* transform = coinEntity->getComponent<game::components::TransformComponent>()) {
+                            transform->position = enemies_transform->position;
+                        }
+
+                        auto coinComp = std::make_unique<game::components::JuiceComponent>(1.0f, randomVel);
+                        coinComp->isCoin = true; // Oznaczamy, ¿e to moneta!
+
+                        if (coinComp->glowSprite) {
+                            coinComp->glowSprite->setColor(sf::Color(255, 215, 0, 180));
+                        }
+
+                        coinEntity->addComponent(std::move(coinComp));
+                        context_.spawnEntity(std::move(coinEntity));
+                    }
+                    
                 }
 
                 enemies_.erase(enemies_.begin() + i);
