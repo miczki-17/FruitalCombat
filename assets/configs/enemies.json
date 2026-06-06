@@ -11,7 +11,7 @@
 			"Dash"
 		],
 		"baseJuice": 3.0,
-		"dropChance": 0.5
+		"dropChance": 0.2
 	},
 	"Carrot": {
 		"r": 255,
@@ -25,6 +25,6 @@
 			"AcidSquirt"
 		],
 		"baseJuice": 1.0,
-		"dropChance": 0.5
+		"dropChance": 0.3
 	}
 }

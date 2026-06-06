@@ -91,6 +91,12 @@ namespace game::states
                 std::string path = fruitData.value("walkTexturePath", "");
                 if (!path.empty()) rm.loadTexture(fruitKey + "_walk", path, AssetGroup::Playing);
             }
+
+            // bullets
+            if (fruitData.contains("projectileTexturePath")) {
+                std::string path = fruitData.value("projectileTexturePath", "");
+                    if (!path.empty()) rm.loadTexture(fruitKey + "_bullet", path, AssetGroup::Playing);
+            }
         }
     }
 

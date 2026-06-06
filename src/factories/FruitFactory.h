@@ -33,7 +33,8 @@ namespace game::factories
             game::components::AbilityComponent* abilities,
             const std::string& abilityName,
             game::entities::Entity* entity,
-            const nlohmann::json& fruitData);
+            const nlohmann::json& fruitData,
+            const std::string & key);
 
     public:
         FruitFactory(

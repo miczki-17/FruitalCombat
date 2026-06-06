@@ -146,21 +146,19 @@ namespace game::components
         frameDuration_ = animSpeed;
         frameSize_ = size;
 
-
-
         useTexture_ = true;
         renderFallbackShape_ = false;
-
-
 
         sprite_.emplace(*texture_);
         sprite_->setTextureRect(sf::IntRect({ 0, 0 }, frameSize_));
         sprite_->setOrigin({ frameSize_.x / 2.0f, frameSize_.y / 2.0f });
 
-
         if (!isWobbly_ && !isParabolic_ && !isDropping_) {
             float angle = std::atan2(velocity_.y, velocity_.x) * 180.0f / 3.14159f;
-            sprite_->setRotation(sf::degrees(angle));
+
+            // --- +90.0f ---
+            // Ustawia "górê" obrazka zgodnie z wektorem lotu
+            sprite_->setRotation(sf::degrees(angle + 90.0f));
         }
     }
 

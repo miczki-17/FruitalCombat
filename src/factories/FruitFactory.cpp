@@ -111,7 +111,7 @@ namespace game::factories
             for (const auto& a : data["abilities"])
             {
                 // PRZEKAZUJEMY 'data' DO FUNKCJI:
-                attachAbility(abilities.get(), a.get<std::string>(), entity.get(), data);
+                attachAbility(abilities.get(), a.get<std::string>(), entity.get(), data, key);
             }
         }
 
@@ -124,12 +124,14 @@ namespace game::factories
         game::components::AbilityComponent* abilities,
         const std::string& name,
         game::entities::Entity* entity,
-        const nlohmann::json& fruitData) // ODBIERAMY DANE OWOCU!
+        const nlohmann::json& fruitData,
+        const std::string& key) // ODBIERAMY DANE OWOCU!
     {
         if (!abilities) return; // Safety check
 
         if (name == "Shoot") {
-            abilities->setWeapon(std::make_unique<game::components::ShootAbility>(&context, entity));
+            float bulletScale = fruitData.value("bulletScale", 1.0f);
+            abilities->setWeapon(std::make_unique<game::components::ShootAbility>(&context, entity, key + "_bullet", bulletScale));
         }
         else if (name == "Shotgun") {
             abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(&context, entity));
@@ -138,17 +140,17 @@ namespace game::factories
             abilities->setSkill(std::make_unique<game::components::DashAbility>(entity));
         }
         else if (name == "AcidSquirt") {
-            // Get JSON data
-            std::string texPath = fruitData.value("projectileTexturePath", "assets/textures/default_bullet.png");
+            float bulletScale = fruitData.value("bulletScale", 1.0f);
             std::string splashKey = fruitData.value("splashKey", "acid_splash");
 
             abilities->setWeapon(std::make_unique<game::components::AcidSquirtAbility>(
                 &context,
                 entity,
-                texPath,
+                key + "_bullet",
                 splashKey,
+                bulletScale,
                 true
-            ));
+                ));
         }
         else if (name == "RindRoll") {
             const float kRadius = 130.0f;

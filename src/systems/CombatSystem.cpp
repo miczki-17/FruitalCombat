@@ -44,19 +44,16 @@ namespace game::systems
                     // Sprawdzamy, czy to MONETA do sklepu
                     if (juice->isCoin)
                     {
-                        // Moneta idzie tylko do portfela z monetami
-                        game_->profile.addCoins(static_cast<int>(juice->value));
+                        // std::round gwarantuje, ¿e 0.9999f stanie siê 1, a nie 0
+                        game_->profile.addCoins(static_cast<int>(std::round(juice->value)));
                     }
-                    // Jeœli to nie moneta, to znaczy, ¿e to zwyk³y SOK (Biomasa)
                     else
                     {
-                        game_->profile.addJuice(static_cast<int>(juice->value));
+                        game_->profile.addJuice(static_cast<int>(std::round(juice->value)));
 
                         if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
                             stats->addUltCharge(juice->value * 0.5f);
-
-                            // odnawianie many po podniesieniu
-                            stats->restoreMana(juice->value * 3.0f); // 3 pkt many za ka¿dy 1 pkt biomasy / soku
+                            stats->restoreMana(juice->value * 3.0f);
                         }
                     }
 
@@ -328,68 +325,77 @@ namespace game::systems
                     const auto& dnaData = dnaComp->getDNA();
                     evolutionManager.onEnemyDeath(dnaData);
 
-                    // 1. ZWYK£A BIOMASA (SOK)
+                    // Wspólne generatory losowoœci dla wszystkich dropów (efekt fontanny)
+                    std::random_device rd;
+                    std::mt19937 gen(rd());
+                    std::uniform_real_distribution<float> velXDist(-250.f, 250.f); // Rozrzut na boki
+                    std::uniform_real_distribution<float> velYDist(-500.f, -200.f); // Wystrza³ w górê
+
+                    // --- 1. ZWYK£A BIOMASA (SOK) ---
                     float randomRoll = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
                     if (randomRoll <= dnaData.dropChance)
                     {
-                        std::random_device rd; std::mt19937 gen(rd());
-                        std::uniform_real_distribution<float> angleDist(0.f, 6.283185f);
-                        std::uniform_real_distribution<float> speedDist(80.f, 180.f);
+                        // Obliczamy CA£KOWIT¥ wartoœæ soku i od razu robimy z niej int
+                        int totalJuiceInt = static_cast<int>(std::round(dnaData.baseJuice * dnaData.sizeScale));
+                        if (totalJuiceInt <= 0) totalJuiceInt = 1; // Zawsze minimum 1 soku
 
-                        float angle = angleDist(gen);
-                        float speed = speedDist(gen);
-                        sf::Vector2f randomVel = { std::cos(angle) * speed, std::sin(angle) * speed - 220.f };
+                        // Maksymalnie 10 kropelek wizualnych, ¿eby nie lagowaæ gry przy silnych wrogach
+                        int numJuiceDrops = std::min(totalJuiceInt, 10);
 
-                        auto juiceEntity = std::make_unique<game::entities::Entity>();
+                        // Dzielimy wartoœæ ca³kowit¹ na kropelki (bez u³amków)
+                        int baseValuePerDrop = totalJuiceInt / numJuiceDrops;
+                        int remainder = totalJuiceInt % numJuiceDrops; // Reszta z dzielenia
 
-                        if (auto* transform = juiceEntity->getComponent<game::components::TransformComponent>()) {
-                            transform->position = enemies_transform->position;
+                        for (int j = 0; j < numJuiceDrops; ++j)
+                        {
+                            // Jeœli jest jakaœ reszta, pierwsze kilka kropel dostaje +1 do wartoœci
+                            float dropValue = static_cast<float>(baseValuePerDrop + (j < remainder ? 1 : 0));
+
+                            sf::Vector2f randomVel = { velXDist(gen), velYDist(gen) };
+                            auto juiceEntity = std::make_unique<game::entities::Entity>();
+
+                            if (auto* transform = juiceEntity->getComponent<game::components::TransformComponent>()) {
+                                transform->position = enemies_transform->position;
+                            }
+
+                            juiceEntity->addComponent(std::make_unique<game::components::JuiceComponent>(
+                                dropValue, randomVel, false
+                                ));
+
+                            context_.spawnEntity(std::move(juiceEntity));
                         }
-
-                        juiceEntity->addComponent(std::make_unique<game::components::JuiceComponent>(
-                            dnaData.baseJuice * dnaData.sizeScale, randomVel));
-
-                        context_.spawnEntity(std::move(juiceEntity));
                     }
 
-                    
+                    // --- 2. MONETY Z MUTANTÓW ---
                     if (dnaData.isMutated)
                     {
                         float coinRoll = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
-                        if (coinRoll <= 0.5f)
+                        if (coinRoll <= 0.07f)
                         {
-                            std::random_device rd; std::mt19937 gen(rd());
-                            std::uniform_real_distribution<float> angleDist(0.f, 6.283185f);
-                            std::uniform_real_distribution<float> speedDist(150.f, 300.f);
+                            std::uniform_int_distribution<int> coinCountDist(1, 3);
+                            int numCoins = coinCountDist(gen);
 
-                            float angle = angleDist(gen);
-                            float speed = speedDist(gen);
-                            sf::Vector2f randomVel = { std::cos(angle) * speed, std::sin(angle) * speed - 250.f };
-
-                            auto coinEntity = std::make_unique<game::entities::Entity>();
-
-                            if (auto* transform = coinEntity->getComponent<game::components::TransformComponent>()) {
-                                transform->position = enemies_transform->position;
-                                transform->scale = { 1.5f, 1.5f }; 
-                            }
-
-                            auto& rm = game::core::ResourceManager::get();
-                            if (rm.hasTexture("coin"))
+                            for (int c = 0; c < numCoins; ++c)
                             {
-                                auto spriteComp = std::make_unique<game::components::SpriteComponent>();
-                                spriteComp->setTexture(rm.getTextureShared("coin"));
-                                coinEntity->addComponent(std::move(spriteComp));
+                                sf::Vector2f randomVel = { velXDist(gen), velYDist(gen) };
+                                auto coinEntity = std::make_unique<game::entities::Entity>();
+
+                                if (auto* transform = coinEntity->getComponent<game::components::TransformComponent>()) {
+                                    transform->position = enemies_transform->position;
+                                    transform->scale = { 1.5f, 1.5f };
+                                }
+
+                                auto coinComp = std::make_unique<game::components::JuiceComponent>(
+                                    1.0f, randomVel, true
+                                    );
+
+                                if (coinComp->glowSprite) {
+                                    coinComp->glowSprite->setColor(sf::Color(255, 215, 0, 180));
+                                }
+
+                                coinEntity->addComponent(std::move(coinComp));
+                                context_.spawnEntity(std::move(coinEntity));
                             }
-
-                            auto coinComp = std::make_unique<game::components::JuiceComponent>(1.0f, randomVel);
-                            coinComp->isCoin = true; 
-
-                            if (coinComp->glowSprite) {
-                                coinComp->glowSprite->setColor(sf::Color(255, 215, 0, 180));
-                            }
-
-                            coinEntity->addComponent(std::move(coinComp));
-                            context_.spawnEntity(std::move(coinEntity));
                         }
                     }
                 }

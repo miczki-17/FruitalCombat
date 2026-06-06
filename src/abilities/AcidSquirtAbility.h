@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Ability.h"
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -18,8 +17,9 @@ namespace game::components
         AcidSquirtAbility(
             game::ArenaContext* context,
             game::entities::Entity* owner,
-            const std::string& texturePath,
+            const std::string& textureKey,
             const std::string& splashKeyBase,
+            float projectileScale = 1.0f,
             bool isFriendly = true);
 
         void update(float deltaTime) override;
@@ -32,13 +32,15 @@ namespace game::components
     private:
         game::ArenaContext* context_;
         game::entities::Entity* owner_;
-        std::shared_ptr<sf::Texture> projectileTexture_;
+
+        std::string textureKey_;
         std::string splashKeyBase_;
+        float projectileScale_;
         bool isFriendly_;
 
         float baseCooldown_ = 0.6f;
         float cooldownTimer_ = 0.0f;
-        
+
         // mana cost
         float manaCost_ = 25.0f;
 

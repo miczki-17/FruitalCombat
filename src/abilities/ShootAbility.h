@@ -6,6 +6,7 @@
 #include "../components/ProjectileComponent.h"
 
 #include <vector>
+#include <string>
 
 namespace game { struct ArenaContext; }
 namespace game::entities { class Entity; }
@@ -17,7 +18,9 @@ namespace game::components
     public:
         explicit ShootAbility(
             game::ArenaContext* context,
-            game::entities::Entity* owner);
+            game::entities::Entity* owner,
+            const std::string& textureKey = "",
+            float projectileScale = 1.0f);
 
         void update(float deltaTime) override;
 
@@ -29,6 +32,9 @@ namespace game::components
     private:
         game::ArenaContext* context_;
         game::entities::Entity* owner_;
+
+        std::string textureKey_;
+        float projectileScale_;
 
         // MANA cost
         float manaCost_ = 15.0f;

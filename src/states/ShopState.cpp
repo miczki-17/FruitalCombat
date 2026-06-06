@@ -172,9 +172,23 @@ namespace game::states
             slot.name->setPosition({ slot.bg.getPosition().x, startY + 40.0f });
 
             // OPIS
+            auto bounds = slot.bg.getGlobalBounds();
+
             slot.desc.emplace(game->mainFont, "", 18);
             if (!slot.data.desc.empty()) {
-                slot.desc->setString(LocUTF8(slot.data.desc));
+                slot.desc->setString(slot.data.desc);
+
+                auto bounds = slot.desc->getLocalBounds();
+
+                slot.desc->setOrigin({
+                    bounds.position.x + bounds.size.x / 2.f,
+                    bounds.position.y + bounds.size.y / 2.f
+                    });
+
+                slot.desc->setPosition({
+                    slot.bg.getPosition().x,
+                    slot.bg.getPosition().y + 90.f
+                    });
             }
             slot.desc->setFillColor(sf::Color(180, 180, 180));
 

@@ -6,6 +6,7 @@
 #include "../components/ProjectileComponent.h"
 #include "../components/PlayerInputComponent.h"
 #include "../core/ArenaContext.h"
+#include "../core/ResourceManager.h"
 #include "../entities/Entity.h"
 
 #include <cmath>
@@ -17,35 +18,24 @@ namespace game::components
     {
         constexpr float PROJECTILE_SPREAD_ANGLE = 0.35f;
         constexpr float PROJECTILE_SPEED = 380.0f;
-
         constexpr float PROJECTILE_RADIUS = 14.0f;
-
-        constexpr int ANIMATION_FRAMES = 4;
-        constexpr float ANIMATION_FRAME_DURATION = 0.1f;
-
         const sf::Color PROJECTILE_COLOR(100, 255, 0, 240);
-        const sf::Vector2i ANIMATION_FRAME_SIZE(32, 32);
     }
 
     AcidSquirtAbility::AcidSquirtAbility(
         game::ArenaContext* context,
         game::entities::Entity* owner,
-        const std::string& texturePath,
+        const std::string& textureKey,
         const std::string& splashKeyBase,
+        float projectileScale,
         bool isFriendly)
         : context_(context),
         owner_(owner),
-        projectileTexture_(std::make_shared<sf::Texture>()),
+        textureKey_(textureKey),
         splashKeyBase_(splashKeyBase),
+        projectileScale_(projectileScale),
         isFriendly_(isFriendly)
     {
-        if (!projectileTexture_->loadFromFile(texturePath))
-        {
-            std::cerr
-                << "[ERROR] Could not load texture: "
-                << texturePath
-                << '\n';
-        }
     }
 
     void AcidSquirtAbility::update(float deltaTime)
@@ -137,75 +127,57 @@ namespace game::components
     {
         if (!context_) return;
 
-        // TWORZYMY NOW¥, CZYST¥ ENCJÊ ECS
         auto bulletEntity = std::make_unique<game::entities::Entity>();
 
-        // 1. TransformComponent (Pozycja) - nadpisujemy domyœlny tworzony w konstruktorze Entity
         if (auto* transform = bulletEntity->getComponent<game::components::TransformComponent>())
         {
             transform->position = origin;
         }
 
-        // 2. Tworzymy pocisk (Logikê uderzeniow¹)
-        // Podajemy {0,0} jako kierunek, bo setupParabolic zaraz i tak to nadpisze
         auto projectile = std::make_unique<game::components::ProjectileComponent>(origin, sf::Vector2f(0.f, 0.f));
 
-        projectile->setAppearance(PROJECTILE_RADIUS, PROJECTILE_COLOR);
+        projectile->setAppearance(0.0f, sf::Color::Transparent); // Ukrywamy domyœlne kó³ko
         projectile->setStatusEffect(game::components::StatusEffect::Poison);
         projectile->setWobble(false, false);
         projectile->setupParabolic(origin, targetPosition, PROJECTILE_SPEED);
         projectile->setFriendly(isFriendly_);
         projectile->setSplashKeyBase(splashKeyBase_);
 
-        if (projectileTexture_->getSize().x > 0)
+        // System nak³adania tekstury
+        if (!textureKey_.empty())
         {
-            projectile->setAnimation(
-                projectileTexture_,
-                ANIMATION_FRAMES,
-                ANIMATION_FRAME_DURATION,
-                ANIMATION_FRAME_SIZE);
+            auto tex = game::core::ResourceManager::get().getTextureShared(textureKey_);
+            if (tex)
+            {
+                auto size = tex->getSize();
+
+                projectile->setAnimation(
+                    tex,
+                    1,
+                    1.0f,
+                    { static_cast<int>(size.x), static_cast<int>(size.y) }
+                );
+
+                projectile->setSpriteScale(projectileScale_, projectileScale_);
+            }
         }
 
-        // Dodajemy logikê pocisku do encji
         bulletEntity->addComponent(std::move(projectile));
-
         context_->spawnEntity(std::move(bulletEntity));
     }
 
     float AcidSquirtAbility::getAttackSpeedModifier() const
     {
-        if (!owner_)
-        {
-            return 1.0f;
-        }
-
-        auto* stats =
-            owner_->getComponent<StatsComponent>();
-
-        if (!stats)
-        {
-            return 1.0f;
-        }
-
-        return stats->getAttackSpeed();
+        if (!owner_) return 1.0f;
+        auto* stats = owner_->getComponent<StatsComponent>();
+        return stats ? stats->getAttackSpeed() : 1.0f;
     }
 
     int AcidSquirtAbility::getBonusProjectileCount() const
     {
-        if (!owner_)
-        {
-            return 0;
-        }
-
-        auto* stats =
-            owner_->getComponent<StatsComponent>();
-
-        if (!stats)
-        {
-            return 0;
-        }
-
-        return stats->getBonusProjectiles();
+        if (!owner_) return 0;
+        auto* stats = owner_->getComponent<StatsComponent>();
+        return stats ? stats->getBonusProjectiles() : 0;
     }
 
     bool AcidSquirtAbility::isOnCooldown() const
@@ -213,10 +185,8 @@ namespace game::components
         return cooldownTimer_ > 0.0f;
     }
 
-    void AcidSquirtAbility::resetCooldown(
-        float attackSpeedModifier)
+    void AcidSquirtAbility::resetCooldown(float attackSpeedModifier)
     {
-        cooldownTimer_ =
-            baseCooldown_ / attackSpeedModifier;
+        cooldownTimer_ = baseCooldown_ / attackSpeedModifier;
     }
 }

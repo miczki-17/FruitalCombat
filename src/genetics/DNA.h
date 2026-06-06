@@ -62,6 +62,8 @@ namespace game::genetics
             child.dropChance = coinFlip(rng) ? this->dropChance : partner.dropChance;
             child.baseJuice = coinFlip(rng) ? this->baseJuice : partner.baseJuice;
 
+            child.isMutated = this->isMutated || partner.isMutated;
+
             return child;
         }
 
@@ -69,18 +71,21 @@ namespace game::genetics
         void mutate(float mutationRate, std::mt19937& rng)
         {
             std::uniform_real_distribution<float> chance(0.0f, 1.0f);
+            bool mutatedThisGeneration = false;
 
             // Mutate Speed
             if (chance(rng) < mutationRate) {
                 std::uniform_real_distribution<float> mod(0.8f, 1.2f);
                 speed *= mod(rng);
                 speed = std::clamp(speed, 50.0f, 600.0f);
+                mutatedThisGeneration = true;
             }
 
             // Mutate HP
             if (chance(rng) < mutationRate) {
                 std::uniform_real_distribution<float> mod(0.8f, 1.3f);
                 maxHp *= mod(rng);
+                mutatedThisGeneration = true;
             }
 
             // Mutate Size and Color
@@ -93,6 +98,7 @@ namespace game::genetics
                 r = std::clamp(r + colorShift(rng), 0, 255);
                 g = std::clamp(g + colorShift(rng), 0, 255);
                 b = std::clamp(b + colorShift(rng), 0, 255);
+                mutatedThisGeneration = true;
             }
 
             // Mutate Juice Amount (Przetrwanie najsilniejszych - oddaj¹ mniej soku!)
@@ -100,12 +106,14 @@ namespace game::genetics
                 std::uniform_real_distribution<float> mod(0.8f, 1.2f);
                 baseJuice *= mod(rng);
                 baseJuice = std::max(1.0f, baseJuice); // Minimum 1 punkt soku
+                mutatedThisGeneration = true;
             }
 
             // Radical Mutation: Behavior change
             if (chance(rng) < (mutationRate * 0.5f)) {
                 std::uniform_int_distribution<int> behDist(0, 2);
                 behavior = static_cast<AiBehavior>(behDist(rng));
+                mutatedThisGeneration = true;
             }
 
             // Radical Mutation: Abilities change
@@ -127,6 +135,11 @@ namespace game::genetics
                         abilities[replaceDist(rng)] = mutatedAbility;
                     }
                 }
+                mutatedThisGeneration = true;
+            }
+
+            if (mutatedThisGeneration) {
+                isMutated = true;
             }
         }
     };

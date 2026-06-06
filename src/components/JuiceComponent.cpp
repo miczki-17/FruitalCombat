@@ -10,50 +10,17 @@
 
 namespace game::components
 {
-    JuiceComponent::JuiceComponent(float xpValue, const sf::Vector2f& initialVelocity)
-        : value(xpValue), velocity(initialVelocity)
+    JuiceComponent::JuiceComponent(float xpValue, const sf::Vector2f& initialVelocity, bool isCoinDrop)
+        : value(xpValue), velocity(initialVelocity), isCoin(isCoinDrop)
     {
-        /*static std::random_device rd;
-        static std::mt19937 gen(rd());
-        std::uniform_int_distribution<int> texDist(1, 4);
-        int textureNumber = texDist(gen);
-
-        auto tex = game::core::ResourceManager::get().getTextureShared("juice_drop_" + std::to_string(textureNumber));
+        std::string textureName = isCoin ? "coin" : "juice";
+        auto tex = game::core::ResourceManager::get().getTextureShared(textureName);
 
         if (tex)
         {
             sprite.emplace(*tex);
             sprite->setOrigin({ tex->getSize().x * 0.5f, tex->getSize().y * 0.5f });
-            glowSprite = *sprite;
         }
-        else
-        {
-            std::cerr << "[B£¥D] JuiceComponent: Nie uda³o siê wczytaæ tekstury 'juice_drop_" << textureNumber << "'!\n";
-        }*/
-
-        auto tex = game::core::ResourceManager::get().getTextureShared("juice");
-
-        if (tex)
-        {
-            sprite.emplace(*tex);
-            sprite->setOrigin({ tex->getSize().x * 0.5f, tex->getSize().y * 0.5f });
-
-            //if (value <= 1.0f) {
-            //    // Zwyk³a, zielona fasolka (ma³y drop)
-            //    sprite->setColor(sf::Color(100, 255, 100));
-            //}
-            //else if (value <= 5.0f) {
-            //    // Pikantna, czerwona fasolka (œredni drop)
-            //    sprite->setColor(sf::Color(255, 60, 40));
-            //}
-            //else {
-            //    // Kosmiczna, fioletowa fasolka (du¿y drop)
-            //    sprite->setColor(sf::Color(180, 50, 255));
-            //}
-
-            //glowSprite = *sprite;
-        }
-
     }
 
     void JuiceComponent::update(float dt)
@@ -93,16 +60,6 @@ namespace game::components
             sprite->setScale({ spawnScale * pulse * 1.7f, spawnScale * pulse * 1.7f });
             sprite->rotate(sf::degrees(dt * 0.f)); // SFML 3
         }
-
-        //if (glowSprite)
-        //{
-        //    glowSprite->setPosition(renderPos);
-        //    glowSprite->setScale({ spawnScale * pulse * 2.0f, spawnScale * pulse * 2.0f });
-
-        //    float alpha = 140.f + std::sin(animationTimer * 8.f) * 60.f;
-        //    glowSprite->setColor(sf::Color(100, 255, 255, static_cast<std::uint8_t>(alpha)));
-        //    glowSprite->rotate(sf::degrees(-dt * 20.f)); // SFML 3
-        //}
     }
 
     void JuiceComponent::render(sf::RenderWindow& window)

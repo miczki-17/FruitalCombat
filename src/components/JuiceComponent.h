@@ -25,7 +25,7 @@ namespace game::components
         bool spawning = true;
 
         // Konstruktor przyjmuje wartosc i pocz¹tkowa prêdkosc dropu z wroga
-        JuiceComponent(float xpValue, const sf::Vector2f& initialVelocity);
+        JuiceComponent(float xpValue, const sf::Vector2f& initialVelocity, bool isCoinDrop = false);
 
         void update(float dt) override;
         void render(sf::RenderWindow& window);

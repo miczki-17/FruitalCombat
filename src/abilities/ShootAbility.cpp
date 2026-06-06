@@ -5,6 +5,8 @@
 #include "../entities/Entity.h"
 #include "../components/TransformComponent.h"
 #include "../components/playerInputComponent.h"
+#include "../components/SpriteComponent.h"
+#include "../core/ResourceManager.h"
 #include "../core/ArenaContext.h"
 
 #include <cmath>
@@ -14,13 +16,18 @@ namespace game::components
     namespace
     {
         constexpr float MIN_AIM_LENGTH = 0.001f;
+        constexpr float PI = 3.14159265359f;
     }
 
     ShootAbility::ShootAbility(
         game::ArenaContext* context,
-        game::entities::Entity* owner)
+        game::entities::Entity* owner,
+        const std::string& textureKey,
+        float projectileScale)
         : context_(context),
-        owner_(owner)
+        owner_(owner),
+        textureKey_(textureKey),
+        projectileScale_(projectileScale)
     {
     }
 
@@ -88,19 +95,34 @@ namespace game::components
 
         auto bulletEntity = std::make_unique<game::entities::Entity>();
 
-        if (auto* transform = bulletEntity->getComponent<game::components::TransformComponent>())
-        {
-            transform->position = origin;
-        }
-
         auto projectile = std::make_unique<game::components::ProjectileComponent>(
             origin,
             direction);
 
         projectile->addVelocity(ownerVelocity);
 
-        bulletEntity->addComponent(std::move(projectile));
+        // --- POPRAWNY SPOSÓB NAK£ADANIA TEKSTURY ---
+        if (!textureKey_.empty())
+        {
+            auto tex = game::core::ResourceManager::get().getTextureShared(textureKey_);
+            if (tex)
+            {
+                auto size = tex->getSize();
 
+                // setAnimation automatycznie ukrywa ¿ó³te kó³ko i aplikuje sprite!
+                projectile->setAnimation(
+                    tex,
+                    1,
+                    1.0f,
+                    { static_cast<int>(size.x), static_cast<int>(size.y) }
+                );
+
+                // Ustawiamy ¿¹dan¹ skalê
+                projectile->setSpriteScale(projectileScale_, projectileScale_);
+            }
+        }
+
+        bulletEntity->addComponent(std::move(projectile));
         context_->spawnEntity(std::move(bulletEntity));
     }
 
