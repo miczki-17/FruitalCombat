@@ -4,6 +4,7 @@
 #include "../entities/Entity.h"
 #include "PlayerInputComponent.h"
 #include "TransformComponent.h"
+#include "StatsComponent.h"
 #include <cmath>
 
 namespace game::components
@@ -23,7 +24,7 @@ namespace game::components
 
     void MovementComponent::setGamePointer(game::Game* game)
     {
-        // Sprytny punkt wstrzykne?cia: gdy PlayingState wywola ta funkcj na graczu,
+        // Sprytny punkt wstrzyknie?cia: gdy PlayingState wywola ta funkcj na graczu,
         // automatycznie dodamy mu komponent wejsciowy obslugujacy klawiature.
         if (game && owner && !owner->getComponent<PlayerInputComponent>())
         {
@@ -93,18 +94,30 @@ namespace game::components
     void MovementComponent::updateRollingState(float deltaTime)
     {
         auto* transform = owner->getComponent<TransformComponent>();
+        if (!transform) return;
+
         if (transform->actionTimer > 0.0f)
         {
             transform->actionTimer -= deltaTime;
+
             if (transform->isRolling)
             {
                 limitSpeed(transform->overrideSpeedLimit);
             }
+
             return;
         }
 
         transform->isRolling = false;
-        limitSpeed(maxSpeed_);
+
+        float speedLimit = maxSpeed_;
+
+        if (auto* stats = owner->getComponent<StatsComponent>())
+        {
+            speedLimit = stats->getCurrentSpeed();
+        }
+
+        limitSpeed(speedLimit);
     }
 
     void MovementComponent::limitSpeed(float maxSpeed)
@@ -120,10 +133,10 @@ namespace game::components
     {
         activeDrag_ = friction;
         stopDrag_ = friction * 2.0f; // Stop drag jest zawsze silniejszy, by postac szybciej sie zatrzymywala
-	}
+    }
 
     void MovementComponent::setSpeedMultiplier(const float multiplier)
     {
         maxSpeed_ *= multiplier;
-	}
+    }
 }

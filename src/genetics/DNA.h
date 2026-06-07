@@ -21,7 +21,7 @@ namespace game::genetics
         // --- GENOTYPE (The actual genes) ---
         std::string skinKey = "Tomato";
 
-        float speed = 200.0f;
+        float speed = 100.0f;
         float maxHp = 100.0f;
         float sizeScale = 1.0f;
 

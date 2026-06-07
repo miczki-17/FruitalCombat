@@ -37,9 +37,9 @@ namespace game::components
         float projectileScale_;
 
         // MANA cost
-        float manaCost_ = 15.0f;
+        float manaCost_ = 12.0f;
 
-        float cooldown_ = 0.2f;
+        float cooldown_ = 0.3f;
         float cooldownTimer_ = 0.0f;
 
         bool isOnCooldown() const;

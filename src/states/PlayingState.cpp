@@ -86,6 +86,13 @@ namespace game::states
                 }
             }
 
+            if (fruitData.contains("puddleTexterePath"))
+            {
+                std::string puddleKey = fruitData.value("puddleKey", "");
+                std::string basePath = fruitData.value("puddleTexterePath", "");
+                rm.loadTexture(puddleKey, basePath, AssetGroup::Playing);
+            }
+
             // Animacja chodzenia
             if (fruitData.contains("walkTexturePath")) {
                 std::string path = fruitData.value("walkTexturePath", "");
@@ -262,6 +269,24 @@ namespace game::states
         if (!rm.hasTexture("coin")) {
             rm.loadTexture("coin", "assets/textures/entities/drops/juice_coin.png", game::core::AssetGroup::Global);
         }
+
+        std::string texKey = "ui_fertilizer_regular";
+        if (game->profile.equippedFertilizer == game::core::FertilizerType::Medium) texKey = "ui_fertilizer_medium";
+        if (game->profile.equippedFertilizer == game::core::FertilizerType::Best) texKey = "ui_fertilizer_best";
+
+        if (ResourceManager::get().hasTexture(texKey)) {
+            activeFertilizerSprite.emplace(*ResourceManager::get().getTexture(texKey));
+            // Pozycja gdzieœ w rogu HUD, np. na dole po lewej stronie
+            activeFertilizerSprite->setPosition({ 1110, 20 });
+            activeFertilizerSprite->setScale({ 0.8f, 0.8f });
+        }
+
+        activeFertilizerText.emplace(game->mainFont);
+        activeFertilizerText->setCharacterSize(static_cast<int>(24 * GLOBAL_FONT_SCALE));
+        activeFertilizerText->setFillColor(sf::Color::White);
+        activeFertilizerText->setOutlineThickness(2.0f);
+        activeFertilizerText->setOutlineColor(sf::Color::Black);
+        activeFertilizerText->setPosition({ 1100.f, 20.0f });
     }
 
     // --- GAME LOOP ---
@@ -301,6 +326,36 @@ namespace game::states
                     }
                 }
             }
+
+            if (keyPressed->code == game->keyFertilizer) {
+                if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
+                    auto& profile = game->profile;
+
+                    if (profile.getEquippedFertilizerCount() > 0) {
+                        game->playUIClick(); // Ewentualnie podepnij tu inny dŸwiêk
+
+                        switch (profile.equippedFertilizer) {
+                        case game::core::FertilizerType::Regular:
+                            stats->heal(stats->getMaxHealth() * 0.3f);
+                            stats->addEffect(game::components::StatusType::SpeedBuff, 60.0f, 1.2f);
+                            profile.regularFertilizerCount--;
+                            break;
+
+                        case game::core::FertilizerType::Medium:
+                            stats->heal(stats->getMaxHealth() * 0.6f);
+                            stats->addEffect(game::components::StatusType::SpeedBuff, 120.0f, 1.3f);
+                            profile.mediumFertilizerCount--;
+                            break;
+
+                        case game::core::FertilizerType::Best:
+                            stats->heal(stats->getMaxHealth());
+                            stats->addEffect(game::components::StatusType::SpeedBuff, 180.0f, 1.6f);
+                            profile.bestFertilizerCount--;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
@@ -312,6 +367,44 @@ namespace game::states
                     game->playUIClick();
                     game->getStateMachine().pushState(StateType::Pause);
                     game->getWindow().setMouseCursorVisible(true);
+                }
+
+                if (activeFertilizerSprite && activeFertilizerSprite->getGlobalBounds().contains(uiPos))
+                {
+                    auto* player = world->getPlayer();
+                    if (player) {
+                        auto* stats = player->getComponent<game::components::StatsComponent>();
+                        auto& profile = game->profile;
+
+                        if (stats && profile.getEquippedFertilizerCount() > 0)
+                        {
+                            game->playUIClick(); // Ewentualnie nowy dŸwiêk, np. "drink_potion"
+
+                            // Zu¿ycie nawozu w zale¿noœci od typu
+                            switch (profile.equippedFertilizer) {
+                            case game::core::FertilizerType::Regular:
+                                stats->heal(stats->getMaxHealth() * 0.3f);
+                                // Zwyk³y nawóz: 1 min, 1.2x predkosci
+                                stats->addEffect(game::components::StatusType::SpeedBuff, 60.0f, 1.2f);
+                                profile.regularFertilizerCount--;
+                                break;
+
+                            case game::core::FertilizerType::Medium:
+                                stats->heal(stats->getMaxHealth() * 0.6f);
+                                // Œredni nawóz: 2 min, 1.3x predkosci
+                                stats->addEffect(game::components::StatusType::SpeedBuff, 120.0f, 1.3f);
+                                profile.mediumFertilizerCount--;
+                                break;
+
+                            case game::core::FertilizerType::Best:
+                                stats->heal(stats->getMaxHealth());
+                                // Najlepszy nawóz: 3 min, 1.6x predkosci
+                                stats->addEffect(game::components::StatusType::SpeedBuff, 180.0f, 1.6f);
+                                profile.bestFertilizerCount--;
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -427,6 +520,10 @@ namespace game::states
                         manaText->setPosition({ std::round(frameMidX), std::round(frameMidY) });
                     }
                 }
+
+                if (activeFertilizerText) {
+                    activeFertilizerText->setString("x" + std::to_string(game->profile.getEquippedFertilizerCount()));
+                }
             }
         }
 
@@ -485,6 +582,9 @@ namespace game::states
         if (biomassSprite) window.draw(*biomassSprite);
         if (biomassText) window.draw(*biomassText);
         if (settingsBtnSprite) window.draw(*settingsBtnSprite);
+
+        if (activeFertilizerSprite) window.draw(*activeFertilizerSprite);
+        if (activeFertilizerText) window.draw(*activeFertilizerText);
     }
 
     void PlayingState::render(sf::RenderWindow& window)
@@ -496,12 +596,12 @@ namespace game::states
         // 2. HUD Render (Static on screen)
         window.setView(window.getDefaultView());
 
+        renderHUD(window);
+
         // Custom crosshair
         if (game->getStateMachine().getCurrentStateType() == states::StateType::Playing && crosshairSprite) {
             crosshairSprite->setPosition(window.mapPixelToCoords(sf::Mouse::getPosition(window), window.getDefaultView()));
             window.draw(*crosshairSprite);
         }
-
-        renderHUD(window);
     }
 }

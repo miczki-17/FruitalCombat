@@ -95,6 +95,12 @@ namespace game::systems
                     {
                         stats->takeDamage(actualDamage);
 
+                        // --- NAK£ADANIE EFEKTÓW ---
+                        if (proj->getStatusEffect() == game::components::StatusEffect::Slow) {
+                            // Spowalnia 50% przez 2s
+                            stats->addEffect(game::components::StatusType::Slow, 2.0f, 0.5f);
+                        }
+
                         if (auto* sprite = enemy->getComponent<game::components::SpriteComponent>()) {
                             sprite->triggerHitFlash();
                         }
@@ -126,6 +132,12 @@ namespace game::systems
                         {
                             stats->takeDamage(actualDamage);
                             //stats->setLastDamageSourceKey();
+
+                            // --- NAK£ADANIE EFEKTÓW ---
+                            //if (proj->getStatusEffect() == game::components::StatusEffect::Slow) {
+                            //    // Spowalnia 50% przez 2s
+                            //    stats->addEffect(game::components::StatusType::Slow, 2.0f, 0.5f);
+                            //}
 
                             if (auto* sprite = player->getComponent<game::components::SpriteComponent>()) {
                                 sprite->triggerHitFlash();
@@ -401,6 +413,112 @@ namespace game::systems
                 }
 
                 enemies_.erase(enemies_.begin() + i);
+            }
+        }
+    }
+
+    void CombatSystem::processAoE(
+        game::entities::Entity* player,
+        float deltaTime)
+    {
+        auto& entities = context_.entities;
+
+        for (auto& entity : entities)
+        {
+            auto* aoe =
+                entity->getComponent<game::components::AoEComponent>();
+
+            auto* aoeTransform =
+                entity->getComponent<game::components::TransformComponent>();
+
+            if (!aoe || !aoeTransform)
+                continue;
+
+            //
+            // WROGOWIE
+            //
+            for (auto& enemy : enemies_)
+            {
+                if (enemy->isDead())
+                    continue;
+
+                auto* enemyTransform =
+                    enemy->getComponent<game::components::TransformComponent>();
+
+                auto* enemyStats =
+                    enemy->getComponent<game::components::StatsComponent>();
+
+                if (!enemyTransform || !enemyStats)
+                    continue;
+
+                sf::Vector2f diff =
+                    enemyTransform->position -
+                    aoeTransform->position;
+
+                float distSq =
+                    diff.x * diff.x +
+                    diff.y * diff.y;
+
+                if (distSq <= aoe->radius * aoe->radius)
+                {
+                    if (aoe->dps > 0.0f)
+                    {
+                        enemyStats->takeDamage(
+                            aoe->dps * deltaTime
+                        );
+                    }
+
+                    if (aoe->appliesSlow)
+                    {
+                        enemyStats->addEffect(
+                            game::components::StatusType::Slow,
+                            0.15f,
+                            aoe->slowMultiplier
+                        );
+                    }
+                }
+            }
+
+            //
+            // GRACZ
+            //
+            if (player && !player->isDead())
+            {
+                auto* playerTransform =
+                    player->getComponent<game::components::TransformComponent>();
+
+                auto* playerStats =
+                    player->getComponent<game::components::StatsComponent>();
+
+                if (playerTransform && playerStats)
+                {
+                    sf::Vector2f diff =
+                        playerTransform->position -
+                        aoeTransform->position;
+
+                    float distSq =
+                        diff.x * diff.x +
+                        diff.y * diff.y;
+
+                    if (distSq <= aoe->radius * aoe->radius)
+                    {
+                        if (aoe->dps > 0.0f)
+                        {
+                            playerStats->takeDamage(
+                                aoe->dps * deltaTime
+                            );
+                        }
+
+                        if (aoe->appliesSlow)
+                        {
+                            playerStats->addEffect(
+                                game::components::StatusType::Slow,
+                                0.15f,
+                                aoe->slowMultiplier
+                            );
+                        }
+                    }
+                }
             }
         }
     }

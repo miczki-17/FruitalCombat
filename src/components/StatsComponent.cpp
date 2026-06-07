@@ -85,43 +85,43 @@ namespace game::components
         float duration,
         float value)
     {
-        for (
-            auto& effect :
-            activeEffects_)
+        for (auto& effect : activeEffects_)
         {
-            if (
-                effect.type !=
-                type)
-            {
+            if (effect.type != type)
                 continue;
-            }
 
             effect.duration =
-                std::max(
-                    effect.duration,
-                    duration);
+                std::max(effect.duration, duration);
 
-            if (
-                type ==
-                StatusType::
-                Poison &&
-                value >
-                effect.value)
+            switch (type)
             {
+            case StatusType::Poison:
                 effect.value =
-                    value;
+                    std::max(effect.value, value);
+                break;
+
+            case StatusType::Slow:
+                // mniejsza wartoœæ = mocniejszy slow
+                effect.value =
+                    std::min(effect.value, value);
+                break;
+
+            case StatusType::SpeedBuff:
+                // wiêksza wartoœæ = mocniejszy buff
+                effect.value =
+                    std::max(effect.value, value);
+                break;
             }
 
             return;
         }
 
-        activeEffects_
-            .push_back({
-                type,
-                duration,
-                value,
-                0.0f
-                });
+        activeEffects_.push_back({
+            type,
+            duration,
+            value,
+            0.0f
+            });
     }
 
     float StatsComponent::getHpPercentage()
@@ -360,4 +360,16 @@ namespace game::components
     }
 
     void StatsComponent::increaseMaxMana(float newMaxMana) { maxMana_ += newMaxMana; }
+
+    bool StatsComponent::hasActiveEffect(StatusType type) const
+    {
+        for (const auto& effect : activeEffects_)
+        {
+            if (effect.type == type && effect.duration > 0.0f)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

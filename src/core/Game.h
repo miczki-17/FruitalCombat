@@ -59,6 +59,7 @@ namespace game
 		sf::Keyboard::Key keyLeft = sf::Keyboard::Key::A;
 		sf::Keyboard::Key keyDown = sf::Keyboard::Key::S;
 		sf::Keyboard::Key keyRight = sf::Keyboard::Key::D;
+		sf::Keyboard::Key keyFertilizer = sf::Keyboard::Key::F;
 
 		
 

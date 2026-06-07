@@ -27,6 +27,8 @@ namespace game::components
 
         float targetDiameter = radius * 2.0f;
         sprite->setScale({ targetDiameter / size.x, targetDiameter / size.y });
+
+        sprite->setRotation( sf::degrees(static_cast<float>(std::rand() % 360)) );
     }
 
     void AoEComponent::update(float dt)

@@ -63,7 +63,17 @@ namespace game::systems
                 proj->render(window);
             }
         }
-        // Layer 6: Sprites
+
+        // Layer 6: AoE zones (if any)
+        for (auto& entity : context_.entities)
+        {
+            if (auto* aoeComp = entity->getComponent<game::components::AoEComponent>())
+            {
+                aoeComp->render(window);
+            }
+        }
+
+        // Layer 7: Sprites
         for (auto& entity : context_.entities)
         {
             if (auto* spriteComp = entity->getComponent<game::components::SpriteComponent>())
@@ -72,26 +82,17 @@ namespace game::systems
             }
         }
 
-        // Layer 7: Enemies (if any)
+        // Layer 8: Enemies (if any)
         for (auto& enemy : enemies) {
             if (auto* sprite = enemy->getComponent<game::components::SpriteComponent>()) {
                 sprite->render(window);
             }
         }
 
-        // Layer 8: Player (if exists)
+        // Layer 9: Player (if exists)
         if (player != nullptr) {
             if (auto* sprite = player->getComponent<game::components::SpriteComponent>()) {
                 sprite->render(window);
-            }
-        }
-
-		// Layer 9: AoE zones (if any)
-        for (auto& entity : context_.entities)
-        {
-            if (auto* aoeComp = entity->getComponent<game::components::AoEComponent>())
-            {
-                aoeComp->render(window);
             }
         }
 

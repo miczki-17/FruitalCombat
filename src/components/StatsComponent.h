@@ -83,6 +83,8 @@ namespace game::components
 
         std::string getLastDamageSourceKey() const;
 
+        bool hasActiveEffect(StatusType type) const;
+
 
         // --- MANA (JUICE) ---
         void consumeMana(float amount);

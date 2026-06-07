@@ -40,6 +40,10 @@ namespace game::states
         std::optional<sf::Text> waveText;
         std::optional<sf::Text> biomassText;
 
+        // Fertilizer
+        std::optional<sf::Sprite> activeFertilizerSprite;
+        std::optional<sf::Text> activeFertilizerText;
+
         // --- GAME WORLD ---
         std::unique_ptr<game::core::GameWorld> world;
 

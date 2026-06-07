@@ -113,7 +113,7 @@ namespace game::states
             for (auto& [characterKey, characterData] : game->fruitsConfig.items()) {
                 if (characterData.contains("idleTexturePath")) {
                     std::string path = characterData.value("idleTexturePath", "");
-                    if (!path.empty()) rm.loadTexture(characterKey + "_idle", path, game::core::AssetGroup::Menu);
+                    if (!path.empty()) rm.loadTexture(characterKey + "_idle", path, game::core::AssetGroup::Global);
                 }
                 if (characterData.contains("initTexturePath")) {
                     std::string path = characterData.value("initTexturePath", "");
@@ -229,10 +229,7 @@ namespace game::states
             {"spd_icon", "assets/textures/ui/speed_icon.png"},
             {"dmg_icon", "assets/textures/ui/damage_icon.png"},
             {"star_full_icon", "assets/textures/ui/star_full_icon.png"},
-            {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
-            {"fert_regular", "assets/textures/ui/fert.png"},
-            {"fert_medium", "assets/textures/ui/fert_medium.png"},
-            {"fert_best", "assets/textures/ui/fert_best.png"},
+            {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"}
         };
 
         std::map<std::string, std::string> uiGlobalPaths = {
@@ -245,7 +242,10 @@ namespace game::states
             {"right_arrow", "assets/textures/ui/right_arrow.png"},
             {"stat_bar_frame", "assets/textures/ui/stat_bar_frame.png"},
             {"stat_bar_fill", "assets/textures/ui/stat_bar_fill.png"},
-            {"coin", "assets/textures/entities/drops/juice_coin.png"}
+            {"coin", "assets/textures/entities/drops/juice_coin.png"},
+            {"fert_regular", "assets/textures/items/fert_regular.png"},
+            {"fert_medium", "assets/textures/items/fert_medium.png"},
+            {"fert_best", "assets/textures/items/fert_best.png"}
         };
 
         for (const auto& [key, path] : uiPaths) {

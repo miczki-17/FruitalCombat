@@ -27,7 +27,7 @@ namespace game::components
         void setSpeedMultiplier(const float multiplier);
 
     private:
-        float maxSpeed_;
+        float maxSpeed_ = 400.0f;
         float acceleration_ = 2500.0f;
         float activeDrag_ = 4.0f;
         float stopDrag_ = 8.0f;

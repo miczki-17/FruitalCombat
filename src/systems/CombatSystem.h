@@ -33,6 +33,9 @@ namespace game::systems
         // Sprawdza stan zdrowia wrogów, obs?uguje ich ?mier?, generuje dropy soku i karmi genami EvolutionManager
         void processEnemyDeaths(game::systems::EvolutionManager& evolutionManager);
 
+        // sprawdza kaluze i ich efektu
+        void processAoE(game::entities::Entity* player, float deltaTime);
+
     private:
         game::Game* game_;
         game::ArenaContext& context_;

@@ -9,6 +9,7 @@
 #include "../abilities/AcidSquirtAbility.h"
 #include "../abilities/RindRollAbility.h"
 #include "../abilities/AcidPoolUltimate.h"
+#include "../abilities/CiderDashAbility.h"
 
 // Components
 #include "../components/MovementComponent.h"
@@ -96,8 +97,8 @@ namespace game::factories
             ? res.getTexture(walkKey)
             : nullptr;
 
-        const int idleFrames = data.value("idleFrames", 4);
-        const int walkFrames = data.value("walkFrames", 4);
+        const int idleFrames = data.value("idleFrames", 2);
+        const int walkFrames = data.value("walkFrames", 2);
 
         entity->addComponent(
             std::make_unique<game::components::SpriteComponent>(
@@ -157,6 +158,9 @@ namespace game::factories
             const float kForce = 400.0f;
             abilities->setSkill(std::make_unique<game::components::RindRollAbility>(
                 entity, &context, &enemies, kRadius, kForce));
+        }
+        else if (name == "Cider Dash") {
+            abilities->setSkill(std::make_unique<game::components::CiderDashAbility>(&context, entity, "apple_puddle"));
         }
         else if (name == "AcidPoolUlt") {
             abilities->setUltimate(std::make_unique<game::components::AcidPoolUltimate>(entity, &context));

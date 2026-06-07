@@ -2,6 +2,7 @@
 #include "StatsComponent.h"
 #include "TransformComponent.h"
 #include "../entities/Entity.h"
+#include "../core/Game.h"
 
 namespace game::components
 {
@@ -39,6 +40,36 @@ namespace game::components
         updateHitFlash(deltaTime);
         updateVisual(deltaTime);
         updateHealthBar();
+
+        if (hitFlashTimer_ <= 0.0f)
+        {
+            auto* stats = owner->getComponent<StatsComponent>();
+            if (stats)
+            {
+                // zaczynamy od default coloru
+                sf::Color targetColor = geneticColor_;
+
+                // Sprawdzamy efekty
+                if (stats->hasActiveEffect(StatusType::Slow))
+                {
+                    // Lekko ¿ó³tawo-zielony (jak cydr/kwas)
+                    targetColor = sf::Color(170, 255, 120, geneticColor_.a);
+                }
+                else if (stats->hasActiveEffect(StatusType::Poison))
+                {
+                    // G³êboki fioletowy/zielony dla zwyk³ej trucizny
+                    targetColor = sf::Color(200, 100, 255, geneticColor_.a);
+                }
+
+                // Aplikujemy ostateczny kolor
+                if (hasSprite()) {
+                    sprite_->setColor(targetColor);
+                }
+                else {
+                    fallbackShape_.setFillColor(targetColor);
+                }
+            }
+        }
     }
 
     void SpriteComponent::render(sf::RenderWindow& window)

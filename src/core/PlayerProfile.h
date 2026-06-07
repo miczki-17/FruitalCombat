@@ -4,6 +4,13 @@
 
 namespace game::core
 {
+    // Definicja typów nawozów
+    enum class FertilizerType {
+        Regular,
+        Medium,
+        Best
+    };
+
     struct PlayerProfile final
     {
         // waluta INgame
@@ -13,6 +20,20 @@ namespace game::core
         int damageLevel = 0;
         int maxHealthLevel = 0;
         int speedLevel = 0;
+
+
+        // Aktualnie wybrany nawóz
+        FertilizerType equippedFertilizer = FertilizerType::Regular;
+
+        // Pomocnicza funkcja do pobierania iloœci aktualnie wybranego nawozu
+        int getEquippedFertilizerCount() const {
+            switch (equippedFertilizer) {
+            case FertilizerType::Regular: return regularFertilizerCount;
+            case FertilizerType::Medium:  return mediumFertilizerCount;
+            case FertilizerType::Best:    return bestFertilizerCount;
+            }
+            return 0;
+        }
 
         // Funkcje zwracaj¹ce gotowe mno¿niki ulepsze dla systemów
         float getDamageMultiplier() const { return 1.0f + (damageLevel * 0.15f); }

@@ -13,7 +13,8 @@ namespace game::components
         None,
         Poison,
         SporePoison,
-        IceShatter
+        IceShatter,
+        Slow
     };
 
     class ProjectileComponent final : public Component

@@ -77,6 +77,70 @@ namespace game::states
     void LobbyState::initUI()
     {
         auto& rm = ResourceManager::get();
+
+        // --- 1. £ADOWANIE TEKSTUR DO PAMIÊCI ---
+        if (!rm.hasTexture("ui_fertilizer_regular")) {
+            rm.loadTexture("ui_fertilizer_regular", "assets/textures/items/fert_regular.png", game::core::AssetGroup::Global);
+        }
+        if (!rm.hasTexture("ui_fertilizer_medium")) {
+            rm.loadTexture("ui_fertilizer_medium", "assets/textures/items/fert_medium.png", game::core::AssetGroup::Global);
+        }
+        if (!rm.hasTexture("ui_fertilizer_best")) {
+            rm.loadTexture("ui_fertilizer_best", "assets/textures/items/fert_best.png", game::core::AssetGroup::Global);
+        }
+
+        // --- 2. TWORZENIE G£ÓWNEJ IKONY ---
+        updateMainFertilizerIcon();
+
+        mainFertilizerText.emplace(game->mainFont);
+        mainFertilizerText->setCharacterSize(static_cast<int>(18 * GLOBAL_FONT_SCALE));
+        mainFertilizerText->setFillColor(sf::Color::White);
+        mainFertilizerText->setOutlineThickness(1.5f);
+        mainFertilizerText->setOutlineColor(sf::Color::Black);
+        // Pozycjonujemy obok monet, np. przesuniête w lewo
+        mainFertilizerText->setPosition({ 960.f, 25.f });
+
+        // --- Inicjalizacja Popupu ---
+        fertilizerPopupBg.setSize({ 260.f, 70.f });
+        fertilizerPopupBg.setFillColor(sf::Color(30, 30, 40, 230));
+        fertilizerPopupBg.setOutlineThickness(2.0f);
+        fertilizerPopupBg.setOutlineColor(sf::Color(100, 100, 120));
+
+        float popupX = 700.f;
+        float popupY = 80.f;
+        fertilizerPopupBg.setPosition({ popupX, popupY });
+
+        // Funkcja lambda dla wygody tworzenia ikonek w popupie
+        auto setupPopupIcon = [&](std::optional<sf::Sprite>& spr, std::optional<sf::Text>& txt, const std::string& texKey, float xOffset) {
+            if (rm.hasTexture(texKey)) {
+                spr.emplace(*rm.getTexture(texKey));
+
+                sf::Vector2u texSize = spr->getTexture().getSize();
+                spr->setOrigin({ texSize.x / 2.0f, texSize.y / 2.0f });
+
+                float targetSize = 45.0f;
+                spr->setScale({ targetSize / texSize.x, targetSize / texSize.y });
+
+                spr->setPosition({ popupX + xOffset, popupY + 35.f });
+            }
+
+            txt.emplace(game->mainFont);
+            txt->setString("x 0");
+            txt->setCharacterSize(static_cast<int>(15 * GLOBAL_FONT_SCALE));
+            txt->setFillColor(sf::Color::White);
+            txt->setOutlineThickness(1.5f);
+            txt->setOutlineColor(sf::Color::Black);
+
+            sf::FloatRect bounds = txt->getLocalBounds();
+            txt->setOrigin({ 0.f, std::round(bounds.position.y + bounds.size.y / 2.0f) });
+
+            txt->setPosition({ popupX + xOffset + 22.f, popupY + 35.f });
+        };
+
+        setupPopupIcon(regFertSprite, regFertText, "ui_fertilizer_regular", 30.f);
+        setupPopupIcon(medFertSprite, medFertText, "ui_fertilizer_medium", 115.f);
+        setupPopupIcon(bestFertSprite, bestFertText, "ui_fertilizer_best", 200.f);
+
         sf::Vector2f viewSize = game->getWindow().getView().getSize();
         float centerX = viewSize.x / 2.0f;
         float margin = 20.0f;
@@ -147,6 +211,21 @@ namespace game::states
         coinText->setOutlineThickness(1.5f);
         coinText->setOutlineColor(sf::Color::Black);
         coinText->setPosition({ 1120.f, 35.f });
+    }
+
+    void LobbyState::updateMainFertilizerIcon()
+    {
+        auto& rm = ResourceManager::get();
+        std::string texKey = "ui_fert_regular";
+
+        if (game->profile.equippedFertilizer == game::core::FertilizerType::Medium) texKey = "ui_fert_medium";
+        if (game->profile.equippedFertilizer == game::core::FertilizerType::Best) texKey = "ui_fert_best";
+
+        if (rm.hasTexture(texKey)) {
+            mainFertilizerSprite.emplace(*rm.getTexture(texKey));
+            mainFertilizerSprite->setPosition({ 975.f, 25.f });
+            mainFertilizerSprite->setScale({ 0.8f, 0.8f });
+        }
     }
 
     void LobbyState::loadSelectedCharacter()
@@ -262,6 +341,47 @@ namespace game::states
                     game->getStateMachine().pushState(StateType::Shop);
                     return;
                 }
+
+                // SprawdŸ klikniêcie w ikonki w popupie (jeœli otwarty)
+                if (isFertilizerPopupOpen) {
+                    bool clickedInside = fertilizerPopupBg.getGlobalBounds().contains(worldPos);
+
+                    if (regFertSprite && regFertSprite->getGlobalBounds().contains(worldPos)) {
+                        game->profile.equippedFertilizer = game::core::FertilizerType::Regular;
+                        game->playUIClick();
+                        updateMainFertilizerIcon();
+                        isFertilizerPopupOpen = false;
+                        return;
+                    }
+                    if (medFertSprite && medFertSprite->getGlobalBounds().contains(worldPos)) {
+                        game->profile.equippedFertilizer = game::core::FertilizerType::Medium;
+                        game->playUIClick();
+                        updateMainFertilizerIcon();
+                        isFertilizerPopupOpen = false;
+                        return;
+                    }
+                    if (bestFertSprite && bestFertSprite->getGlobalBounds().contains(worldPos)) {
+                        game->profile.equippedFertilizer = game::core::FertilizerType::Best;
+                        game->playUIClick();
+                        updateMainFertilizerIcon();
+                        isFertilizerPopupOpen = false;
+                        return;
+                    }
+
+                    // Jeœli klikn¹³ gdzieœ indziej poza popupem, zamknij go
+                    if (!clickedInside) {
+                        isFertilizerPopupOpen = false;
+                    }
+                }
+                else
+                {
+                    // Klikniêcie w g³ówn¹ ikonê otwiera popup
+                    if (mainFertilizerSprite && mainFertilizerSprite->getGlobalBounds().contains(worldPos)) {
+                        game->playUIClick();
+                        isFertilizerPopupOpen = true;
+                        return;
+                    }
+                }
             }
         }
     }
@@ -337,6 +457,16 @@ namespace game::states
             float charTopY = characterSprite->getPosition().y - (characterSprite->getGlobalBounds().size.y / 2.0f);
             charNameText->setPosition({ characterSprite->getPosition().x, charTopY - 40.f + floatOffset });
         }
+
+        if (mainFertilizerText) {
+            mainFertilizerText->setString("x" + std::to_string(game->profile.getEquippedFertilizerCount()));
+        }
+
+        if (isFertilizerPopupOpen) {
+            if (regFertText) regFertText->setString("x" + std::to_string(game->profile.regularFertilizerCount));
+            if (medFertText) medFertText->setString("x" + std::to_string(game->profile.mediumFertilizerCount));
+            if (bestFertText) bestFertText->setString("x" + std::to_string(game->profile.bestFertilizerCount));
+        }
     }
 
 
@@ -407,6 +537,22 @@ namespace game::states
         // coins
         if (coinSprite) window.draw(*coinSprite);
         if (coinText) window.draw(*coinText);
+
+        // NAWOZY
+        if (mainFertilizerSprite) window.draw(*mainFertilizerSprite);
+        if (mainFertilizerText) window.draw(*mainFertilizerText);
+
+        if (isFertilizerPopupOpen) {
+            window.draw(fertilizerPopupBg);
+            if (regFertSprite) window.draw(*regFertSprite);
+            if (regFertText) window.draw(*regFertText);
+
+            if (medFertSprite) window.draw(*medFertSprite);
+            if (medFertText) window.draw(*medFertText);
+
+            if (bestFertSprite) window.draw(*bestFertSprite);
+            if (bestFertText) window.draw(*bestFertText);
+        }
 
         game->drawMenuCursor();
     }

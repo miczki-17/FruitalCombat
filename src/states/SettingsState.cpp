@@ -1,3 +1,5 @@
+// --- SettingsState.cpp ---
+
 #include "SettingsState.h"
 #include "../core/Game.h"
 #include "../core/ResourceManager.h"
@@ -84,8 +86,23 @@ namespace game::states
         bindsBackground.setOrigin({ 200.f, 0.f });
         bindsBackground.setPosition({ rightColX, 200.f });
 
+        // --- SCROLLBAR WIZUALIZACJA ---
+        float trackWidth = 12.0f;
+        float trackHeight = bindsBackground.getSize().y - 10.f;
+        float trackX = bindsBackground.getPosition().x + (bindsBackground.getSize().x / 2.0f) - trackWidth - 410.0f;
+        float trackY = bindsBackground.getPosition().y + 5.f;
+
+        scrollbarTrack.setSize({ trackWidth, trackHeight });
+        scrollbarTrack.setPosition({ trackX, trackY });
+        scrollbarTrack.setFillColor(sf::Color(30, 30, 30, 200));
+        scrollbarTrack.setOutlineThickness(1.0f);
+        scrollbarTrack.setOutlineColor(sf::Color(80, 80, 80));
+
+        scrollbarThumb.setSize({ trackWidth, 50.0f });
+        scrollbarThumb.setPosition({ trackX, trackY });
+        scrollbarThumb.setFillColor(sf::Color(150, 150, 150, 255));
+
         // Ustawienie "kamery" (View) do scrolowania listy.
-        // Viewport to procentowe wymiary ekranu (od 0.0 do 1.0)
         sf::FloatRect bgBounds = bindsBackground.getGlobalBounds();
         scrollView.setSize({ bgBounds.size.x, bgBounds.size.y });
         scrollView.setCenter({ rightColX, 200.f + (bgBounds.size.y / 2.0f) });
@@ -102,8 +119,9 @@ namespace game::states
         setupBindRow(leftLabel, leftBtnText, startY + spacing);
         setupBindRow(downLabel, downBtnText, startY + spacing * 2);
         setupBindRow(rightLabel, rightBtnText, startY + spacing * 3);
+        setupBindRow(fertilizerLabel, fertilizerBtnText, startY + spacing * 4); // Nowy bind nawozu
 
-        maxScroll = 0.0f; // change if more binds
+        maxScroll = 50.0f; // Limit przewijania
 
         // --- BACK BUTTON ---
         if (rm.hasTexture("ui_back")) {
@@ -115,7 +133,7 @@ namespace game::states
             backBtnSprite->setPosition({ 60.f, 60.f });
         }
 
-        refreshTexts(); // set all text as actual
+        refreshTexts(); // Ustawienie tekstów zale¿nych od jêzyka
     }
 
     void SettingsState::setupBindRow(std::optional<sf::Text>& label,
@@ -173,7 +191,6 @@ namespace game::states
             });
         langBtnText->setPosition({ leftColX, rowY });
 
-        // --- PRECYZYJNA KONTROLA STRZALEK ---
         constexpr float languageFieldWidth = 220.f;
         constexpr float paddingX = 60.f;
 
@@ -191,7 +208,7 @@ namespace game::states
         controlsTitle->setOrigin({ std::round(cBounds.size.x / 2.f), 0.f });
         controlsTitle->setPosition({ rightColX, 150.f });
 
-        
+
         constexpr float LABEL_COLUMN_OFFSET = 320.f;
         constexpr float KEY_COLUMN_OFFSET = 360.f;
 
@@ -199,7 +216,7 @@ namespace game::states
 
         float labelColumnX = panelLeft + LABEL_COLUMN_OFFSET;
         float keyColumnX = panelLeft + KEY_COLUMN_OFFSET;
-        
+
 
         rawStr = Loc("ui_move_up");
         upLabel->setString(sf::String::fromUtf8(rawStr.begin(), rawStr.end()));
@@ -209,20 +226,26 @@ namespace game::states
         downLabel->setString(sf::String::fromUtf8(rawStr.begin(), rawStr.end()));
         rawStr = Loc("ui_move_right");
         rightLabel->setString(sf::String::fromUtf8(rawStr.begin(), rawStr.end()));
+        rawStr = Loc("ui_use_fertilizer");
+        fertilizerLabel->setString(sf::String::fromUtf8(rawStr.begin(), rawStr.end()));
 
         alignTextRight(*upLabel);
         alignTextRight(*leftLabel);
         alignTextRight(*downLabel);
         alignTextRight(*rightLabel);
+        alignTextRight(*fertilizerLabel);
 
         upLabel->setPosition({ labelColumnX, upLabel->getPosition().y });
         leftLabel->setPosition({ labelColumnX, leftLabel->getPosition().y });
         downLabel->setPosition({ labelColumnX, downLabel->getPosition().y });
         rightLabel->setPosition({ labelColumnX, rightLabel->getPosition().y });
+        fertilizerLabel->setPosition({ labelColumnX, fertilizerLabel->getPosition().y });
+
         upBtnText->setPosition({ keyColumnX, upBtnText->getPosition().y });
         leftBtnText->setPosition({ keyColumnX, leftBtnText->getPosition().y });
         downBtnText->setPosition({ keyColumnX, downBtnText->getPosition().y });
         rightBtnText->setPosition({ keyColumnX, rightBtnText->getPosition().y });
+        fertilizerBtnText->setPosition({ keyColumnX, fertilizerBtnText->getPosition().y });
     }
 
     void SettingsState::setupButton(const std::string& key, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
@@ -256,7 +279,7 @@ namespace game::states
             btn->setScale({ baseScaleX * 1.1f, baseScaleY * 1.1f });
 
             if (linkedText && linkedText->has_value()) {
-                (*linkedText)->setFillColor(sf::Color::Yellow); // Zmiana na zolty przy hoverze
+                (*linkedText)->setFillColor(sf::Color::Yellow);
                 (*linkedText)->setScale({ 1.05f, 1.05f });
             }
         }
@@ -289,10 +312,11 @@ namespace game::states
             if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>())
             {
                 switch (currentRebind) {
-                case RebindTarget::Up:    game->keyUp = keyEvent->code; break;
-                case RebindTarget::Left:  game->keyLeft = keyEvent->code; break;
-                case RebindTarget::Down:  game->keyDown = keyEvent->code; break;
-                case RebindTarget::Right: game->keyRight = keyEvent->code; break;
+                case RebindTarget::Up:         game->keyUp = keyEvent->code; break;
+                case RebindTarget::Left:       game->keyLeft = keyEvent->code; break;
+                case RebindTarget::Down:       game->keyDown = keyEvent->code; break;
+                case RebindTarget::Right:      game->keyRight = keyEvent->code; break;
+                case RebindTarget::Fertilizer: game->keyFertilizer = keyEvent->code; break;
                 default: break;
                 }
                 currentRebind = RebindTarget::None;
@@ -316,15 +340,8 @@ namespace game::states
                 scrollOffset -= scroll->delta * 30.0f;
                 scrollOffset = std::clamp(scrollOffset, 0.0f, maxScroll);
 
-                // Aktualizacja kamery widoku listy
                 sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
                 float rightColX = viewSize.x * 0.75f;
-
-                constexpr float LABEL_COLUMN_OFFSET = 60.f;
-                constexpr float KEY_COLUMN_OFFSET = 90.f;
-
-                float labelColumnX = rightColX + LABEL_COLUMN_OFFSET;
-                float keyColumnX = rightColX + KEY_COLUMN_OFFSET;
 
                 scrollView.setCenter({ rightColX, 200.f + (bindsBackground.getSize().y / 2.0f) + scrollOffset });
             }
@@ -336,8 +353,6 @@ namespace game::states
             if (mousePressed->button == sf::Mouse::Button::Left)
             {
                 sf::Vector2f globalMousePos = game->getWindow().mapPixelToCoords(sf::Mouse::getPosition(game->getWindow()), game->getWindow().getDefaultView());
-
-                // Myszka w ukladzie wspolrzednych "scrollowanej listy"
                 sf::Vector2f scrolledMousePos = game->getWindow().mapPixelToCoords(sf::Mouse::getPosition(game->getWindow()), scrollView);
 
                 if (backBtnSprite && backBtnSprite->getGlobalBounds().contains(globalMousePos)) {
@@ -346,7 +361,6 @@ namespace game::states
                     return;
                 }
 
-                // Zmiana jezyka klikiem w tekst LUB w lewa/prawa strzalke
                 bool leftClicked = langLeftArrow && langLeftArrow->getGlobalBounds().contains(globalMousePos);
                 bool rightClicked = langRightArrow && langRightArrow->getGlobalBounds().contains(globalMousePos);
                 bool textClicked = langBtnText && langBtnText->getGlobalBounds().contains(globalMousePos);
@@ -370,18 +384,32 @@ namespace game::states
                     isDraggingSlider = true;
                 }
 
-                // Klikanie w Bindy
+                // Wykrywanie klikniêcia w pasek przewijania (Scrollbar)
+                if (maxScroll > 0.0f) {
+                    sf::FloatRect scrollHitbox(
+                        { scrollbarTrack.getPosition().x - 10.f, scrollbarTrack.getPosition().y }, // Wektor pozycji
+                        { scrollbarTrack.getSize().x + 20.f, scrollbarTrack.getSize().y }          // Wektor rozmiaru
+                    );
+
+                    if (scrollHitbox.contains(globalMousePos)) {
+                        isDraggingScrollbar = true;
+                    }
+                }
+
+                // Klikanie w Bindy (widok ze scrollView)
                 if (bindsBackground.getGlobalBounds().contains(globalMousePos)) {
-                    if (upBtnText->getGlobalBounds().contains(scrolledMousePos))    currentRebind = RebindTarget::Up;
-                    if (leftBtnText->getGlobalBounds().contains(scrolledMousePos))  currentRebind = RebindTarget::Left;
-                    if (downBtnText->getGlobalBounds().contains(scrolledMousePos))  currentRebind = RebindTarget::Down;
-                    if (rightBtnText->getGlobalBounds().contains(scrolledMousePos)) currentRebind = RebindTarget::Right;
+                    if (upBtnText->getGlobalBounds().contains(scrolledMousePos))         currentRebind = RebindTarget::Up;
+                    if (leftBtnText->getGlobalBounds().contains(scrolledMousePos))       currentRebind = RebindTarget::Left;
+                    if (downBtnText->getGlobalBounds().contains(scrolledMousePos))       currentRebind = RebindTarget::Down;
+                    if (rightBtnText->getGlobalBounds().contains(scrolledMousePos))      currentRebind = RebindTarget::Right;
+                    if (fertilizerBtnText->getGlobalBounds().contains(scrolledMousePos)) currentRebind = RebindTarget::Fertilizer;
                 }
             }
         }
 
         if (event.is<sf::Event::MouseButtonReleased>()) {
             isDraggingSlider = false;
+            isDraggingScrollbar = false;
         }
     }
 
@@ -413,6 +441,7 @@ namespace game::states
         leftBtnText->setString(currentRebind == RebindTarget::Left ? Loc("ui_press_key") : "[ " + keyToString(game->keyLeft) + " ]");
         downBtnText->setString(currentRebind == RebindTarget::Down ? Loc("ui_press_key") : "[ " + keyToString(game->keyDown) + " ]");
         rightBtnText->setString(currentRebind == RebindTarget::Right ? Loc("ui_press_key") : "[ " + keyToString(game->keyRight) + " ]");
+        fertilizerBtnText->setString(currentRebind == RebindTarget::Fertilizer ? Loc("ui_press_key") : "[ " + keyToString(game->keyFertilizer) + " ]");
 
         // Hover dla guzika jezyka
         if (langBtnText) {
@@ -424,6 +453,42 @@ namespace game::states
                 langBtnText->setFillColor(sf::Color::White);
                 langBtnText->setScale({ 1.0f, 1.0f });
             }
+        }
+
+        // --- LOGIKA I ANIMACJA SCROLLBARA ---
+        if (maxScroll > 0.0f)
+        {
+            float trackY = scrollbarTrack.getPosition().y;
+            float trackHeight = scrollbarTrack.getSize().y;
+            float thumbHeight = scrollbarThumb.getSize().y;
+
+            if (isDraggingScrollbar) {
+                float mouseY = uiMousePos.y;
+                float relativeY = mouseY - trackY - (thumbHeight / 2.0f);
+                float scrollRatio = std::clamp(relativeY / (trackHeight - thumbHeight), 0.0f, 1.0f);
+
+                scrollOffset = scrollRatio * maxScroll;
+
+                sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
+                float rightColX = viewSize.x * 0.75f;
+                scrollView.setCenter({ rightColX, 200.f + (bindsBackground.getSize().y / 2.0f) + scrollOffset });
+
+                scrollbarThumb.setFillColor(sf::Color::White);
+            }
+            else {
+                if (scrollbarThumb.getGlobalBounds().contains(uiMousePos)) {
+                    scrollbarThumb.setFillColor(sf::Color(200, 200, 200));
+                }
+                else {
+                    scrollbarThumb.setFillColor(sf::Color(150, 150, 150));
+                }
+            }
+
+            float scrollRatio = scrollOffset / maxScroll;
+            float maxThumbY = trackY + trackHeight - thumbHeight;
+            float currentThumbY = trackY + (scrollRatio * (trackHeight - thumbHeight));
+
+            scrollbarThumb.setPosition({ scrollbarThumb.getPosition().x, currentThumbY });
         }
     }
 
@@ -449,6 +514,13 @@ namespace game::states
 
         window.draw(*controlsTitle);
         window.draw(bindsBackground);
+
+        // Rysuj scrollbar tylko wtedy, gdy lista jest d³u¿sza
+        if (maxScroll > 0.0f) {
+            window.draw(scrollbarTrack);
+            window.draw(scrollbarThumb);
+        }
+
         if (backBtnSprite) window.draw(*backBtnSprite);
 
         // 2. Rysujemy SCROLLOWANA LISTE BINDOW
@@ -458,6 +530,7 @@ namespace game::states
         window.draw(*leftLabel); window.draw(*leftBtnText);
         window.draw(*downLabel); window.draw(*downBtnText);
         window.draw(*rightLabel); window.draw(*rightBtnText);
+        window.draw(*fertilizerLabel); window.draw(*fertilizerBtnText);
 
         // 3. Zawsze na koncu wracamy do domyslnej kamery, zeby kursor dzialal poprawnie
         window.setView(window.getDefaultView());
@@ -476,6 +549,12 @@ namespace game::states
         case sf::Keyboard::Key::Down: return "Down";
         case sf::Keyboard::Key::Right: return "Right";
         case sf::Keyboard::Key::Space: return "Space";
+        case sf::Keyboard::Key::F: return "F";
+        case sf::Keyboard::Key::E: return "E";
+        case sf::Keyboard::Key::Q: return "Q";
+        case sf::Keyboard::Key::LShift: return "LShift";
+        case sf::Keyboard::Key::RShift: return "RShift";
+        case sf::Keyboard::Key::Tab: return "Tab";
         default: return "Key";
         }
     }

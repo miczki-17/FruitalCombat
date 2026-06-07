@@ -56,7 +56,7 @@ namespace game::components
         std::shared_ptr<sf::Texture> texture_;
         bool hasTextures_ = false;
 
-        
+
         std::unordered_map<AnimState, AnimationData> animations_;
         AnimState currentState_ = AnimState::Idle;
         sf::Vector2i frameSize_{ 96, 96 };

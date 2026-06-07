@@ -84,16 +84,14 @@ namespace game::core
             if (auto* stats = enemy->getComponent<game::components::StatsComponent>()) stats->update(dt);
         }
 
-        // Aktualizacja logiczna postaci
-        player->update(dt);
-        for (auto& enemy : enemies) enemy->update(dt);
 
-        // Zunifikowane wywo?ania Systemów!
+        // Zunifikowane wywo?ania Systemów
         collisionSystem->updateJuiceCollection(player.get(), dt);
         collisionSystem->updateBulletIntersections(dt, collisionMask_, mapScale_);
 
         combatSystem->processJuiceCollection(player.get());
         combatSystem->processBulletDamage(player.get());
+        combatSystem->processAoE(player.get(), dt);
 
         particleSystem->updateEffects(dt);
         particleSystem->updateParticles(player.get(), dt, lastPlayerPos_, playerDustSpawnTimer_);
@@ -102,6 +100,10 @@ namespace game::core
 
         combatSystem->processEnemyDeaths(*evolutionManager);
         evolutionManager->update(dt);
+
+        // Aktualizacja logiczna postaci
+        player->update(dt);
+        for (auto& enemy : enemies) enemy->update(dt);
     }
 
     void GameWorld::render(sf::RenderWindow& window, std::optional<sf::Sprite>& mapSprite)

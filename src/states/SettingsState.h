@@ -8,7 +8,7 @@
 
 namespace game::states
 {
-    enum class RebindTarget { None, Up, Left, Down, Right };
+    enum class RebindTarget { None, Up, Left, Down, Right, Fertilizer };
 
     class SettingsState : public State
     {
@@ -42,12 +42,18 @@ namespace game::states
         float scrollOffset = 0.0f;
         float maxScroll = 0.0f;
 
+        // --- SCROLLBAR ---
+        sf::RectangleShape scrollbarTrack;
+        sf::RectangleShape scrollbarThumb;
+        bool isDraggingScrollbar = false;
+
         std::optional<sf::Text> controlsTitle;
 
         std::optional<sf::Text> upLabel;      std::optional<sf::Text> upBtnText;
         std::optional<sf::Text> leftLabel;    std::optional<sf::Text> leftBtnText;
         std::optional<sf::Text> downLabel;    std::optional<sf::Text> downBtnText;
         std::optional<sf::Text> rightLabel;   std::optional<sf::Text> rightBtnText;
+        std::optional<sf::Text> fertilizerLabel; std::optional<sf::Text> fertilizerBtnText;
 
         RebindTarget currentRebind = RebindTarget::None;
 
@@ -57,7 +63,7 @@ namespace game::states
 
         // --- HELPERS ---
         std::string keyToString(sf::Keyboard::Key key);
-        void refreshTexts(); // Odœwie¿a napisy po zmianie jêzyka!
+        void refreshTexts(); // odswierza napisy po zmianie jezyka
         void setupBindRow(std::optional<sf::Text>& label, std::optional<sf::Text>& btn, float yPos);
         
         void setupButton(const std::string& key, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize);
