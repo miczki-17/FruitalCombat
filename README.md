@@ -24,7 +24,7 @@ Pojawiają się:
   Ulepszenia unikalne (character-specific) (5% szans na pojawienie się).
 
 
-  System Many (Nawodnienie) (niebieski pasek):
+  System Many (Nawodnienie) (żółty pasek):
     Pasywna odnawia się wolno,
     Aktywna warzywa mogą dropić Krople rosy, po których podniesienie gracz szybko odzyskuje manę. Wymusza ruch.
 
