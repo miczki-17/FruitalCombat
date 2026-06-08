@@ -7,6 +7,7 @@
 #include "../components/ParticleComponent.h"
 #include "../components/TransformComponent.h"
 #include "../components/JuiceComponent.h"
+#include "../components/TraitDisplayComponent.h"
 #include "../components/AoEComponent.h"
 #include "../entities/Entity.h"
 
@@ -93,6 +94,13 @@ namespace game::systems
         if (player != nullptr) {
             if (auto* sprite = player->getComponent<game::components::SpriteComponent>()) {
                 sprite->render(window);
+            }
+        }
+
+        // Layer 10: Floating Texts & Traits (NA SAMYM WIERZCHU)
+        for (auto& enemy : enemies) {
+            if (auto* traitDisplay = enemy->getComponent<game::components::TraitDisplayComponent>()) {
+                traitDisplay->render(window);
             }
         }
 

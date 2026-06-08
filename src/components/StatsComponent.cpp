@@ -45,7 +45,12 @@ namespace game::components
     void StatsComponent::takeDamage(
         float amount)
     {
-        currentHealth_ -= amount;
+        // Obliczamy ostateczne obra?enia:
+        // Je?li amount = 20, a damageReduction_ = 0.3 (30% pancerza),
+        // to finalDamage = 20 * (1.0 - 0.3) = 20 * 0.7 = 14.
+        float finalDamage = amount * (1.0f - damageReduction_);
+
+        currentHealth_ -= finalDamage;
 
         currentHealth_ =
             std::max(
@@ -371,5 +376,11 @@ namespace game::components
             }
         }
         return false;
+    }
+
+    void StatsComponent::setDamageReduction(float reduction)
+    {
+        // Ograniczamy redukcj? do przedzia?u 0.0 (brak) do 1.0 (100% redukcji / niesko?czono??)
+        damageReduction_ = std::clamp(reduction, 0.0f, 1.0f);
     }
 }

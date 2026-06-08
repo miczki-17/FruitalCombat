@@ -37,7 +37,7 @@ namespace game::core
         }
 
         // 2. Inicjalizacja Wrogów i Ewolucji
-        mutantFactory = std::make_unique<game::factories::MutantFactory>(game_->arenaContext, game_, collisionMask_, mapScale_);
+        mutantFactory = std::make_unique<game::factories::MutantFactory>(game_->arenaContext, game_, collisionMask_, mapScale_, game_->enemiesConfig);
         evolutionManager = std::make_unique<game::systems::EvolutionManager>(
             *mutantFactory, enemies, player.get(), game_->enemiesConfig, collisionMask_, mapScale_
         );

@@ -83,6 +83,13 @@ namespace game::entities
             }
         }
 
+        void render(sf::RenderWindow& window)
+        {
+            for (auto& component : components) {
+                component->render(window);
+            }
+        }
+
         // Konstruktor domyslny, ktory dodaje TransformComponent 
         Entity()
         {

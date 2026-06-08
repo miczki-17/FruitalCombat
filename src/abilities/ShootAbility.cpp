@@ -101,6 +101,9 @@ namespace game::components
 
         projectile->addVelocity(ownerVelocity);
 
+        bool isPlayer = (owner_->getComponent<game::components::PlayerInputComponent>() != nullptr);
+        projectile->setFriendly(isPlayer);
+
         // --- POPRAWNY SPOSÓB NAK£ADANIA TEKSTURY ---
         if (!textureKey_.empty())
         {

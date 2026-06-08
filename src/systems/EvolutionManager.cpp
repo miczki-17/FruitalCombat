@@ -208,6 +208,8 @@ namespace game::systems
                 std::string beh = data.value("behavior", "Charger");
                 if (beh == "Sniper")          dna.behavior = game::genetics::AiBehavior::Sniper;
                 else if (beh == "Skirmisher") dna.behavior = game::genetics::AiBehavior::Skirmisher;
+                else if (beh == "Stationary")      dna.behavior = game::genetics::AiBehavior::Stationary; // <--- DODANE
+                else if (beh == "Kamikaze")        dna.behavior = game::genetics::AiBehavior::Kamikaze;
                 else                          dna.behavior = game::genetics::AiBehavior::Charger;
 
                 if (data.contains("abilities")) {

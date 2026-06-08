@@ -17,6 +17,10 @@ namespace game::components
         constexpr float SNIPER_MIN_DISTANCE = 300.0f;
         constexpr float SNIPER_MAX_DISTANCE = 450.0f;
         constexpr float SKIRMISHER_DISTANCE = 200.0f;
+
+        // --- NOWE STA?E ---
+        constexpr float STATIONARY_DISTANCE = 500.0f;
+        constexpr float KAMIKAZE_EXPLODE_RANGE = 45.0f;
     }
 
     AiInputComponent::AiInputComponent(
@@ -84,6 +88,12 @@ namespace game::components
 
         case game::genetics::AiBehavior::Skirmisher:
             return calculateSkirmisherMovement(directionToPlayer, distanceToPlayer);
+
+        case game::genetics::AiBehavior::Stationary:
+            return calculateStationaryMovement(directionToPlayer, distanceToPlayer);
+
+        case game::genetics::AiBehavior::Kamikaze:
+            return directionToPlayer; // Szar?uje prosto na cel
         }
         return { 0.f, 0.f };
     }
@@ -106,43 +116,43 @@ namespace game::components
         return evadeDirection - directionToPlayer * 0.5f;
     }
 
-    //void AiInputComponent::applyMovement(const sf::Vector2f& direction, float deltaTime)
-    //{
-    //    // 1. DROGA ECS: Je?li wróg ma dedykowany komponent ruchu, zlecamy mu zadanie
-    //    if (auto* moveComp = owner->getComponent<MovementComponent>())
-    //    {
-    //        moveComp->setDesiredDirection(direction);
-    //        return;
-    //    }
+    sf::Vector2f AiInputComponent::calculateStationaryMovement(
+        const sf::Vector2f& directionToPlayer, float distanceToPlayer) const
+    {
+        // Margines b??du, ?eby Kukurydza nie trz?s?a si? przód/ty?
+        float distanceTolerance = 20.0f;
 
-    //    auto* owner_transform = owner->getComponent<TransformComponent>(); if (!owner_transform) return;
+        if (distanceToPlayer > STATIONARY_DISTANCE + distanceTolerance) {
+            return directionToPlayer; // Za daleko -> id? do gracza
+        }
+        else if (distanceToPlayer < STATIONARY_DISTANCE - distanceTolerance) {
+            return -directionToPlayer; // Za blisko -> uciekaj
+        }
 
-    //    // 2. DROGA LEGACY: Je?li mutant nie ma jeszcze komponentu ruchu, liczymy fizyk? bezpo?rednio (Etap 2 fallback)
-    //    owner_transform->isMoving = (direction != sf::Vector2f(0.f, 0.f));
-    //    owner_transform->velocity += direction * acceleration_ * deltaTime;
-    //    owner_transform->velocity -= owner_transform->velocity * drag_ * deltaTime;
-
-    //    float speed = owner_transform->velocity.length(); // SFML 3
-    //    if (speed > movementSpeed_ && !owner_transform->isRolling && owner_transform->actionTimer <= 0.0f)
-    //    {
-    //        owner_transform->velocity = owner_transform->velocity.normalized() * movementSpeed_; // SFML 3
-    //    }
-    //}
-
-    //void AiInputComponent::updateFacingDirection(const sf::Vector2f& directionToPlayer)
-    //{
-    //    auto* owner_transform = owner->getComponent<TransformComponent>(); if (!owner_transform) return;
-
-    //    if (directionToPlayer.x > LOOK_THRESHOLD)       owner_transform->facingRight = true;
-    //    else if (directionToPlayer.x < -LOOK_THRESHOLD) owner_transform->facingRight = false;
-    //}
+        return { 0.0f, 0.0f }; // W idealnym zasi?gu = zatrzymaj si? ca?kowicie
+    }
 
     void AiInputComponent::tryAttack(float distanceToPlayer)
     {
-        if (distanceToPlayer > ATTACK_RANGE) return;
-        if (auto* abilityComponent = owner->getComponent<AbilityComponent>())
+        auto* abilityComponent = owner->getComponent<AbilityComponent>();
+        if (!abilityComponent) return;
+
+        auto* targetPlayer_transform = targetPlayer_->getComponent<TransformComponent>();
+        if (!targetPlayer_transform) return;
+
+        // Specjalna logika dla Kamikaze (Czosnek)
+        if (behavior_ == game::genetics::AiBehavior::Kamikaze)
         {
-            auto* targetPlayer_transform = targetPlayer_->getComponent<TransformComponent>(); if (!targetPlayer_transform) return;
+            if (distanceToPlayer <= KAMIKAZE_EXPLODE_RANGE) {
+                // Kamikaze odpala skill (wybuch) po dotarciu do gracza
+                abilityComponent->useSkill(targetPlayer_transform->position);
+            }
+            return; // Kamikaze nie strzela z normalnej broni, wi?c ko?czymy funkcj?
+        }
+
+        // Standardowa logika dla reszty wrogów (Strzelanie z dystansu)
+        if (distanceToPlayer <= ATTACK_RANGE)
+        {
             abilityComponent->useWeapon(targetPlayer_transform->position);
         }
     }
@@ -151,7 +161,9 @@ namespace game::components
     {
         if (auto* abilityComponent = owner->getComponent<AbilityComponent>())
         {
-            auto* targetPlayer_transform = targetPlayer_->getComponent<TransformComponent>(); if (!targetPlayer_transform) return;
+            auto* targetPlayer_transform = targetPlayer_->getComponent<TransformComponent>();
+            if (!targetPlayer_transform) return;
+
             abilityComponent->useSkill(targetPlayer_transform->position);
         }
     }

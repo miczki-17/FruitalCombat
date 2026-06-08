@@ -11,9 +11,11 @@ namespace game::genetics
 {
     
     enum class AiBehavior {
-        Charger,    // Rushes directly at the player
-        Sniper,     // Tries to maintain a specific long distance
-        Skirmisher  // Erratic movement, hit-and-run tactics
+        Charger,    // Rushes directly at the player (Broccoli, Potato)
+        Sniper,     // Tries to maintain a specific long distance (Carrot)
+        Skirmisher, // Erratic movement, hit-and-run tactics
+        Stationary, // Zatrzymuje si? na dystans i nie rusza (Corn)
+        Kamikaze    // Biegnie do gracza i wybucha (Garlic)
     };
 
     struct DNA
@@ -48,21 +50,42 @@ namespace game::genetics
             DNA child;
             std::uniform_int_distribution<int> coinFlip(0, 1);
 
+            // Wygl?d i zachowanie losujemy (50/50 czy po ojcu czy po matce)
             child.skinKey = coinFlip(rng) ? this->skinKey : partner.skinKey;
-            child.speed = coinFlip(rng) ? this->speed : partner.speed;
-            child.maxHp = coinFlip(rng) ? this->maxHp : partner.maxHp;
-            child.sizeScale = coinFlip(rng) ? this->sizeScale : partner.sizeScale;
+            child.behavior = coinFlip(rng) ? this->behavior : partner.behavior;
+
+            // Kolor (je?li u?ywamy tint) te? losujemy
             child.r = coinFlip(rng) ? this->r : partner.r;
             child.g = coinFlip(rng) ? this->g : partner.g;
             child.b = coinFlip(rng) ? this->b : partner.b;
-            child.behavior = coinFlip(rng) ? this->behavior : partner.behavior;
-            child.abilities = coinFlip(rng) ? this->abilities : partner.abilities;
 
-            // Dziedziczenie statystyk ³upów
-            child.dropChance = coinFlip(rng) ? this->dropChance : partner.dropChance;
-            child.baseJuice = coinFlip(rng) ? this->baseJuice : partner.baseJuice;
+            // Statystyki fizyczne U?REDNIAMY (krzy?owanie)
+            child.speed = (this->speed + partner.speed) / 2.0f;
+            child.maxHp = (this->maxHp + partner.maxHp) / 2.0f;
+            child.sizeScale = (this->sizeScale + partner.sizeScale) / 2.0f;
+            child.dropChance = (this->dropChance + partner.dropChance) / 2.0f;
+            child.baseJuice = (this->baseJuice + partner.baseJuice) / 2.0f;
 
-            child.isMutated = this->isMutated || partner.isMutated;
+            // --- PRAWDZIWE ??CZENIE UMIEJ?TNO?CI ---
+            child.abilities = this->abilities; // Bierzemy geny rodzica A
+            for (const auto& ab : partner.abilities)
+            {
+                // Je?li dziecko jeszcze nie ma genu rodzica B, ma 50% szans go odziedziczy?
+                if (std::find(child.abilities.begin(), child.abilities.end(), ab) == child.abilities.end())
+                {
+                    if (coinFlip(rng)) {
+                        child.abilities.push_back(ab);
+                    }
+                }
+            }
+
+            // Ograniczamy do max 3 umiej?tno?ci
+            if (child.abilities.size() > 3) {
+                std::shuffle(child.abilities.begin(), child.abilities.end(), rng);
+                child.abilities.resize(3);
+            }
+
+            child.isMutated = true; // Potomek jest mutantem
 
             return child;
         }
@@ -116,27 +139,32 @@ namespace game::genetics
                 mutatedThisGeneration = true;
             }
 
-            // Radical Mutation: Abilities change
-            if (chance(rng) < (mutationRate * 0.5f)) {
-                static const std::vector<std::string> possibleAbilities = {
-                    "AcidSquirt", "Shotgun", "Dash", "RindRoll"
-                };
+            //// Radical Mutation: Abilities change
+            //if (chance(rng) < (mutationRate * 0.5f)) {
+            //    static const std::vector<std::string> possibleAbilities = {
+            //        "Shoot",
+            //        "Armor",
+            //        "SplitOnDeath",
+            //        "WindupBruiser",
+            //        "PoisonExplosion",
+            //        "Dash"
+            //    };
 
-                std::uniform_int_distribution<size_t> poolDist(0, possibleAbilities.size() - 1);
-                std::string mutatedAbility = possibleAbilities[poolDist(rng)];
+            //    std::uniform_int_distribution<size_t> poolDist(0, possibleAbilities.size() - 1);
+            //    std::string mutatedAbility = possibleAbilities[poolDist(rng)];
 
-                auto it = std::find(abilities.begin(), abilities.end(), mutatedAbility);
-                if (it == abilities.end()) {
-                    if (abilities.size() < 3) {
-                        abilities.push_back(mutatedAbility);
-                    }
-                    else {
-                        std::uniform_int_distribution<size_t> replaceDist(0, abilities.size() - 1);
-                        abilities[replaceDist(rng)] = mutatedAbility;
-                    }
-                }
-                mutatedThisGeneration = true;
-            }
+            //    auto it = std::find(abilities.begin(), abilities.end(), mutatedAbility);
+            //    if (it == abilities.end()) {
+            //        if (abilities.size() < 3) {
+            //            abilities.push_back(mutatedAbility);
+            //        }
+            //        else {
+            //            std::uniform_int_distribution<size_t> replaceDist(0, abilities.size() - 1);
+            //            abilities[replaceDist(rng)] = mutatedAbility;
+            //        }
+            //    }
+            //    mutatedThisGeneration = true;
+            //}
 
             if (mutatedThisGeneration) {
                 isMutated = true;

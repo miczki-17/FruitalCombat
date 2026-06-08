@@ -41,6 +41,9 @@ namespace game::components
             float duration,
             float value);
 
+        void setDamageReduction(
+			float reduction);
+
         void addUltCharge(
             float amount);
 
@@ -115,6 +118,9 @@ namespace game::components
         float currentMana_ = 100.0f;
         float manaRegenRate_ = 5.0f;
 
+
+        // --- ARMOR ---
+        float damageReduction_ = 0.0f;
 
         // what gave dmg as last
         std::string lastDamageSourceKey_ = "";

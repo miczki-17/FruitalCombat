@@ -1,30 +1,59 @@
 {
-	"Tomato": {
-		"r": 220,
-		"g": 40,
-		"b": 40,
-		"behavior": "Charger",
-		"speed": 300.0,
-		"maxHp": 60.0,
-		"sizeScale": 0.9,
-		"abilities": [
-			"Dash"
-		],
-		"baseJuice": 3.0,
-		"dropChance": 0.2
-	},
 	"Carrot": {
-		"r": 255,
-		"g": 140,
-		"b": 0,
+		"name": "Karaterot",
 		"behavior": "Sniper",
-		"speed": 250.0,
-		"maxHp": 80.0,
+		"speed": 350.0,
+		"maxHp": 40.0,
 		"sizeScale": 1.0,
-		"abilities": [
-			"AcidSquirt"
-		],
-		"baseJuice": 1.0,
-		"dropChance": 0.3
+		"abilities": [ "Shoot" ],
+		"damage": 15,
+		"idleTexturePath": "assets/textures/entities/enemies/karaterot_idle.png",
+		"walkTexturePath": "assets/textures/entities/enemies/karaterot_walk.png",
+		"projectileTexturePath": "assets/textures/entities/enemies/carrot_bullet.png"
+	},
+	"Potato": {
+		"name": "Spudnik",
+		"behavior": "Charger",
+		"speed": 400.0,
+		"maxHp": 80.0,
+		"sizeScale": 1.2,
+		"abilities": [ "Armor", "SplitOnDeath" ],
+		"damage": 20,
+		"idleTexturePath": "assets/textures/entities/enemies/spudnik_idle.png",
+		"walkTexturePath": "assets/textures/entities/enemies/spudnik_walk.png"
+	},
+	"Broccoli": {
+		"name": "Brocc-Hulk",
+		"behavior": "Charger",
+		"speed": 80.0,
+		"maxHp": 60.0,
+		"sizeScale": 1.5,
+		"abilities": [ "WindupBruiser" ],
+		"damage": 40,
+		"idleTexturePath": "assets/textures/entities/enemies/brocc_idle.png",
+		"walkTexturePath": "assets/textures/entities/enemies/brocc_walk.png"
+	},
+	"Corn": {
+		"name": "Colonel Corn",
+		"behavior": "Stationary",
+		"speed": 40.0,
+		"maxHp": 40.0,
+		"sizeScale": 1.0,
+		"abilities": [ "PopcornShoot" ],
+		"damage": 15,
+		"idleTexturePath": "assets/textures/entities/enemies/corn_idle.png",
+		"walkTexturePath": "assets/textures/entities/enemies/corn_walk.png",
+		"projectileTexturePath": "assets/textures/entities/enemies/popcorn_kernel.png"
+	},
+	"Garlic": {
+		"name": "Count Clovula",
+		"behavior": "Kamikaze",
+		"speed": 300.0,
+		"maxHp": 30.0,
+		"sizeScale": 0.8,
+		"abilities": [ "PoisonExplosion" ],
+		"damage": 0,
+		"idleTexturePath": "assets/textures/entities/enemies/clovula_idle.png",
+		"walkTexturePath": "assets/textures/entities/enemies/clovula_walk.png"
 	}
 }

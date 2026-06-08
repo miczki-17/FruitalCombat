@@ -75,11 +75,9 @@ Zaprojektowane tak, by w kodzie opierały się na prostych tagach (flagach bitow
 
 1. Marchewka (Karaterot)
 
-DNA Tag: Trait::Fast | Trait::Melee
+DNA Tag: Trait::Fast | Trait::Sniper
 
-Parametry: HP: 30, Obrażenia: 10, Szybkość: 150
-
-Zachowanie: Biegnie prosto na gracza w linii prostej. Podstawa do tworzenia szybkich mutantów.
+Zachowanie: Trzyma dystans, strzela pojedynczymi pociskami o dużej prędkości.
 
 
 
@@ -116,8 +114,6 @@ Zachowanie: Zatrzymuje się w pewnej odległości od gracza i co 2 sekundy wystr
 
 5. Czosnek (Count Clovula)
 
-DNA Tag: Trait::Medium | Trait::Support
+DNA Tag: Trait::Medium | Trait::Explosive
 
-Parametry: HP: 50, Obrażenia: 5, Szybkość: 100
-
-Zachowanie: Unika bezpośredniej walki. Posiada wokół siebie niewidzialny promień działania (Aura). Inne warzywa znajdujące się w tym promieniu odzyskują 2 HP co sekundę.
+Zachowanie: biegnie do gracza szybko i wybucha trującym gazem przy kontakcie.

@@ -36,6 +36,8 @@ namespace game::components
         sf::Vector2f calculateDesiredDirection(const sf::Vector2f& directionToPlayer, float distanceToPlayer) const;
         sf::Vector2f calculateSniperMovement(const sf::Vector2f& directionToPlayer, float distanceToPlayer) const;
         sf::Vector2f calculateSkirmisherMovement(const sf::Vector2f& directionToPlayer, float distanceToPlayer) const;
+        sf::Vector2f calculateStationaryMovement(
+            const sf::Vector2f& directionToPlayer, float distanceToPlayer) const;
 
         //void applyMovement(const sf::Vector2f& direction, float deltaTime);
         //void updateFacingDirection(const sf::Vector2f& directionToPlayer);

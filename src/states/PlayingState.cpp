@@ -51,6 +51,7 @@ namespace game::states
         AudioManager::get().stopAllSounds();
         // Zwalniamy zasoby z grupy Playing.
         ResourceManager::get().unloadGroup(AssetGroup::Playing);
+        game->profile.biomassJuice = 0;
     }
 
     // --- LOADING HELPERS ---
@@ -93,13 +94,6 @@ namespace game::states
                 rm.loadTexture(puddleKey, basePath, AssetGroup::Playing);
             }
 
-            // splash tex tmp dla wrogow
-            for (uint8_t i = 1; i <= 3; i++)
-            {
-                rm.loadTexture("green_splash_" + std::to_string(i), "assets/textures/entities/enemies/green_splash_1.png", AssetGroup::Playing);
-            }
-            rm.loadTexture("green_bullet", "assets/textures/entities/enemies/green_bullet.png", AssetGroup::Playing);
-
             // Animacja chodzenia
             if (fruitData.contains("walkTexturePath")) {
                 std::string path = fruitData.value("walkTexturePath", "");
@@ -124,7 +118,17 @@ namespace game::states
             if (enemyData.contains("walkTexturePath")) {
                 rm.loadTexture(enemyKey + "_walk", enemyData.value("walkTexturePath", ""), AssetGroup::Playing);
             }
+            if (enemyData.contains("projectileTexturePath")) {
+                rm.loadTexture(enemyKey + "_bullet", enemyData.value("projectileTexturePath", ""), AssetGroup::Playing);
+            }
         }
+
+        // splash tex tmp dla wrogow
+        for (uint8_t i = 1; i <= 3; i++)
+        {
+            rm.loadTexture("green_splash_" + std::to_string(i), "assets/textures/entities/enemies/green_splash_1.png", AssetGroup::Playing);
+        }
+        rm.loadTexture("green_bullet", "assets/textures/entities/enemies/green_bullet.png", AssetGroup::Playing);
     }
 
     void PlayingState::loadMapAssets()

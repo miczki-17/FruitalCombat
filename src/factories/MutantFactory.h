@@ -6,6 +6,7 @@
 #include "../core/ArenaContext.h"
 #include "../core/Game.h"
 #include "../genetics/DNA.h"
+#include "../vendor/nlohmann/json.hpp"
 
 namespace game::factories
 {
@@ -17,11 +18,14 @@ namespace game::factories
         const sf::Image& collisionMask;
         float mapScale;
 
+        const nlohmann::json& enemiesConfig;
+
     public:
         MutantFactory(game::ArenaContext& arenaContext,
             game::Game* gameRef,
             const sf::Image& mask,
-            float scale);
+            float scale,
+            const nlohmann::json& config);
 
         std::unique_ptr<game::entities::Entity>
             createMutant(const game::genetics::DNA& dna,

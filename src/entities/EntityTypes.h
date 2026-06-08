@@ -18,8 +18,10 @@ namespace game::entities
     // Veggies (AI Mutanty)
     enum class VeggieType
     {
-        Carrot,     // Sniper
-        Broccoli,   // Tank
-        Tomato      // Kamikaze
+        Carrot,
+		Broccoli,
+        Potato,
+        Corn,
+		Garlic
     };
 }
