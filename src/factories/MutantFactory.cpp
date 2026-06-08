@@ -92,8 +92,9 @@ namespace game::factories
                 abilities->setWeapon(std::make_unique<game::components::AcidSquirtAbility>(
                     &context,
                     entity.get(), 
-                    "assets/textures/default_bullet.png",
-                    "acid_splash",
+                    "green_bullet",
+                    "green_splash",
+                    1.0f,
                     false
                 ));
             }

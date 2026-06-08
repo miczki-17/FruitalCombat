@@ -80,41 +80,44 @@ namespace game::systems
             float actualDamage = proj->getDamage();
 
             // 1. AREA DAMAGE: WROGOWIE
-            for (auto& enemy : enemies_)
+            if (proj->getIsFriendly())
             {
-                if (enemy->isDead()) continue;
-
-                auto* enemy_transform = enemy->getComponent<game::components::TransformComponent>();
-                if (!enemy_transform) continue;
-
-                sf::Vector2f diff = explodePos - enemy_transform->position;
-
-                if (diff.x * diff.x + diff.y * diff.y < (explosionRadius * explosionRadius))
+                for (auto& enemy : enemies_)
                 {
-                    if (auto* stats = enemy->getComponent<game::components::StatsComponent>())
+                    if (enemy->isDead()) continue;
+
+                    auto* enemy_transform = enemy->getComponent<game::components::TransformComponent>();
+                    if (!enemy_transform) continue;
+
+                    sf::Vector2f diff = explodePos - enemy_transform->position;
+
+                    if (diff.x * diff.x + diff.y * diff.y < (explosionRadius * explosionRadius))
                     {
-                        stats->takeDamage(actualDamage);
+                        if (auto* stats = enemy->getComponent<game::components::StatsComponent>())
+                        {
+                            stats->takeDamage(actualDamage);
 
-                        // --- NAK£ADANIE EFEKTÓW ---
-                        if (proj->getStatusEffect() == game::components::StatusEffect::Slow) {
-                            // Spowalnia 50% przez 2s
-                            stats->addEffect(game::components::StatusType::Slow, 2.0f, 0.5f);
+                            // --- NAK£ADANIE EFEKTÓW ---
+                            if (proj->getStatusEffect() == game::components::StatusEffect::Slow) {
+                                // Spowalnia 50% przez 2s
+                                stats->addEffect(game::components::StatusType::Slow, 2.0f, 0.5f);
+                            }
+
+                            if (auto* sprite = enemy->getComponent<game::components::SpriteComponent>()) {
+                                sprite->triggerHitFlash();
+                            }
+
+                            auto textEntity = std::make_unique<game::entities::Entity>();
+                            if (auto* transform = textEntity->getComponent<game::components::TransformComponent>()) {
+                                transform->position = enemy_transform->position;
+                                transform->velocity = sf::Vector2f(static_cast<float>((rand() % 100) - 50), -140.0f);
+                            }
+
+                            textEntity->addComponent(std::make_unique<game::components::TextComponent>(
+                                game_->mainFont, "-" + std::to_string(static_cast<int>(actualDamage)), 22, sf::Color::Red));
+                            textEntity->addComponent(std::make_unique<game::components::LifespanComponent>(0.6f, true));
+                            context_.spawnEntity(std::move(textEntity));
                         }
-
-                        if (auto* sprite = enemy->getComponent<game::components::SpriteComponent>()) {
-                            sprite->triggerHitFlash();
-                        }
-
-                        auto textEntity = std::make_unique<game::entities::Entity>();
-                        if (auto* transform = textEntity->getComponent<game::components::TransformComponent>()) {
-                            transform->position = enemy_transform->position;
-                            transform->velocity = sf::Vector2f(static_cast<float>((rand() % 100) - 50), -140.0f);
-                        }
-
-                        textEntity->addComponent(std::make_unique<game::components::TextComponent>(
-                            game_->mainFont, "-" + std::to_string(static_cast<int>(actualDamage)), 22, sf::Color::Red));
-                        textEntity->addComponent(std::make_unique<game::components::LifespanComponent>(0.6f, true));
-                        context_.spawnEntity(std::move(textEntity));
                     }
                 }
             }
@@ -205,7 +208,7 @@ namespace game::systems
                 }
 
                 auto poisonAoE = std::make_unique<game::components::AoEComponent>(
-                    120.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f, proj->getIsFriendly());
+                    80.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f, proj->getIsFriendly());
                 poisonAoE->isVisible = false;
                 aoeEntity->addComponent(std::move(poisonAoE));
 
@@ -437,44 +440,47 @@ namespace game::systems
             //
             // WROGOWIE
             //
-            for (auto& enemy : enemies_)
+            if (aoe->isFriendly)
             {
-                if (enemy->isDead())
-                    continue;
-
-                auto* enemyTransform =
-                    enemy->getComponent<game::components::TransformComponent>();
-
-                auto* enemyStats =
-                    enemy->getComponent<game::components::StatsComponent>();
-
-                if (!enemyTransform || !enemyStats)
-                    continue;
-
-                sf::Vector2f diff =
-                    enemyTransform->position -
-                    aoeTransform->position;
-
-                float distSq =
-                    diff.x * diff.x +
-                    diff.y * diff.y;
-
-                if (distSq <= aoe->radius * aoe->radius)
+                for (auto& enemy : enemies_)
                 {
-                    if (aoe->dps > 0.0f)
-                    {
-                        enemyStats->takeDamage(
-                            aoe->dps * deltaTime
-                        );
-                    }
+                    if (enemy->isDead())
+                        continue;
 
-                    if (aoe->appliesSlow)
+                    auto* enemyTransform =
+                        enemy->getComponent<game::components::TransformComponent>();
+
+                    auto* enemyStats =
+                        enemy->getComponent<game::components::StatsComponent>();
+
+                    if (!enemyTransform || !enemyStats)
+                        continue;
+
+                    sf::Vector2f diff =
+                        enemyTransform->position -
+                        aoeTransform->position;
+
+                    float distSq =
+                        diff.x * diff.x +
+                        diff.y * diff.y;
+
+                    if (distSq <= aoe->radius * aoe->radius)
                     {
-                        enemyStats->addEffect(
-                            game::components::StatusType::Slow,
-                            0.15f,
-                            aoe->slowMultiplier
-                        );
+                        if (aoe->dps > 0.0f)
+                        {
+                            enemyStats->takeDamage(
+                                aoe->dps * deltaTime
+                            );
+                        }
+
+                        if (aoe->appliesSlow)
+                        {
+                            enemyStats->addEffect(
+                                game::components::StatusType::Slow,
+                                0.15f,
+                                aoe->slowMultiplier
+                            );
+                        }
                     }
                 }
             }

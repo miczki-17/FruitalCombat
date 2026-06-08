@@ -72,8 +72,8 @@ namespace game::states
 
         // --- STATISTICS ---
         auto& rm = ResourceManager::get();
-        if (rm.hasTexture("magic_bean_base")) {
-            biomassIcon_.emplace(*rm.getTexture("magic_bean_base"));
+        if (rm.hasTexture("juice")) {
+            biomassIcon_.emplace(*rm.getTexture("juice"));
             sf::Vector2u iconSize = biomassIcon_->getTexture().getSize();
             biomassIcon_->setOrigin({ iconSize.x / 2.0f, iconSize.y / 2.0f });
             biomassIcon_->setScale({ 2.5f, 2.5f });

@@ -69,6 +69,8 @@ namespace game::systems
             {
                 if (enemy->isDead()) continue;
 
+                if (!proj->getIsFriendly()) continue;
+
                 auto* enemy_transform = enemy->getComponent<game::components::TransformComponent>();
                 if (!enemy_transform) continue;
 

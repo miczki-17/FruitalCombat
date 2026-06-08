@@ -4,7 +4,7 @@
 		"g": 40,
 		"b": 40,
 		"behavior": "Charger",
-		"speed": 800.0,
+		"speed": 300.0,
 		"maxHp": 60.0,
 		"sizeScale": 0.9,
 		"abilities": [
@@ -18,7 +18,7 @@
 		"g": 140,
 		"b": 0,
 		"behavior": "Sniper",
-		"speed": 600.0,
+		"speed": 250.0,
 		"maxHp": 80.0,
 		"sizeScale": 1.0,
 		"abilities": [
