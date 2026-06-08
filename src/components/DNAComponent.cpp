@@ -68,18 +68,19 @@ namespace game::components
             PROXIMITY_MULTIPLIER;
     }
 
-    float DNAComponent::calculateDistanceToPlayer()
-        const
+    float DNAComponent::calculateDistanceToPlayer() const
     {
-        auto* targetPlayer_transform = targetPlayer_->getComponent<TransformComponent>(); if (!targetPlayer_transform) return 0.0;
-        auto* owner_transform = owner->getComponent <TransformComponent>(); if (!owner_transform) return 0.0;
+        auto* targetPlayer_transform = targetPlayer_->getComponent<TransformComponent>();
+        if (!targetPlayer_transform) return PROXIMITY_RANGE; // <--- Zamiast 0.0
+
+        auto* owner_transform = owner->getComponent<TransformComponent>();
+        if (!owner_transform) return PROXIMITY_RANGE; // <--- Zamiast 0.0
+
         const sf::Vector2f diff =
             targetPlayer_transform->position -
             owner_transform->position;
 
-        return std::sqrt(
-            diff.x * diff.x +
-            diff.y * diff.y);
+        return std::sqrt(diff.x * diff.x + diff.y * diff.y);
     }
 
     const game::genetics::DNA& DNAComponent::getDNA() 

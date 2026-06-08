@@ -76,7 +76,20 @@ namespace game::components
     void MovementComponent::applyMovement(const sf::Vector2f& direction, float deltaTime)
     {
         auto* transform = owner->getComponent<TransformComponent>();
-        transform->velocity += direction * acceleration_ * deltaTime;
+        if (!transform) return;
+
+        // 1. Zdob?d? docelow? pr?dko?? (uwzgl?dnia te? np. spowolnienie z trucizny)
+        float currentTargetSpeed = maxSpeed_;
+        if (auto* stats = owner->getComponent<StatsComponent>())
+        {
+            currentTargetSpeed = stats->getCurrentSpeed();
+        }
+
+        // 2. Dynamiczne przyspieszenie = Pr?dko?? docelowa * Opór (Drag)
+        float dynamicAcceleration = currentTargetSpeed * activeDrag_;
+
+        // 3. Aplikuj si?y na wektor
+        transform->velocity += direction * dynamicAcceleration * deltaTime;
         transform->velocity -= transform->velocity * activeDrag_ * deltaTime;
     }
 

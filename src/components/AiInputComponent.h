@@ -25,9 +25,6 @@ namespace game::components
         game::genetics::AiBehavior behavior_;
         float movementSpeed_;
 
-        float acceleration_ = 1800.0f;
-        float drag_ = 5.0f;
-
         float decisionTimer_ = 0.0f;
         float strafeDirection_ = 1.0f;
 

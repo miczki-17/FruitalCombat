@@ -15,6 +15,7 @@ namespace game::components
         // Zmienne u¿ywane do sterowania orientacj¹
         bool facingRight = true;
         bool isMoving = false; // Flaga przydatna do animacji
+        bool isShooting = false;
 
         // Flaga akcji specjalnej (np. RindRoll)
         float actionTimer = 0.0f;

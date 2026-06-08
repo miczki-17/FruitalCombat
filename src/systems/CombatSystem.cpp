@@ -205,7 +205,7 @@ namespace game::systems
                 }
 
                 auto poisonAoE = std::make_unique<game::components::AoEComponent>(
-                    120.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f);
+                    120.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f, proj->getIsFriendly());
                 poisonAoE->isVisible = false;
                 aoeEntity->addComponent(std::move(poisonAoE));
 
@@ -482,7 +482,7 @@ namespace game::systems
             //
             // GRACZ
             //
-            if (player && !player->isDead())
+            if (!aoe->isFriendly && player && !player->isDead())
             {
                 auto* playerTransform =
                     player->getComponent<game::components::TransformComponent>();

@@ -41,7 +41,7 @@ namespace game::factories
 
         // STATS
         entity->addComponent(std::make_unique<game::components::StatsComponent>(
-            dna.maxHp, 1.0f));
+            dna.maxHp, 1.0f, dna.speed));
 
         // DNA tracking
         entity->addComponent(std::make_unique<game::components::DNAComponent>(
@@ -117,13 +117,13 @@ namespace game::factories
         const auto& mapData = game->mapsConfig[mapKey];
 
         if (auto* moveComp = entity->getComponent<game::components::MovementComponent>()) {
-            //moveComp->setGamePointer(game);
-
             float mapFriction = mapData["physics"].value("friction", 1.0f);
-            float mapSpeedMulti = mapData["physics"].value("speedMultiplier", 1.0f);
-
             moveComp->setFriction(mapFriction);
-            moveComp->setSpeedMultiplier(mapSpeedMulti);
+        }
+
+        if (auto* statsComp = entity->getComponent<game::components::StatsComponent>()) {
+            float mapSpeedMulti = mapData["physics"].value("speedMultiplier", 1.0f);
+            statsComp->multiplyBaseSpeed(mapSpeedMulti);
         }
 
         return entity;

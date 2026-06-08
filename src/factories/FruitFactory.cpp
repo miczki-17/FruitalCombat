@@ -67,11 +67,11 @@ namespace game::factories
         // ---------------- STATS ----------------
         const int hp = data.value("hp", 100);
         const float attackSpeed = data.value("attackSpeed", 1.0f);
-        const float speed = data.value("maxSpeed", 400.0f);
+        const float speed = data.value("speed", 400.0f);
 
         entity->addComponent(
             std::make_unique<game::components::StatsComponent>(
-                hp, attackSpeed));
+                hp, attackSpeed, speed));
 
         // ---------------- MOVEMENT ----------------
         entity->addComponent(

@@ -16,6 +16,7 @@ namespace game::components
         Idle,
         Walk,
         Attack,
+        Shoot,
         Dead
     };
 

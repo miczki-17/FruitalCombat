@@ -151,38 +151,44 @@ namespace game::components
             const AnimationData& data = it->second;
             sprite_->setTexture(*(data.texture), true);
 
-            if (!animationFinished_)
+            // Odmierzamy czas i zmieniamy klatki (dziala tak samo dla Idle jak i dla Walk)
+            if (currentState_ != AnimState::Walk)
             {
-                animationTimer_ += deltaTime;
-                if (animationTimer_ >= data.frameDuration)
+                if (!animationFinished_)
                 {
-                    animationTimer_ -= data.frameDuration;
-                    currentFrame_++;
-
-                    if (currentFrame_ >= data.totalFrames)
+                    animationTimer_ += deltaTime;
+                    if (animationTimer_ >= data.frameDuration)
                     {
-                        if (data.loop)
+                        animationTimer_ -= data.frameDuration;
+                        currentFrame_++;
+
+                        if (currentFrame_ >= data.totalFrames)
                         {
-                            currentFrame_ = 0;
-                        }
-                        else
-                        {
-                            currentFrame_ = data.totalFrames - 1;
-                            animationFinished_ = true;
+                            if (data.loop)
+                            {
+                                currentFrame_ = 0;
+                            }
+                            else
+                            {
+                                currentFrame_ = data.totalFrames - 1;
+                                animationFinished_ = true;
+                            }
                         }
                     }
                 }
             }
 
-            // 4. Obliczanie wycinka tekstury i obsluga odbicia lustrzanego (facingRight)
+            // 4. Obliczanie wycinka tekstury i automatyczne odbicie lustrzane
             int rectLeftX = currentFrame_ * frameSize_.x;
 
             if (transform->facingRight)
             {
+                // Posta? patrzy w prawo - wycinamy normalnie
                 sprite_->setTextureRect(sf::IntRect({ rectLeftX, 0 }, frameSize_));
             }
             else
             {
+                // Posta? patrzy w lewo - odwracamy CA?? animacj? Idle w lewo
                 sprite_->setTextureRect(sf::IntRect({ rectLeftX + frameSize_.x, 0 }, { -frameSize_.x, frameSize_.y }));
             }
         }

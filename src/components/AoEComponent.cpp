@@ -7,9 +7,9 @@
 namespace game::components
 {
     AoEComponent::AoEComponent(float r, sf::Color color, float damagePerSec,
-        bool poison, float pDps, bool slow, float slowMult)
+        bool poison, float pDps, bool slow, float slowMult, bool friendly)
         : radius(r), dps(damagePerSec), appliesPoison(poison), poisonDps(pDps),
-        appliesSlow(slow), slowMultiplier(slowMult)
+        appliesSlow(slow), slowMultiplier(slowMult), isFriendly(friendly)
     {
         shape.setRadius(radius);
         shape.setOrigin({ radius, radius });
