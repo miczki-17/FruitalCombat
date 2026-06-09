@@ -233,6 +233,7 @@ namespace game::systems
     int EvolutionManager::getCurrentWave() const { return currentWave; }
     bool EvolutionManager::isSpawningActive() const { return !spawnQueue.empty(); }
 
+
     bool EvolutionManager::requiresShop() const
     {
         return pendingShopBreak;
