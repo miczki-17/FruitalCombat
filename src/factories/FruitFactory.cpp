@@ -100,9 +100,17 @@ namespace game::factories
         const int idleFrames = data.value("idleFrames", 2);
         const int walkFrames = data.value("walkFrames", 2);
 
-        entity->addComponent(
-            std::make_unique<game::components::SpriteComponent>(
-                idleTex, idleFrames, walkTex, walkFrames));
+        float sizeScale = data.value("sizeScale", 1.0f);
+        float spriteScale = data.value("spriteScale", 1.0f);
+
+
+
+        auto spriteComp = std::make_unique<game::components::SpriteComponent>(
+            idleTex, idleFrames, walkTex, walkFrames);
+
+        spriteComp->setCustomScale(spriteScale * sizeScale);
+
+        entity->addComponent(std::move(spriteComp));
 
         // ---------------- ABILITIES ----------------
         auto abilities = std::make_unique<game::components::AbilityComponent>();
@@ -117,6 +125,11 @@ namespace game::factories
         }
 
         entity->addComponent(std::move(abilities));
+
+        // ---------------- UPDATE FIZYCZNEJ SKALI ----------------
+        if (auto* transform = entity->getComponent<game::components::TransformComponent>()) {
+            transform->scale = { sizeScale, sizeScale };
+        }
 
         return entity;
     }

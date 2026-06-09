@@ -23,11 +23,13 @@ namespace game::components
         game::ArenaContext* context,
         game::entities::Entity* owner,
         const std::string& textureKey,
-        float projectileScale)
+        float projectileScale,
+        float cooldown)
         : context_(context),
         owner_(owner),
         textureKey_(textureKey),
-        projectileScale_(projectileScale)
+        projectileScale_(projectileScale),
+        cooldown_(cooldown)
     {
     }
 

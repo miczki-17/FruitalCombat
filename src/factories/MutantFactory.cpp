@@ -12,12 +12,15 @@
 #include "../components/AbilityComponent.h"
 #include "../components/MovementComponent.h"
 #include "../components/TraitDisplayComponent.h"
+#include "../components/DeathRattleComponent.h"
+#include "../components/SplitOnDeathComponent.h"
 
 #include "../abilities/AcidSquirtAbility.h"
 #include "../abilities/ShotgunAbility.h"
 #include "../abilities/DashAbility.h"
 #include "../abilities/RindRollAbility.h"
 #include "../abilities/ShootAbility.h"
+#include "../abilities/PoisonExplosionAbility.h"
 
 #include "../core/ResourceManager.h"
 
@@ -45,6 +48,10 @@ namespace game::factories
 
         auto entity = std::make_unique<game::entities::Entity>();
 
+        // Odczytanie bazowych danych z JSONa na podstawie genotypu skinKey
+        const auto& baseData = enemiesConfig.value(dna.skinKey, nlohmann::json::object());
+
+
         // STATS
         entity->addComponent(std::make_unique<game::components::StatsComponent>(
             dna.maxHp, 1.0f, dna.speed));
@@ -54,8 +61,10 @@ namespace game::factories
             dna, targetPlayer));
 
         // AI
+        float entityAgility = baseData.value("agility", 5.0f);
+
         entity->addComponent(std::make_unique<game::components::AiInputComponent>(
-            targetPlayer, dna.behavior, dna.speed));
+            targetPlayer, dna.behavior, dna.speed, entityAgility));
 
         // MOVEMENT
         entity->addComponent(std::make_unique<game::components::MovementComponent>(
@@ -65,9 +74,6 @@ namespace game::factories
         float baseRadius = 25.0f;
         entity->addComponent(std::make_unique<game::components::ColliderComponent>(
             collisionMask, mapScale, baseRadius * dna.sizeScale));
-
-        // Odczytanie bazowych danych z JSONa na podstawie genotypu skinKey
-        const auto& baseData = enemiesConfig.value(dna.skinKey, nlohmann::json::object());
 
         // SPRITE - Dynamiczne wczytywanie z JSONa (z fallbackiem)
         auto& res = game::core::ResourceManager::get();
@@ -86,7 +92,7 @@ namespace game::factories
         const int idleFrames = baseData.value("idleFrames", 2);
         const int walkFrames = baseData.value("walkFrames", 2);
 
-        auto spriteComp = std::make_unique<game::components::SpriteComponent>(idleTex, 4, walkTex, 4);
+        auto spriteComp = std::make_unique<game::components::SpriteComponent>(idleTex, idleFrames, walkTex, walkFrames);
 
         // DNA definiuje kolor - nak?adamy go na bazow? tekstur?
         spriteComp->setTint(sf::Color(
@@ -96,9 +102,14 @@ namespace game::factories
         ));
         spriteComp->setCustomScale(dna.sizeScale);
 
-        // [Tutaj miejsce na podpi?cie bazowych Shaderów dla zmutowanych wariantów]
+        float baseSpriteScale = baseData.value("spriteScale", 1.0f);
+
+        // Finalna wielko?? obrazka to: bazowy rozmiar pliku PNG * modyfikator genetyczny
+        spriteComp->setCustomScale(baseSpriteScale * dna.sizeScale);
 
         entity->addComponent(std::move(spriteComp));
+
+        // [Tutaj miejsce na podpi?cie bazowych Shaderów dla zmutowanych wariantów]
 
         // ABILITIES
         auto abilities = std::make_unique<game::components::AbilityComponent>();
@@ -106,9 +117,12 @@ namespace game::factories
         for (const auto& abName : dna.abilities)
         {
             if (abName == "Shoot") {
-                std::string projTex = baseData.value("projectileTexturePath", "default_bullet");
+                std::string projTex = baseData.contains("projectileTexturePath")
+                    ? (dna.skinKey + "_bullet")
+                    : "default_bullet";
+				float attackCooldown = baseData.value("attackCooldown", 2.0f);
                 abilities->setWeapon(std::make_unique<game::components::ShootAbility>(
-                    &context, entity.get(), projTex, 1.5f)); // Zwi?kszona pr?dko??/skala
+                    &context, entity.get(), projTex, 1.5f, attackCooldown));
             }
             else if (abName == "Armor") {
                 // Armor mo?e by? pasywn? umiej?tno?ci? przypinan? do StatsComponent, 
@@ -117,15 +131,32 @@ namespace game::factories
                 if (stats) stats->setDamageReduction(0.30f); // Dodaj t? metod? do StatsComponent
             }
             else if (abName == "SplitOnDeath") {
-                // Dodaj nowy komponent reaguj?cy na zniszczenie
-                // entity->addComponent(std::make_unique<game::components::SplitRattleComponent>(&context, 4, "Fries"));
+                int splitCount = baseData.value("splitCount", 3);
+                std::string splitSkin = baseData.value("splitSkinKey", ""); 
+                float splitScale = baseData.value("splitScale", 0.5f);
+
+                entity->addComponent(std::make_unique<game::components::SplitOnDeathComponent>(
+                    splitCount, splitSkin, splitScale));
             }
             else if (abName == "WindupBruiser") {
                 // BruiserAttackAbility wewn?trz metody update zatrzymuje MovementComponent na 0.5s przed uderzeniem
                 // abilities->setSkill(std::make_unique<game::components::BruiserAttackAbility>(entity.get()));
             }
             else if (abName == "PoisonExplosion") {
-                // abilities->setSkill(std::make_unique<game::components::ExplosionAbility>(&context, entity.get(), 150.0f));
+                float explosionRadius = baseData.value("explosionRadius", 150.0f);
+                float poisonDps = baseData.value("poisonDps", 20.0f);
+                float cloudDuration = baseData.value("cloudDuration", 5.0f);
+
+                // Sprawdzamy, czy potwór ma zdefiniowan? tekstur? chmury
+                std::string cloudTexKey = baseData.contains("cloudTexturePath")
+                    ? (dna.skinKey + "_cloud")
+                    : "default_cloud";
+
+                abilities->setSkill(std::make_unique<game::components::PoisonExplosionAbility>(
+                    &context, entity.get(), explosionRadius, poisonDps, cloudDuration, cloudTexKey)); // Przekazujemy klucz!
+
+                entity->addComponent(std::make_unique<game::components::DeathRattleComponent>(
+                    explosionRadius, poisonDps, cloudDuration, cloudTexKey)); // I przekazujemy do ?mierci!
             }
             // ... reszta starych umiej?tno?ci ...
         }

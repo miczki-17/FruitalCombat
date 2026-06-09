@@ -195,6 +195,11 @@ namespace game::systems
         {
             for (auto& [key, data] : enemiesConfig.items())
             {
+                bool isSpawnable = data.value("spawnable", true);
+                if (!isSpawnable) {
+                    continue;
+                }
+
                 game::genetics::DNA dna;
                 dna.skinKey = key;
                 dna.r = data.value("r", 255); dna.g = data.value("g", 255); dna.b = data.value("b", 255);
@@ -233,6 +238,43 @@ namespace game::systems
     int EvolutionManager::getCurrentWave() const { return currentWave; }
     bool EvolutionManager::isSpawningActive() const { return !spawnQueue.empty(); }
 
+    // spawn splits
+    void EvolutionManager::spawnSplits(const game::genetics::DNA& parentDNA, sf::Vector2f position, int count, const std::string& splitSkinKey, float splitScale) // <--- Dodany argument
+    {
+        if (targetPlayer == nullptr) return;
+
+        for (int i = 0; i < count; ++i)
+        {
+            game::genetics::DNA childDNA = parentDNA;
+            childDNA.isClone = true;
+
+            if (!splitSkinKey.empty()) {
+                childDNA.skinKey = splitSkinKey;
+            }
+
+            childDNA.maxHp = std::max(5.0f, parentDNA.maxHp * 0.25f);
+            childDNA.speed = parentDNA.speed * 1.4f;
+
+            childDNA.sizeScale = parentDNA.sizeScale * splitScale;
+
+            childDNA.behavior = game::genetics::AiBehavior::Charger;
+
+            auto it = std::find(childDNA.abilities.begin(), childDNA.abilities.end(), "SplitOnDeath");
+            if (it != childDNA.abilities.end()) {
+                childDNA.abilities.erase(it);
+            }
+
+            // Tworzymy mutanta
+            auto childMutant = mutantFactory.createMutant(childDNA, targetPlayer);
+            // Ustawiamy pozycj? na cia?o rodzica + ma?y losowy rozrzut, ?eby nie sta?y w jednym punkcie
+            if (auto* transform = childMutant->getComponent<game::components::TransformComponent>()) {
+                std::uniform_real_distribution<float> offsetDist(-25.0f, 25.0f);
+                transform->position = position + sf::Vector2f(offsetDist(rng), offsetDist(rng));
+            }
+
+            activeEnemies.push_back(std::move(childMutant));
+        }
+    }
 
     bool EvolutionManager::requiresShop() const
     {

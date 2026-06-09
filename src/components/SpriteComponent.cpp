@@ -80,7 +80,10 @@ namespace game::components
             if (transform) {
                 sprite_->setPosition(transform->position);
                 sprite_->setRotation(sf::degrees(transform->rotation));
-                sprite_->setScale(transform->scale);
+                sprite_->setScale({
+                    transform->scale.x * BASE_SPRITE_SCALE * currentScale_,
+                    transform->scale.y * BASE_SPRITE_SCALE * currentScale_
+                    });
             }
             window.draw(*sprite_);
         }

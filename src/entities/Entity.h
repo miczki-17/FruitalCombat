@@ -10,6 +10,7 @@
 #include "../components/TransformComponent.h"
 #include "../components/AbilityComponent.h"
 #include "../components/StatsComponent.h"
+#include <iostream>
 
 namespace game::entities
 {
@@ -17,7 +18,7 @@ namespace game::entities
     {
     private:
         std::vector<std::unique_ptr<game::components::Component>> components;
-        std::array<game::components::Component*, 32> componentArray{};
+        std::array<game::components::Component*, 64> componentArray{};
 
     public:
         bool isPendingDestroy = false;
@@ -55,14 +56,22 @@ namespace game::entities
         template <typename T>
         void addComponent(std::unique_ptr<T> component)
         {
+            if (!component) {
+                std::cout << "B??D: Przekazano pusty (NULL) komponent!\n";
+                return;
+            }
+
             component->owner = this;
+
             auto typeID = game::components::getComponentTypeID<T>();
 
             if (typeID >= componentArray.size()) {
-                // Obsluga bledu lub resize (w zaleznosci od Twojej implementacji)
+                std::cout << "B??D: Przekroczono limit tablicy! ID: " << typeID << ", Limit: " << componentArray.size() << "\n";
+                return;
             }
 
             componentArray[typeID] = component.get();
+
             components.push_back(std::move(component));
         }
 

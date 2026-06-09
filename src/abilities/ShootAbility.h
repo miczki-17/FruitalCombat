@@ -20,7 +20,8 @@ namespace game::components
             game::ArenaContext* context,
             game::entities::Entity* owner,
             const std::string& textureKey = "",
-            float projectileScale = 1.0f);
+            float projectileScale = 1.0f,
+            float cooldown = 0.3f);
 
         void update(float deltaTime) override;
 

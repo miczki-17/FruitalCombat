@@ -1,6 +1,5 @@
-// ==========================================
 // components/AiInputComponent.h
-// ==========================================
+
 #pragma once
 #include "Component.h"
 #include "../genetics/DNA.h"
@@ -16,7 +15,8 @@ namespace game::components
         AiInputComponent(
             game::entities::Entity* targetPlayer,
             game::genetics::AiBehavior behavior,
-            float movementSpeed);
+            float movementSpeed,
+            float agility = 5.0f);
 
         void update(float deltaTime) override;
 
@@ -31,6 +31,9 @@ namespace game::components
         std::mt19937 randomEngine_{ std::random_device{}() };
         std::uniform_real_distribution<float> decisionTimeDistribution_{ 1.0f, 3.0f };
         std::uniform_int_distribution<int> directionDistribution_{ 0, 1 };
+
+        float agility_;
+        sf::Vector2f currentDirection_{ 0.f, 0.f };
 
         void updateDecision(float deltaTime);
         sf::Vector2f calculateDesiredDirection(const sf::Vector2f& directionToPlayer, float distanceToPlayer) const;

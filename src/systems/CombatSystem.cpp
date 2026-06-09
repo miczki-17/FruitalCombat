@@ -16,6 +16,9 @@
 #include "../components/PopAnimationComponent.h"
 #include "../components/JuiceComponent.h"
 #include "../components/AoEComponent.h"
+#include "../components/DeathRattleComponent.h"
+#include "../abilities/PoisonExplosionAbility.h"
+#include "../components/SplitOnDeathComponent.h"
 #include "EvolutionManager.h"
 
 #include <algorithm>
@@ -338,8 +341,11 @@ namespace game::systems
                     if (!enemies_transform) continue;
 
                     const auto& dnaData = dnaComp->getDNA();
-                    evolutionManager.onEnemyDeath(dnaData);
 
+                    // klony nie sa pokarmem dla ewolucji
+                    if (!dnaData.isClone) {
+                        evolutionManager.onEnemyDeath(dnaData);
+                    }
                     // Wspólne generatory losowoœci dla wszystkich dropów (efekt fontanny)
                     std::random_device rd;
                     std::mt19937 gen(rd());
@@ -411,6 +417,33 @@ namespace game::systems
                                 coinEntity->addComponent(std::move(coinComp));
                                 context_.spawnEntity(std::move(coinEntity));
                             }
+                        }
+                    }
+                }
+
+				// DEATH RATTLE (AOE TRUCIZNY W MIEJSCU ?MIERCI)
+                if (auto* rattle = enemies_[i]->getComponent<game::components::DeathRattleComponent>())
+                {
+                    if (auto* transform = enemies_[i]->getComponent<game::components::TransformComponent>())
+                    {
+                        // Wykorzystujemy istniej?c? umiej?tno??, ?eby nie duplikowa? kodu tworzenia chmury
+                        game::components::PoisonExplosionAbility explosion(
+                            &context_, enemies_[i].get(), rattle->radius, rattle->dps, rattle->duration, rattle->textureKey);
+
+                        // Odpalamy wybuch w miejscu ?mierci wroga
+                        explosion.execute(transform->position, transform->position, { 0, 0 });
+                    }
+                }
+
+				// SPLIT ON DEATH (EVO MANAGER STWORZY KLONY W MIEJSCU ?MIERCI)
+                if (auto* splitComp = enemies_[i]->getComponent<game::components::SplitOnDeathComponent>())
+                {
+                    if (auto* transform = enemies_[i]->getComponent<game::components::TransformComponent>())
+                    {
+                        if (auto* dnaComp = enemies_[i]->getComponent<game::components::DNAComponent>())
+                        {
+                            // Wo?amy mened?era, ?eby stworzy? "klony" w miejscu ?mierci
+                            evolutionManager.spawnSplits(dnaComp->getDNA(), transform->position, splitComp->splitCount, splitComp->splitSkinKey, splitComp->splitScale);
                         }
                     }
                 }

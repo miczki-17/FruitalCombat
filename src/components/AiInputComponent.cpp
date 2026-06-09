@@ -26,10 +26,12 @@ namespace game::components
     AiInputComponent::AiInputComponent(
         game::entities::Entity* targetPlayer,
         game::genetics::AiBehavior behavior,
-        float movementSpeed)
+        float movementSpeed,
+        float agility)
         : targetPlayer_(targetPlayer),
         behavior_(behavior),
-        movementSpeed_(movementSpeed)
+        movementSpeed_(movementSpeed),
+        agility_(agility)
     {
     }
 
@@ -50,12 +52,25 @@ namespace game::components
 
         updateDecision(deltaTime);
 
-        sf::Vector2f movementDirection = calculateDesiredDirection(toPlayer, distance);
+        sf::Vector2f desiredDirection = calculateDesiredDirection(toPlayer, distance);
 
-        // Przekazanie decyzji o kierunku do komponentu ruchu
+        if (currentDirection_.x == 0.0f && currentDirection_.y == 0.0f) {
+            currentDirection_ = desiredDirection;
+        }
+
+        // --- NOWE, AGRESYWNE SKR?CANIE ---
+        // Mno?ymy agility_ * n.f, ?eby skala 1-10 by?a brutalnie odczuwalna.
+        // std::clamp ucina wynik do 1.0f (czyli max 100% obrotu w jednej klatce), 
+        // co chroni fizyk? przed b??dami, gdy wpiszesz w JSON np. 1000.
+        float turnSpeed = std::clamp(agility_ * 8.0f * deltaTime, 0.0f, 1.0f);
+
+        currentDirection_.x += (desiredDirection.x - currentDirection_.x) * turnSpeed;
+        currentDirection_.y += (desiredDirection.y - currentDirection_.y) * turnSpeed;
+
+        // Przekazanie WYG?ADZONEJ decyzji o kierunku do komponentu ruchu
         if (auto* moveComp = owner->getComponent<MovementComponent>())
         {
-            moveComp->setDesiredDirection(game::utils::math::safeNormalize(movementDirection));
+            moveComp->setDesiredDirection(game::utils::math::safeNormalize(currentDirection_));
         }
 
         tryAttack(distance);

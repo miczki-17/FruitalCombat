@@ -36,7 +36,11 @@ namespace game::genetics
         float dropChance = 1.0f;  // 1.0 = 100% chance
         float baseJuice = 10.0f;  // Base amount of currency dropped
 
+		// for mutations tracking
         bool isMutated = false;
+
+		// for clone tracking
+        bool isClone = false;
 
         // --- PHENOTYPE RESULTS ---
         // Fitness score determines how "successful" this mutant was in the arena

@@ -121,6 +121,9 @@ namespace game::states
             if (enemyData.contains("projectileTexturePath")) {
                 rm.loadTexture(enemyKey + "_bullet", enemyData.value("projectileTexturePath", ""), AssetGroup::Playing);
             }
+            if (enemyData.contains("cloudTexturePath")) {
+                rm.loadTexture(enemyKey + "_cloud", enemyData.value("cloudTexturePath", ""), AssetGroup::Playing);
+            }
         }
 
         // splash tex tmp dla wrogow
@@ -129,6 +132,9 @@ namespace game::states
             rm.loadTexture("green_splash_" + std::to_string(i), "assets/textures/entities/enemies/green_splash_1.png", AssetGroup::Playing);
         }
         rm.loadTexture("green_bullet", "assets/textures/entities/enemies/green_bullet.png", AssetGroup::Playing);
+
+		// wybuchy dla wrogow
+        rm.loadTexture("default_cloud", "assets/textures/entities/enemies/default_cloud.png", AssetGroup::Playing);
     }
 
     void PlayingState::loadMapAssets()

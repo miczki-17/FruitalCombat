@@ -105,52 +105,42 @@ namespace game::components
             sf::Color::Black;
     }
 
-    sf::Vector2f
-        ColliderComponent::calculatePushVector(
-            const sf::Vector2f& position,
-            int& hitCount) const
+    sf::Vector2f ColliderComponent::calculatePushVector(
+        const sf::Vector2f& position,
+        int& hitCount) const
     {
-        sf::Vector2f pushVector(
-            0.f,
-            0.f);
-
+        sf::Vector2f pushVector(0.f, 0.f);
         hitCount = 0;
 
-        for (
-            int probeIndex = 0;
-            probeIndex < NUM_PROBES;
-            ++probeIndex)
+        // --- Pobieramy aktualn? skal? fizyczn? z TransformComponent ---
+        float currentScale = 1.0f;
+        if (owner) {
+            if (auto* transform = owner->getComponent<TransformComponent>()) {
+                currentScale = transform->scale.x; // Zak?adamy proporcjonalne skalowanie
+            }
+        }
+
+        // --- Obliczamy faktyczny promie? kolizji ---
+        float dynamicRadius = collisionRadius_ * currentScale;
+
+        for (int probeIndex = 0; probeIndex < NUM_PROBES; ++probeIndex)
         {
             const float angle =
-                (
-                    static_cast<float>(
-                        probeIndex) *
-                    2.0f *
-                    std::numbers::pi_v<float>
-                    ) /
-                NUM_PROBES;
+                (static_cast<float>(probeIndex) * 2.0f * std::numbers::pi_v<float>) / NUM_PROBES;
 
             const sf::Vector2f offset(
-                std::cos(angle) *
-                collisionRadius_,
+                std::cos(angle) * dynamicRadius,
+                std::sin(angle) * dynamicRadius);
 
-                std::sin(angle) *
-                collisionRadius_);
+            const sf::Vector2f probePoint = position + offset;
 
-            const sf::Vector2f probePoint =
-                position +
-                offset;
-
-            if (!isWallPixel(
-                probePoint))
+            if (!isWallPixel(probePoint))
             {
                 continue;
             }
 
             ++hitCount;
-
-            pushVector -=
-                offset;
+            pushVector -= offset;
         }
 
         return pushVector;

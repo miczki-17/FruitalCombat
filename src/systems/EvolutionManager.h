@@ -60,6 +60,9 @@ namespace game::systems
         int getCurrentWave() const;
         bool isSpawningActive() const;
 
+        // death split
+        void spawnSplits(const game::genetics::DNA& parentDNA, sf::Vector2f position, int count, const std::string& splitSkinKey, float splitScale);
+
         // shop request
         bool requiresShop() const;
         void resolveShopBreak();
