@@ -204,6 +204,8 @@ namespace game::systems
         // Pr?dko?? ro?nie tylko o 1.2%
         float waveSpeedMultiplier = std::pow(1.012f, currentWave);
 
+
+
         // wstrzykniecie nowych 25 % czystych genow z configu
         std::vector<game::genetics::DNA> basePool;
         for (auto& [key, data] : enemiesConfig.items()) {
@@ -216,6 +218,8 @@ namespace game::systems
             dna.speed = data.value("speed", 200.0f);
             dna.maxHp = data.value("maxHp", 100.0f);
             dna.sizeScale = data.value("sizeScale", 1.0f);
+            dna.baseJuice = data.value("baseJuice", 4.0f);
+            dna.dropChance = data.value("dropChance", 1.0f);
 
             std::string beh = data.value("behavior", "Charger");
             if (beh == "Sniper")          dna.behavior = game::genetics::AiBehavior::Sniper;
@@ -271,12 +275,12 @@ namespace game::systems
                 dna.sizeScale = data.value("sizeScale", 1.0f);
 
                 dna.dropChance = data.value("dropChance", 1.0f);
-                dna.baseJuice = data.value("baseJuice", 10.0f);
+                dna.baseJuice = data.value("baseJuice", 4.0f);
 
                 std::string beh = data.value("behavior", "Charger");
                 if (beh == "Sniper")          dna.behavior = game::genetics::AiBehavior::Sniper;
                 else if (beh == "Skirmisher") dna.behavior = game::genetics::AiBehavior::Skirmisher;
-                else if (beh == "Stationary")      dna.behavior = game::genetics::AiBehavior::Stationary; // <--- DODANE
+                else if (beh == "Stationary")      dna.behavior = game::genetics::AiBehavior::Stationary;
                 else if (beh == "Kamikaze")        dna.behavior = game::genetics::AiBehavior::Kamikaze;
                 else                          dna.behavior = game::genetics::AiBehavior::Charger;
 
@@ -331,7 +335,7 @@ namespace game::systems
             auto childMutant = mutantFactory.createMutant(childDNA, targetPlayer);
             // Ustawiamy pozycj? na cia?o rodzica + ma?y losowy rozrzut, ?eby nie sta?y w jednym punkcie
             if (auto* transform = childMutant->getComponent<game::components::TransformComponent>()) {
-                std::uniform_real_distribution<float> offsetDist(-25.0f, 25.0f);
+                std::uniform_real_distribution<float> offsetDist(-37.0f, 37.0f);
                 transform->position = position + sf::Vector2f(offsetDist(rng), offsetDist(rng));
             }
 

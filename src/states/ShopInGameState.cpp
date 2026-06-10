@@ -224,7 +224,7 @@ namespace game::states
                 if (rerollBtnSprite && rerollBtnSprite->getGlobalBounds().contains(worldPos)) {
                     if (game->profile.biomassJuice >= rerollCost) {
                         game->playUIClick();
-                        game->profile.addJuice(-rerollCost);
+                        game->profile.spendJuice(rerollCost);
                         rollItems();
                     }
                 }

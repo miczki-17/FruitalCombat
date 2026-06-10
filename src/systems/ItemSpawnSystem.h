@@ -28,6 +28,7 @@ namespace game::systems
         float mapScale_;
 
         float medkitSpawnTimer_ = 45.0f;
+        float manaPouchSpawnTimer_ = 55.0f;
 
         std::mt19937 rng_;
     };

@@ -94,7 +94,7 @@ namespace game::core
         collisionSystem->updateBulletIntersections(dt, collisionMask_, mapScale_);
 
         // COMBAT
-        combatSystem->processJuiceCollection(player.get());
+        combatSystem->processItemCollection(player.get());
         combatSystem->processBulletDamage(player.get());
         combatSystem->processAoE(player.get(), dt);
         combatSystem->processEnemyDeaths(*evolutionManager);

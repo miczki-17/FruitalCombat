@@ -1,6 +1,7 @@
 #include "ItemSpawnSystem.h"
 #include "../entities/Entity.h"
 #include "../components/MedkitComponent.h"
+#include "../components/ManaPouchComponent.h"
 #include "../components/TransformComponent.h"
 #include "../components/SpriteComponent.h"
 #include "../components/StatsComponent.h"
@@ -32,6 +33,7 @@ namespace game::systems
         if (!player || player->isDead()) return;
 
         int activeMedkitsCount = 0;
+        int activeManaPouchesCount = 0;
 
         // 1. Policz aktywne apteczki na mapie
         for (auto& entity : entities_)
@@ -40,16 +42,22 @@ namespace game::systems
             {
                 activeMedkitsCount++;
             }
+
+            if (entity->getComponent<game::components::ManaPouchComponent>())
+            {
+                activeManaPouchesCount++;
+            }
         }
 
         auto* playerTransform = player->getComponent<game::components::TransformComponent>();
         auto* playerStats = player->getComponent<game::components::StatsComponent>();
 
-        // 2. Logika podnoszenia apteczek przez gracza
+        // 2. Logika podnoszenia apteczek i sakiewek przez gracza
         if (playerTransform && playerStats)
         {
             for (auto& entity : entities_)
             {
+                // medkits
                 if (auto* medkit = entity->getComponent<game::components::MedkitComponent>())
                 {
                     auto* medkitTransform = entity->getComponent<game::components::TransformComponent>();
@@ -63,6 +71,24 @@ namespace game::systems
                             playerStats->heal(medkit->healAmount);
                             entity->destroy();
                             activeMedkitsCount--;
+                        }
+                    }
+                }
+
+                // pouches
+                if (auto* manaPouch = entity->getComponent<game::components::ManaPouchComponent>())
+                {
+                    auto* manaPouchTransform = entity->getComponent<game::components::TransformComponent>();
+                    if (manaPouchTransform)
+                    {
+                        sf::Vector2f diff = playerTransform->position - manaPouchTransform->position;
+                        float distSq = (diff.x * diff.x) + (diff.y * diff.y);
+
+                        if (distSq < (40.0f * 40.0f)) // Promie? zebrania przedmiotu
+                        {
+                            playerStats->restoreMana(manaPouch->manaAmount);
+                            entity->destroy();
+                            activeManaPouchesCount--;
                         }
                     }
                 }
@@ -96,6 +122,35 @@ namespace game::systems
                 entities_.push_back(std::move(newMedkit));
             }
         }
+
+        // 4. Logika generowania nowych mana sakiewek
+        if (activeManaPouchesCount < 2)
+        {
+            manaPouchSpawnTimer_ -= deltaTime;
+            if (manaPouchSpawnTimer_ <= 0.0f)
+            {
+                std::uniform_real_distribution<float> timeDist(10.0f, 20.0f);
+                manaPouchSpawnTimer_ = timeDist(rng_);
+
+                auto newManaPouch = std::make_unique<game::entities::Entity>();
+
+                if (auto* transform = newManaPouch->getComponent<game::components::TransformComponent>()) {
+                    transform->position = getRandomValidPosition();
+                }
+
+                std::uniform_real_distribution<float> velX(-150.f, 150.f);
+                sf::Vector2f popVelocity = { velX(rng_), -400.f };
+
+                // 1. Cia?o (Fizyka i Grafika) -> TO RYSYJE APTECZK? I J? ANIMUJE
+                newManaPouch->addComponent(std::make_unique<game::components::PickupComponent>("mana_pouch_item", popVelocity));
+
+                // 2. ?adunek (Leczenie) -> TO DECYDUJE CO SI? STANIE PO ZEBRANIU
+                newManaPouch->addComponent(std::make_unique<game::components::ManaPouchComponent>(10.0f));
+
+                entities_.push_back(std::move(newManaPouch));
+            }
+        }
+
     }
 
     sf::Vector2f ItemSpawnSystem::getRandomValidPosition()

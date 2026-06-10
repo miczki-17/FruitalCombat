@@ -25,7 +25,7 @@ namespace game::systems
         CombatSystem(game::Game* game, game::ArenaContext& context, std::vector<std::unique_ptr<game::entities::Entity>>& enemiesRef);
 
         // Przetwarza zebrane dropy soku, przyznaje walut? i ?aduje pasek Ultimate gracza
-        void processJuiceCollection(game::entities::Entity* player);
+        void processItemCollection(game::entities::Entity* player);
 
         // Przetwarza wybuchy pocisków, zadaje obra?enia obszarowe, nak?ada HitFlash oraz tworzy strefy kwasu
         void processBulletDamage(game::entities::Entity* player);

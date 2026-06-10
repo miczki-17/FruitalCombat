@@ -16,6 +16,7 @@
 #include "../components/PopAnimationComponent.h"
 #include "../components/JuiceComponent.h"
 #include "../components/MedkitComponent.h"
+#include "../components/ManaPouchComponent.h"
 #include "../components/AoEComponent.h"
 #include "../components/DeathRattleComponent.h"
 #include "../components/PickupComponent.h"
@@ -35,7 +36,7 @@ namespace game::systems
     {
     }
 
-    void CombatSystem::processJuiceCollection(game::entities::Entity* player)
+    void CombatSystem::processItemCollection(game::entities::Entity* player)
     {
         if (!player || player->isDead()) return;
         auto* player_stats = player->getComponent<game::components::StatsComponent>();
@@ -66,6 +67,12 @@ namespace game::systems
                 if (auto* medkit = entities[i]->getComponent<game::components::MedkitComponent>())
                 {
                     if (player_stats) player_stats->heal(medkit->healAmount);
+                }
+
+                // 3. MANA POUCH
+                if (auto* manaPouch = entities[i]->getComponent<game::components::ManaPouchComponent>())
+                {
+                    if (player_stats) player_stats->restoreMana(manaPouch->manaAmount);
                 }
 
                 // Niszczymy przedmiot, bo ?adunek zosta? odebrany

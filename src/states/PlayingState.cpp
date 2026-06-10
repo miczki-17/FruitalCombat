@@ -180,7 +180,7 @@ namespace game::states
         // 3. Opcje ogolne
         rm.loadTexture("juice", "assets/textures/entities/drops/juice.png", AssetGroup::Playing);
         rm.loadTexture("medkit_item", "assets/textures/items/medkit.png", AssetGroup::Playing);
-        //rm.loadTexture("juicekit_item", "assets/textures/items/juicekit.png", AssetGroup::Playing);
+        rm.loadTexture("mana_pouch_item", "assets/textures/items/mana_pouch_item.png", AssetGroup::Playing);
 
         game->arenaContext.mapDustColor = sf::Color(
             static_cast<std::uint8_t>(mapData.value("dustR", 150)),
