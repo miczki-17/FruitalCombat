@@ -175,8 +175,8 @@ namespace game::states
             setupButtonText(ui.cost, std::to_string(ui.data.cost), { ui.bg.getPosition().x - 15.f, innerPos.y + cardHeight - 40.f }, 24);
             ui.cost->setFillColor(sf::Color(255, 215, 0));
 
-            if (rm.hasTexture("magic_bean_base")) {
-                ui.costIcon.emplace(*rm.getTexture("magic_bean_base"));
+            if (rm.hasTexture("juice")) {
+                ui.costIcon.emplace(*rm.getTexture("juice"));
                 ui.costIcon->setScale({ 1.3f, 1.3f });
                 ui.costIcon->setOrigin({ ui.costIcon->getTexture().getSize().x / 2.f, ui.costIcon->getTexture().getSize().y / 2.f });
                 ui.costIcon->setPosition({ ui.bg.getPosition().x + 25.f, innerPos.y + cardHeight - 40.f });
@@ -195,13 +195,13 @@ namespace game::states
             playerStats->increaseMaxHealth(item.value);
         }
         else if (item.targetStat == "mana") {
-            // playerStats->increaseMaxWater(item.value);
+            playerStats->increaseMaxMana(item.value);
         }
         else if (item.targetStat == "speed_pct") {
             playerStats->multiplyBaseSpeed(1.0f + item.value);
         }
         else if (item.targetStat == "dmg_pct") {
-            // playerStats->addDamageMultiplier(item.value);
+            //playerStats->addDamageMultiplier(item.value);
         }
         else if (item.targetStat == "lifesteal") {
             // playerStats->addLifesteal(item.value);

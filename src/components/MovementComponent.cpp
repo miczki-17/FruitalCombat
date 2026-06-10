@@ -47,8 +47,19 @@ namespace game::components
 
         transform->isMoving = (desiredDirection_ != sf::Vector2f(0.f, 0.f));
 
-        // Wygladzeniue wektora ruchu postaci
-        smoothedInput_ += (desiredDirection_ - smoothedInput_) * turnSpeed_ * deltaTime;
+        // --- POPRAWKA: Rozró?nienie gracza od NPC ---
+        bool isPlayer = (owner->getComponent<PlayerInputComponent>() != nullptr);
+
+        if (isPlayer)
+        {
+            // Gracz zachowuje p?ynne wyg?adzanie sterowania klawiatur?
+            smoothedInput_ += (desiredDirection_ - smoothedInput_) * turnSpeed_ * deltaTime;
+        }
+        else
+        {
+            // NPC reaguje NATYCHMIAST na swoje AI, eliminuj?c podwójne wyg?adzanie
+            smoothedInput_ = desiredDirection_;
+        }
 
         float smoothedLength = smoothedInput_.length();
 
@@ -78,25 +89,47 @@ namespace game::components
         auto* transform = owner->getComponent<TransformComponent>();
         if (!transform) return;
 
-        // 1. Zdob?d? docelow? pr?dko?? (uwzgl?dnia te? np. spowolnienie z trucizny)
         float currentTargetSpeed = maxSpeed_;
         if (auto* stats = owner->getComponent<StatsComponent>())
         {
             currentTargetSpeed = stats->getCurrentSpeed();
         }
 
-        // 2. Dynamiczne przyspieszenie = Pr?dko?? docelowa * Opór (Drag)
-        float dynamicAcceleration = currentTargetSpeed * activeDrag_;
+        // --- Izolacja tarcia mapy ---
+        bool isPlayer = (owner->getComponent<PlayerInputComponent>() != nullptr);
+        float drag = isPlayer ? activeDrag_ : 3.5f; // NPC ma sta?y grip, gracz s?ucha mapy
 
-        // 3. Aplikuj si?y na wektor
+        // --- Gwa?towne skr?ty NPC ---
+        // Je?li to przeciwnik, porusza si? i próbuje zmieni? kierunek pod du?ym k?tem:
+        if (!isPlayer && transform->velocity.length() > 10.0f)
+        {
+            sf::Vector2f normVel = transform->velocity.normalized();
+            // Iloczyn skalarny (dot product) mówi nam, jak bardzo po??dany kierunek ró?ni si? od obecnego
+            float cosAngle = normVel.x * direction.x + normVel.y * direction.y;
+
+            // Je?li k?t skr?tu jest ostry lub potwór zawraca (cosAngle < 0.75)
+            if (cosAngle < 0.75f)
+            {
+                // kasujemy p?d boczny
+                transform->velocity = direction * transform->velocity.length() * 0.5f;
+            }
+        }
+
+        // Standardowe zaaplikowanie si?
+        float dynamicAcceleration = currentTargetSpeed * drag;
         transform->velocity += direction * dynamicAcceleration * deltaTime;
-        transform->velocity -= transform->velocity * activeDrag_ * deltaTime;
+        transform->velocity -= transform->velocity * drag * deltaTime;
     }
 
     void MovementComponent::applyStopping(float deltaTime)
     {
         auto* transform = owner->getComponent<TransformComponent>();
-        transform->velocity -= transform->velocity * stopDrag_ * deltaTime;
+        if (!transform) return;
+
+        bool isPlayer = (owner->getComponent<PlayerInputComponent>() != nullptr);
+        float drag = isPlayer ? stopDrag_ : 12.0f; // NPC staje jak wryty, gracz ?lizga si? zale?nie od mapy
+
+        transform->velocity -= transform->velocity * drag * deltaTime;
 
         if (transform->velocity.length() < STOP_THRESHOLD)
         {

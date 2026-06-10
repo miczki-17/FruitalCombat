@@ -18,6 +18,8 @@ namespace game::components
 
         const game::genetics::DNA& getDNA() const;
 
+        float timeAlive = 0.0f;
+
     private:
         game::genetics::DNA dna_;
         game::entities::Entity* targetPlayer_;

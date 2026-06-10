@@ -33,8 +33,8 @@ namespace game::genetics
         std::vector<std::string> abilities;
 
         // --- ECONOMY / LOOT GENETICS ---
-        float dropChance = 1.0f;  // 1.0 = 100% chance
-        float baseJuice = 10.0f;  // Base amount of currency dropped
+        float dropChance = 0.66f;  // 1.0 = 100% chance
+        float baseJuice = 3.0f;  // Base amount of currency dropped
 
 		// for mutations tracking
         bool isMutated = false;

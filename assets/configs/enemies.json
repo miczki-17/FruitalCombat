@@ -1,13 +1,34 @@
 {
+	"geneticRules": [
+		{
+			"comment": "Snipers & stationers cannot use melee or split abilities",
+			"if_behavior_in": [ "Sniper", "Stationary" ],
+			"remove_abilities": [ "WindupBruiser", "SplitOnDeath" ],
+			"force_ability": "Shoot"
+		},
+		{
+			"comment": "Kamikaze cannot shoot, it just runs",
+			"if_behavior_in": [ "Kamikaze" ],
+			"remove_abilities": [ "Shoot" ]
+		},
+		{
+			"comment": "Monsters with the split gene MUST be aggressive and run towards the player",
+			"if_ability": "SplitOnDeath",
+			"force_behavior": "Charger"
+		}
+	],
+
+
+
 	"Carrot": {
 		"name": "Karaterot",
 		"behavior": "Sniper",
-		"speed": 250.0,
+		"speed": 120.0,
 		"maxHp": 40.0,
 		"sizeScale": 0.78,
 		"spriteScale": 0.78,
 		"abilities": [ "Shoot" ],
-		"damage": 15,
+		"damage": 1.5,
 		"agility": 5.0,
 		"attackCooldown": 1.8,
 		"splitSkinKey": "",
@@ -22,12 +43,12 @@
 	"Potato": {
 		"name": "Spudnik",
 		"behavior": "Charger",
-		"speed": 210.0,
+		"speed": 115.0,
 		"maxHp": 80.0,
-		"sizeScale": 0.78,
-		"spriteScale": 0.78,
+		"sizeScale": 0.75,
+		"spriteScale": 0.75,
 		"abilities": [ "Armor", "SplitOnDeath" ],
-		"damage": 20,
+		"damage": 3,
 		"agility": 4.3,
 		"splitSkinKey": "Fry",
 		"splitCount": 4,
@@ -41,12 +62,12 @@
 	"Broccoli": {
 		"name": "Brocc-Hulk",
 		"behavior": "Charger",
-		"speed": 220.0,
+		"speed": 115.0,
 		"maxHp": 60.0,
-		"sizeScale": 0.9,
+		"sizeScale": 1.1,
 		"spriteScale": 0.9,
 		"abilities": [ "WindupBruiser" ],
-		"damage": 40,
+		"damage": 4.5,
 		"agility": 3.5,
 		"splitSkinKey": "",
 		"splitCount": 2,
@@ -60,12 +81,12 @@
 	"Corn": {
 		"name": "Colonel Corn",
 		"behavior": "Stationary",
-		"speed": 240.0,
+		"speed": 100.0,
 		"maxHp": 40.0,
-		"sizeScale": 0.85,
-		"spriteScale": 0.85,
+		"sizeScale": 0.80,
+		"spriteScale": 0.80,
 		"abilities": [ "Shoot" ],
-		"damage": 15,
+		"damage": 2,
 		"agility": 5.1,
 		"splitSkinKey": "",
 		"splitCount": 2,
@@ -79,7 +100,7 @@
 	"Garlic": {
 		"name": "Count Clovula",
 		"behavior": "Kamikaze",
-		"speed": 320.0,
+		"speed": 290.0,
 		"maxHp": 30.0,
 		"sizeScale": 0.70,
 		"spriteScale": 0.70,
@@ -101,7 +122,7 @@
 	},
 
 
-	
+
 	"Fry": {
 		"name": "French Fry",
 		"spawnable": false,

@@ -60,8 +60,8 @@
     "maskPath": "assets/textures/maps/chopping_block_mask.png",
     "musicPath": "assets/audio/music/kitchen_chaos.ogg",
     "physics": {
-      "friction": 0.8,
-      "speedMultiplier": 1.0
+      "friction": 1.0,
+      "speedMultiplier": 1.35
     },
 
     "playableBounds": {
@@ -110,7 +110,7 @@
     "maskPath": "assets/textures/maps/frosbite_fridge_mask.png",
     "musicPath": "assets/audio/music/chill_vibes.ogg",
     "physics": {
-      "friction": 0.2,
+      "friction": 0.6,
       "speedMultiplier": 1.3
     },
 

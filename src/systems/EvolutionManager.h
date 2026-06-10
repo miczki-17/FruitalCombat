@@ -28,7 +28,7 @@ namespace game::systems
         bool pendingShopBreak = false;
 
         int currentWave = 0;
-        int baseWaveSize = 4;
+        int baseWaveSize = 3;
         float mutationRate = 0.15f;
 
         std::vector<game::genetics::DNA> harvestedDNA;
@@ -45,6 +45,10 @@ namespace game::systems
         // --- HELPER METHOD FOR VALID POSITION HUNTING ---
         // Uses a loop to roll coordinates until a walkable white pixel on the mask is found
         sf::Vector2f getRandomValidPosition(bool aroundPlayer);
+
+        void applyGeneticRules(game::genetics::DNA& dna);
+        std::string behaviorToStr(game::genetics::AiBehavior b) const;
+        game::genetics::AiBehavior strToBehavior(const std::string& s) const;
 
     public:
         EvolutionManager(game::factories::MutantFactory& factory,

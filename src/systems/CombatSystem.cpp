@@ -15,8 +15,10 @@
 #include "../components/LifespanComponent.h"
 #include "../components/PopAnimationComponent.h"
 #include "../components/JuiceComponent.h"
+#include "../components/MedkitComponent.h"
 #include "../components/AoEComponent.h"
 #include "../components/DeathRattleComponent.h"
+#include "../components/PickupComponent.h"
 #include "../abilities/PoisonExplosionAbility.h"
 #include "../components/SplitOnDeathComponent.h"
 #include "EvolutionManager.h"
@@ -36,33 +38,38 @@ namespace game::systems
     void CombatSystem::processJuiceCollection(game::entities::Entity* player)
     {
         if (!player || player->isDead()) return;
+        auto* player_stats = player->getComponent<game::components::StatsComponent>();
 
         auto& entities = context_.entities;
         for (int i = static_cast<int>(entities.size()) - 1; i >= 0; --i)
         {
-            if (auto* juice = entities[i]->getComponent<game::components::JuiceComponent>())
+            // Pytamy: Czy to jest przedmiot i czy gracz go w?a?nie dotkn???
+            auto* pickup = entities[i]->getComponent<game::components::PickupComponent>();
+            if (pickup && pickup->isCollected)
             {
-                if (juice->isCollected)
+                // 1. ?ADUNEK: SOK / MONETA
+                if (auto* juice = entities[i]->getComponent<game::components::JuiceComponent>())
                 {
-                    // Sprawdzamy, czy to MONETA do sklepu
-                    if (juice->isCoin)
-                    {
-                        // std::round gwarantuje, ¿e 0.9999f stanie siê 1, a nie 0
+                    if (juice->isCoin) {
                         game_->profile.addCoins(static_cast<int>(std::round(juice->value)));
                     }
-                    else
-                    {
+                    else {
                         game_->profile.addJuice(static_cast<int>(std::round(juice->value)));
-
-                        if (auto* stats = player->getComponent<game::components::StatsComponent>()) {
-                            stats->addUltCharge(juice->value * 0.5f);
-                            stats->restoreMana(juice->value * 3.0f);
+                        if (player_stats) {
+                            player_stats->addUltCharge(juice->value * 0.5f);
+                            player_stats->restoreMana(juice->value * 3.0f);
                         }
                     }
-
-                    // Niezale¿nie od tego czy to moneta czy sok, po zebraniu niszczymy encjê
-                    entities[i]->destroy();
                 }
+
+                // 2. ?ADUNEK: APTECZKA
+                if (auto* medkit = entities[i]->getComponent<game::components::MedkitComponent>())
+                {
+                    if (player_stats) player_stats->heal(medkit->healAmount);
+                }
+
+                // Niszczymy przedmiot, bo ?adunek zosta? odebrany
+                entities[i]->destroy();
             }
         }
     }
@@ -340,12 +347,15 @@ namespace game::systems
                     auto* enemies_transform = enemies_[i]->getComponent<game::components::TransformComponent>();
                     if (!enemies_transform) continue;
 
-                    const auto& dnaData = dnaComp->getDNA();
+                    game::genetics::DNA dnaData = dnaComp->getDNA();
+
+                    dnaData.fitnessScore = dnaComp->timeAlive;
 
                     // klony nie sa pokarmem dla ewolucji
                     if (!dnaData.isClone) {
                         evolutionManager.onEnemyDeath(dnaData);
                     }
+
                     // Wspólne generatory losowoœci dla wszystkich dropów (efekt fontanny)
                     std::random_device rd;
                     std::mt19937 gen(rd());
@@ -369,19 +379,22 @@ namespace game::systems
 
                         for (int j = 0; j < numJuiceDrops; ++j)
                         {
-                            // Jeœli jest jakaœ reszta, pierwsze kilka kropel dostaje +1 do wartoœci
+                            // Je?li jest jaka? reszta, pierwsze kilka kropel dostaje +1 do warto?ci
                             float dropValue = static_cast<float>(baseValuePerDrop + (j < remainder ? 1 : 0));
 
                             sf::Vector2f randomVel = { velXDist(gen), velYDist(gen) };
                             auto juiceEntity = std::make_unique<game::entities::Entity>();
 
+                            // 1. Ustawienie pozycji (bez dodawania nowego Transformu!)
                             if (auto* transform = juiceEntity->getComponent<game::components::TransformComponent>()) {
                                 transform->position = enemies_transform->position;
                             }
 
-                            juiceEntity->addComponent(std::make_unique<game::components::JuiceComponent>(
-                                dropValue, randomVel, false
-                                ));
+                            // 2. Cia?o (Fizyka i grafika soku)
+                            juiceEntity->addComponent(std::make_unique<game::components::PickupComponent>("juice", randomVel));
+
+                            // 3. Dusza (Warto?? soku) - ZWRÓ? UWAG?: TYLKO 2 ARGUMENTY!
+                            juiceEntity->addComponent(std::make_unique<game::components::JuiceComponent>(dropValue, false));
 
                             context_.spawnEntity(std::move(juiceEntity));
                         }
@@ -406,15 +419,16 @@ namespace game::systems
                                     transform->scale = { 1.5f, 1.5f };
                                 }
 
-                                auto coinComp = std::make_unique<game::components::JuiceComponent>(
-                                    1.0f, randomVel, true
-                                    );
+                                // 1. Cia?o (Fizyka i po?wiata z kluczem "coin")
+                                coinEntity->addComponent(std::make_unique<game::components::PickupComponent>(
+                                    "coin", randomVel, true
+                                ));
 
-                                if (coinComp->glowSprite) {
-                                    coinComp->glowSprite->setColor(sf::Color(255, 215, 0, 180));
-                                }
+                                // 2. ?adunek (JuiceComponent jako moneta: warto?? 1.0, isCoin = true)
+                                coinEntity->addComponent(std::make_unique<game::components::JuiceComponent>(
+                                    1.0f, true
+                                ));
 
-                                coinEntity->addComponent(std::move(coinComp));
                                 context_.spawnEntity(std::move(coinEntity));
                             }
                         }

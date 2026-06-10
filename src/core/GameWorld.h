@@ -19,6 +19,7 @@ namespace game::systems {
     class ParticleSystem;
     class RenderSystem;
     class MapHazardSystem;
+    class ItemSpawnSystem;
 }
 
 namespace game::core
@@ -61,5 +62,8 @@ namespace game::core
         std::unique_ptr<game::systems::ParticleSystem> particleSystem;
         std::unique_ptr<game::systems::RenderSystem> renderSystem;
         std::unique_ptr<game::systems::MapHazardSystem> mapHazardSystem;
+
+        // itemy
+		std::unique_ptr<game::systems::ItemSpawnSystem> itemSpawnSystem;
     };
 }

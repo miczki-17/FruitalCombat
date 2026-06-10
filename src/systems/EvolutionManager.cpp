@@ -148,8 +148,17 @@ namespace game::systems
 
     void EvolutionManager::evolveNextWaveGenomes()
     {
-        currentWave++;
-        int newWaveSize = baseWaveSize + (currentWave * 2);
+		currentWave++;
+
+        int maxSafeEnemies = 90; // Limit dla bezpiecze?stwa CPU i czytelno?ci gry
+
+        float multiplier = 7.78;
+
+        // Funkcja ro?nie szybko na pocz?tku, a potem bardzo powoli
+        int calculatedSize = baseWaveSize + static_cast<int>(multiplier * (std::sqrt(currentWave) - 1.0f));
+
+        // Wybieramy mniejsz? warto?? (Zabezpieczenie przed Armagedonem)
+        int newWaveSize = std::min(maxSafeEnemies, calculatedSize);
         mutationRate = std::min(0.45f, 0.12f + (currentWave * 0.02f));
 
         std::cout << "\n==================================================\n";
@@ -160,16 +169,21 @@ namespace game::systems
             return;
         }
 
+        // 1. Sortowanie po Fitness Score
         std::sort(harvestedDNA.begin(), harvestedDNA.end(), [](const game::genetics::DNA& a, const game::genetics::DNA& b) {
             return a.fitnessScore > b.fitnessScore;
             });
 
         size_t eliteCount = std::max(static_cast<size_t>(1), harvestedDNA.size() / 2);
         std::vector<game::genetics::DNA> elites(harvestedDNA.begin(), harvestedDNA.begin() + eliteCount);
-
         harvestedDNA.clear();
 
-        for (int i = 0; i < newWaveSize; ++i)
+        // --- ZAPEWNIENIE RÓ?NORODNO?CI ---
+        int randomSpawns = std::max(1, static_cast<int>(newWaveSize * 0.25f)); // 25% fali to czy?ci, nowi wrogowie
+        int bredSpawns = newWaveSize - randomSpawns;
+
+        // 2. Krzy?owanie najlepszych (75% fali)
+        for (int i = 0; i < bredSpawns; ++i)
         {
             std::uniform_int_distribution<size_t> dist(0, elites.size() - 1);
             const auto& parentA = elites[dist(rng)];
@@ -177,13 +191,59 @@ namespace game::systems
 
             game::genetics::DNA childDNA = parentA.crossover(parentB, rng);
             childDNA.mutate(mutationRate, rng);
+            applyGeneticRules(childDNA); // Oczyszczamy DNA naszym interpreterem z JSON-a
             childDNA.fitnessScore = 0.0f;
 
             spawnQueue.push_back(childDNA);
         }
 
+        // --- Mno?niki wyk?adnicze ---
+        // Wyliczane RAZ na ca?? fal?. 
+        // HP ro?nie o 4% co fal? (pot?gowanie)
+        float waveHpMultiplier = std::pow(1.04f, currentWave);
+        // Pr?dko?? ro?nie tylko o 1.2%
+        float waveSpeedMultiplier = std::pow(1.012f, currentWave);
+
+        // wstrzykniecie nowych 25 % czystych genow z configu
+        std::vector<game::genetics::DNA> basePool;
+        for (auto& [key, data] : enemiesConfig.items()) {
+            if (key == "geneticRules") continue;
+            if (!data.value("spawnable", true)) continue;
+
+            game::genetics::DNA dna;
+            dna.skinKey = key;
+            dna.r = data.value("r", 255); dna.g = data.value("g", 255); dna.b = data.value("b", 255);
+            dna.speed = data.value("speed", 200.0f);
+            dna.maxHp = data.value("maxHp", 100.0f);
+            dna.sizeScale = data.value("sizeScale", 1.0f);
+
+            std::string beh = data.value("behavior", "Charger");
+            if (beh == "Sniper")          dna.behavior = game::genetics::AiBehavior::Sniper;
+            else if (beh == "Skirmisher") dna.behavior = game::genetics::AiBehavior::Skirmisher;
+            else if (beh == "Stationary") dna.behavior = game::genetics::AiBehavior::Stationary;
+            else if (beh == "Kamikaze")   dna.behavior = game::genetics::AiBehavior::Kamikaze;
+            else                          dna.behavior = game::genetics::AiBehavior::Charger;
+
+            if (data.contains("abilities")) {
+                for (const auto& ab : data["abilities"]) {
+                    dna.abilities.push_back(ab.get<std::string>());
+                }
+            }
+            basePool.push_back(dna);
+        }
+
+        if (!basePool.empty()) {
+            std::uniform_int_distribution<size_t> poolDist(0, basePool.size() - 1);
+            for (int i = 0; i < randomSpawns; ++i) {
+                spawnQueue.push_back(basePool[poolDist(rng)]);
+            }
+        }
+
+        // 4. Tasujemy kolejk?, ?eby wrogowie wychodzili wymieszani (inaczej na ko?cu fali by?yby same randomy)
+        std::shuffle(spawnQueue.begin(), spawnQueue.end(), rng);
+
         spawnTimer = 0.5f;
-        std::cout << "[EVOLUTION] " << newWaveSize << " genomes loaded into spawn queue.\n";
+        std::cout << "[EVOLUTION] " << bredSpawns << " bred and " << randomSpawns << " random genomes queued.\n";
         std::cout << "==================================================\n\n";
     }
 
@@ -195,6 +255,9 @@ namespace game::systems
         {
             for (auto& [key, data] : enemiesConfig.items())
             {
+				// pomijamy klucz geneticRules, bo to nie jest definicja przeciwnika
+                if (key == "geneticRules") continue;
+
                 bool isSpawnable = data.value("spawnable", true);
                 if (!isSpawnable) {
                     continue;
@@ -285,5 +348,84 @@ namespace game::systems
     {
         pendingShopBreak = false;
         evolveNextWaveGenomes();
+    }
+
+
+
+    std::string EvolutionManager::behaviorToStr(game::genetics::AiBehavior b) const {
+        switch (b) {
+        case game::genetics::AiBehavior::Sniper: return "Sniper";
+        case game::genetics::AiBehavior::Skirmisher: return "Skirmisher";
+        case game::genetics::AiBehavior::Stationary: return "Stationary";
+        case game::genetics::AiBehavior::Kamikaze: return "Kamikaze";
+        default: return "Charger";
+        }
+    }
+
+    game::genetics::AiBehavior EvolutionManager::strToBehavior(const std::string& s) const {
+        if (s == "Sniper") return game::genetics::AiBehavior::Sniper;
+        if (s == "Skirmisher") return game::genetics::AiBehavior::Skirmisher;
+        if (s == "Stationary") return game::genetics::AiBehavior::Stationary;
+        if (s == "Kamikaze") return game::genetics::AiBehavior::Kamikaze;
+        return game::genetics::AiBehavior::Charger;
+    }
+
+    void EvolutionManager::applyGeneticRules(game::genetics::DNA& dna)
+    {
+        if (!enemiesConfig.contains("geneticRules")) return;
+
+        const auto& rules = enemiesConfig["geneticRules"];
+        std::string currentBehaviorStr = behaviorToStr(dna.behavior);
+
+        for (const auto& rule : rules)
+        {
+            bool conditionMet = false;
+
+            // 1. if_behavior_in
+            if (rule.contains("if_behavior_in")) {
+                for (const auto& b : rule["if_behavior_in"]) {
+                    if (b.get<std::string>() == currentBehaviorStr) {
+                        conditionMet = true;
+                        break;
+                    }
+                }
+            }
+
+            // 2. if_ability
+            if (rule.contains("if_ability")) {
+                std::string reqAb = rule["if_ability"].get<std::string>();
+                if (std::find(dna.abilities.begin(), dna.abilities.end(), reqAb) != dna.abilities.end()) {
+                    conditionMet = true;
+                }
+            }
+
+            // 3. Wykonanie akcji
+            if (conditionMet)
+            {
+                // Akcja A: remove_abilities
+                if (rule.contains("remove_abilities")) {
+                    for (const auto& abToRemove : rule["remove_abilities"]) {
+                        auto it = std::find(dna.abilities.begin(), dna.abilities.end(), abToRemove.get<std::string>());
+                        if (it != dna.abilities.end()) {
+                            dna.abilities.erase(it);
+                        }
+                    }
+                }
+
+                // Akcja B: force_ability (dodaje, je?li jeszcze nie ma)
+                if (rule.contains("force_ability")) {
+                    std::string forceAb = rule["force_ability"].get<std::string>();
+                    if (std::find(dna.abilities.begin(), dna.abilities.end(), forceAb) == dna.abilities.end()) {
+                        dna.abilities.push_back(forceAb);
+                    }
+                }
+
+                // Akcja C: force_behavior (nadpisuje sztuczn? inteligencj?)
+                if (rule.contains("force_behavior")) {
+                    dna.behavior = strToBehavior(rule["force_behavior"].get<std::string>());
+                    currentBehaviorStr = behaviorToStr(dna.behavior); // aktualizacja lokalnej zmiennej
+                }
+            }
+        }
     }
 }

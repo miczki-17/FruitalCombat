@@ -7,6 +7,7 @@
 #include "../components/ParticleComponent.h"
 #include "../components/TransformComponent.h"
 #include "../components/JuiceComponent.h"
+#include "../components/PickupComponent.h"
 #include "../components/TraitDisplayComponent.h"
 #include "../components/AoEComponent.h"
 #include "../entities/Entity.h"
@@ -48,11 +49,12 @@ namespace game::systems
             window.draw(dustShape);
         }
 
-		// Layer 4: Juice drops (if any)
+		// Layer 4: Drops / items (if any)
         for (auto& entity : context_.entities)
         {
-            if (auto* juice = entity->getComponent<game::components::JuiceComponent>()) {
-                juice->render(window);
+            if (auto* pickup = entity->getComponent<game::components::PickupComponent>())
+            {
+                pickup->render(window);
             }
         }
 

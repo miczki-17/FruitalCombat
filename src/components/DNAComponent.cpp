@@ -38,6 +38,8 @@ namespace game::components
 
         addSurvivalFitness(deltaTime);
         addProximityFitness(deltaTime);
+
+		timeAlive += deltaTime;
     }
 
     void DNAComponent::addSurvivalFitness(

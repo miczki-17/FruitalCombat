@@ -12,6 +12,7 @@
 #include "../systems/ParticleSystem.h"
 #include "../systems/RenderSystem.h"
 #include "../systems/MapHazardSystem.h"
+#include "../systems/ItemSpawnSystem.h"
 #include "../components/StatsComponent.h"
 #include "../components/MovementComponent.h"
 
@@ -50,6 +51,7 @@ namespace game::core
         renderSystem = std::make_unique<game::systems::RenderSystem>(game_->arenaContext);
         particleSystem = std::make_unique<game::systems::ParticleSystem>(game_->arenaContext);
         renderSystem = std::make_unique<game::systems::RenderSystem>(game_->arenaContext);
+        itemSpawnSystem = std::make_unique<game::systems::ItemSpawnSystem>(game_->arenaContext, game_->arenaContext.entities, collisionMask_, mapScale_);
 
         // ParticleSystem config from maps json
         const auto& currentMapConfig = game_->mapsConfig[game_->selectedMapKey];
@@ -85,21 +87,30 @@ namespace game::core
         }
 
 
-        // Zunifikowane wywo?ania Systemów
-        collisionSystem->updateJuiceCollection(player.get(), dt);
+        // SYSTEMS
+
+        // COLLISIONS
+        collisionSystem->updatePickups(player.get(), dt);
         collisionSystem->updateBulletIntersections(dt, collisionMask_, mapScale_);
 
+        // COMBAT
         combatSystem->processJuiceCollection(player.get());
         combatSystem->processBulletDamage(player.get());
         combatSystem->processAoE(player.get(), dt);
+        combatSystem->processEnemyDeaths(*evolutionManager);
 
+        // PARTICLES
         particleSystem->updateEffects(dt);
         particleSystem->updateParticles(player.get(), dt, lastPlayerPos_, playerDustSpawnTimer_);
 
+        // HAZARDS
         mapHazardSystem->update(dt, game_->arenaContext, player.get());
 
-        combatSystem->processEnemyDeaths(*evolutionManager);
+        // EVO
         evolutionManager->update(dt);
+
+        // ITEMS
+        itemSpawnSystem->update(dt, getPlayer());
 
         // Aktualizacja logiczna postaci
         player->update(dt);

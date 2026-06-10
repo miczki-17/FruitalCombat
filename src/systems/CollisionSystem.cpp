@@ -2,11 +2,12 @@
 
 #include "CollisionSystem.h"
 #include "../core/ArenaContext.h"
+#include "../core/Game.h"
 #include "../entities/Entity.h"
 #include "../components/ProjectileComponent.h"
 #include "../components/StatsComponent.h"
 #include "../components/TransformComponent.h"
-#include "../components/JuiceComponent.h"
+#include "../components/PickupComponent.h"
 #include <cmath>
 
 namespace game::systems
@@ -16,35 +17,35 @@ namespace game::systems
     {
     }
 
-    void CollisionSystem::updateJuiceCollection(game::entities::Entity* player, float dt)
+    void CollisionSystem::updatePickups(game::entities::Entity* player, float dt)
     {
-        if (!player || player->isDead()) return;
+        // 1. Zabezpieczamy pozycj? gracza (ale NIE przerywamy funkcji je?li gracz nie ?yje)
+        auto* player_transform = (player && !player->isDead()) ? player->getComponent<game::components::TransformComponent>() : nullptr;
 
-        auto* player_transform = player->getComponent<game::components::TransformComponent>();
-        if (!player_transform) return;
-
-        auto& entities = context_.entities;
-
-        for (auto& entity : entities)
+        for (auto& entity : context_.entities)
         {
-            auto* juice = entity->getComponent<game::components::JuiceComponent>();
-            if (!juice || juice->isCollected) continue;
+            auto* pickup = entity->getComponent<game::components::PickupComponent>();
+            if (!pickup) continue; // Ignoruj to, co nie jest pickupem
 
-            auto* juice_transform = entity->getComponent<game::components::TransformComponent>();
-            if (!juice_transform) continue;
+            // --- TO O?YWIA SOK I APTECZKI (Fizyka i Skala z 0 do 1) ---
+            pickup->update(dt);
 
-            sf::Vector2f diff = player_transform->position - juice_transform->position;
-            float dist = diff.length(); // SFML 3
+            // Je?li przedmiot zosta? ju? zebrany, albo gracz nie ?yje - pomijamy tylko magnesowanie
+            if (pickup->isCollected || !player_transform) continue;
 
-            if (dist < 180.0f && dist > 0.001f)
-            {
-                // Przyspieszone "magnesowanie" do gracza
-                juice_transform->position += (diff / dist) * 350.0f * dt;
+            auto* pickup_transform = entity->getComponent<game::components::TransformComponent>();
+            if (!pickup_transform) continue;
+
+            sf::Vector2f diff = player_transform->position - pickup_transform->position;
+            float dist = diff.length();
+
+            if (dist < 180.0f && dist > 0.001f) {
+                // Przyspieszone "magnesowanie"
+                pickup_transform->position += (diff / dist) * 350.0f * dt;
             }
 
-            if (dist < 30.0f)
-            {
-                juice->isCollected = true;
+            if (dist < 30.0f) {
+                pickup->isCollected = true;
             }
         }
     }
@@ -55,7 +56,7 @@ namespace game::systems
 
         for (int i = static_cast<int>(entities.size()) - 1; i >= 0; --i)
         {
-            // Interesuj¹ nas tylko encje posiadaj¹ce komponent pocisku
+            // Interesuj? nas tylko encje posiadaj?ce komponent pocisku
             auto* proj = entities[i]->getComponent<game::components::ProjectileComponent>();
             if (!proj) continue;
 
