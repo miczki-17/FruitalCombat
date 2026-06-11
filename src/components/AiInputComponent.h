@@ -20,6 +20,8 @@ namespace game::components
 
         void update(float deltaTime) override;
 
+        game::entities::Entity* getTargetPlayer() const { return targetPlayer_; }
+
     private:
         game::entities::Entity* targetPlayer_;
         game::genetics::AiBehavior behavior_;

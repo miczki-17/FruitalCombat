@@ -22,6 +22,8 @@ namespace game::components
         bool isRolling = false;
         float overrideSpeedLimit = 0.0f;
 
+        float zOffset = 0.0f;
+
         float rotation = 0.0f;
         sf::Vector2f scale = { 1.0f, 1.0f };
 

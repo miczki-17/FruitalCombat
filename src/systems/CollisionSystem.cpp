@@ -50,13 +50,12 @@ namespace game::systems
         }
     }
 
-    void CollisionSystem::updateBulletIntersections(float dt, const sf::Image& collisionMask, float mapScale)
+    void CollisionSystem::updateBulletIntersections(float dt, const sf::Image& collisionMask, float mapScale, game::entities::Entity* player)
     {
         auto& entities = context_.entities;
 
         for (int i = static_cast<int>(entities.size()) - 1; i >= 0; --i)
         {
-            // Interesuj? nas tylko encje posiadaj?ce komponent pocisku
             auto* proj = entities[i]->getComponent<game::components::ProjectileComponent>();
             if (!proj) continue;
 
@@ -66,22 +65,38 @@ namespace game::systems
 
             sf::Vector2f bulletPos = proj->getPosition();
 
-            for (auto& enemy : enemies_)
+            // 1. Kule uderzaj?ce w PRZECIWNIKÓW (Strzela Gracz)
+            if (proj->getIsFriendly())
             {
-                if (enemy->isDead()) continue;
-
-                if (!proj->getIsFriendly()) continue;
-
-                auto* enemy_transform = enemy->getComponent<game::components::TransformComponent>();
-                if (!enemy_transform) continue;
-
-                float combinedRadius = proj->getRadius() + 30.0f;
-                sf::Vector2f diff = bulletPos - enemy_transform->position;
-
-                if (diff.lengthSquared() < (combinedRadius * combinedRadius))
+                for (auto& enemy : enemies_)
                 {
-                    proj->destroy();
-                    break;
+                    if (enemy->isDead()) continue;
+
+                    auto* enemy_transform = enemy->getComponent<game::components::TransformComponent>();
+                    if (!enemy_transform) continue;
+
+                    float combinedRadius = proj->getRadius() + 30.0f; // 30.0f -> szacowany hitbox przeciwnika
+                    sf::Vector2f diff = bulletPos - enemy_transform->position;
+
+                    if (diff.lengthSquared() < (combinedRadius * combinedRadius))
+                    {
+                        proj->destroy();
+                        break;
+                    }
+                }
+            }
+            // 2. Kule uderzaj?ce w GRACZA (Strzelaj? Potwory)
+            else if (!proj->getIsFriendly() && player && !player->isDead())
+            {
+                if (auto* player_transform = player->getComponent<game::components::TransformComponent>())
+                {
+                    float combinedRadius = proj->getRadius() + 25.0f; // 25.0f -> szacowany hitbox gracza
+                    sf::Vector2f diff = bulletPos - player_transform->position;
+
+                    if (diff.lengthSquared() < (combinedRadius * combinedRadius))
+                    {
+                        proj->destroy();
+                    }
                 }
             }
         }

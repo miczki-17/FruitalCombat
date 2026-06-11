@@ -143,12 +143,10 @@ namespace game::core
 
     void AudioManager::update()
     {
-        activeSounds_.erase(
-            std::remove_if(activeSounds_.begin(), activeSounds_.end(), [](const sf::Sound& sound) {
-                return sound.getStatus() == sf::SoundSource::Status::Stopped;
-                }),
-            activeSounds_.end()
-                    );
+        // Ekstremalnie szybkie usuwanie zu?ytych d?wi?ków z listy
+        activeSounds_.remove_if([](const sf::Sound& sound) {
+            return sound.getStatus() == sf::SoundSource::Status::Stopped;
+            });
     }
 
     bool AudioManager::isMusicPlaying(

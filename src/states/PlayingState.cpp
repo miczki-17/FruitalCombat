@@ -1,6 +1,7 @@
 // --- PlayingState.cpp ---
 
 #include "PlayingState.h"
+#include "../core/Config.h"
 #include "../core/ResourceManager.h"
 #include "../core/AudioManager.h"
 #include "../core/LocalizationManager.h"
@@ -39,6 +40,9 @@ namespace game::states
         // Utworzenie GameWorld'a
         sf::Vector2f startPos(mapLimits.x / 2.0f, mapLimits.y / 2.0f);
         world = std::make_unique<game::core::GameWorld>(game, collisionMask, mapScale, startPos);
+
+		// rezerwowanie pamieci na obiekty (zapobiegnie fragmentacji i spowolnieniu w trakcie gry)
+		game->arenaContext.entities.reserve(game::config::ENTITY_POOL_SIZE);
 
         // Ustawienie kamery
         cameraView = game->getWindow().getDefaultView();

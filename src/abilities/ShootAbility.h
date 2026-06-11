@@ -21,7 +21,8 @@ namespace game::components
             game::entities::Entity* owner,
             const std::string& textureKey = "",
             float projectileScale = 1.0f,
-            float cooldown = 0.3f);
+            float cooldown = 0.3f,
+            float damage = 1.0f);
 
         void update(float deltaTime) override;
 
@@ -36,6 +37,7 @@ namespace game::components
 
         std::string textureKey_;
         float projectileScale_;
+        float damage_;
 
         // MANA cost
         float manaCost_ = 12.0f;

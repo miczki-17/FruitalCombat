@@ -114,7 +114,7 @@ namespace game::components
 
 
         // --- MANA (JUICE) ---
-        float maxMana_ = 160.0f;
+        float maxMana_ = 100.0f;
         float currentMana_ = 100.0f;
         float manaRegenRate_ = 5.0f;
 

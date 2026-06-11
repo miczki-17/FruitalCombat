@@ -144,8 +144,13 @@ namespace game::factories
         if (!abilities) return; // Safety check
 
         if (name == "Shoot") {
-            float bulletScale = fruitData.value("bulletScale", 1.0f);
-            abilities->setWeapon(std::make_unique<game::components::ShootAbility>(&context, entity, key + "_bullet", bulletScale));
+            // JSON
+            float attackCooldown = fruitData.value("attackCooldown", 0.5f);
+            float projDamage = fruitData.value("projectileDamage", 25.0f);
+            float bulletScale = fruitData.value("projectileScale", 1.0f);
+
+            abilities->setWeapon(std::make_unique<game::components::ShootAbility>(
+                &context, entity, key + "_bullet", bulletScale, attackCooldown, projDamage));
         }
         else if (name == "Shotgun") {
             abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(&context, entity));
@@ -154,6 +159,7 @@ namespace game::factories
             abilities->setSkill(std::make_unique<game::components::DashAbility>(entity));
         }
         else if (name == "AcidSquirt") {
+			// JSON
             float bulletScale = fruitData.value("bulletScale", 1.0f);
             std::string splashKey = fruitData.value("splashKey", "acid_splash");
 

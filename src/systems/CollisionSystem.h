@@ -23,7 +23,7 @@ namespace game::systems
         CollisionSystem(game::ArenaContext& context, std::vector<std::unique_ptr<game::entities::Entity>>& enemiesRef);
 
         void updatePickups(game::entities::Entity* player, float dt);
-        void updateBulletIntersections(float dt, const sf::Image& collisionMask, float mapScale);
+        void updateBulletIntersections(float dt, const sf::Image& collisionMask, float mapScale, game::entities::Entity* player);
 
     private:
         game::ArenaContext& context_;

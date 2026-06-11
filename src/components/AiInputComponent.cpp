@@ -18,7 +18,6 @@ namespace game::components
         constexpr float SNIPER_MAX_DISTANCE = 450.0f;
         constexpr float SKIRMISHER_DISTANCE = 200.0f;
 
-        // --- NOWE STA?E ---
         constexpr float STATIONARY_DISTANCE = 500.0f;
         constexpr float KAMIKAZE_EXPLODE_RANGE = 45.0f;
     }

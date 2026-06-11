@@ -114,9 +114,8 @@ namespace game::systems
                         {
                             stats->takeDamage(actualDamage);
 
-                            // --- NAK£ADANIE EFEKTÓW ---
+                            // --- NAK?ADANIE EFEKTÓW ---
                             if (proj->getStatusEffect() == game::components::StatusEffect::Slow) {
-                                // Spowalnia 50% przez 2s
                                 stats->addEffect(game::components::StatusType::Slow, 2.0f, 0.5f);
                             }
 
@@ -124,15 +123,16 @@ namespace game::systems
                                 sprite->triggerHitFlash();
                             }
 
+                            // LAT?J?CY TEKST OBRA?E?
                             auto textEntity = std::make_unique<game::entities::Entity>();
-                            if (auto* transform = textEntity->getComponent<game::components::TransformComponent>()) {
-                                transform->position = enemy_transform->position;
-                                transform->velocity = sf::Vector2f(static_cast<float>((rand() % 100) - 50), -140.0f);
-                            }
+                            auto textTrans = std::make_unique<game::components::TransformComponent>(enemy_transform->position);
+                            textTrans->velocity = sf::Vector2f(static_cast<float>((rand() % 100) - 50), -140.0f);
+                            textEntity->addComponent(std::move(textTrans));
 
                             textEntity->addComponent(std::make_unique<game::components::TextComponent>(
                                 game_->mainFont, "-" + std::to_string(static_cast<int>(actualDamage)), 22, sf::Color::Red));
                             textEntity->addComponent(std::make_unique<game::components::LifespanComponent>(0.6f, true));
+
                             context_.spawnEntity(std::move(textEntity));
                         }
                     }
@@ -151,27 +151,21 @@ namespace game::systems
                         if (auto* stats = player->getComponent<game::components::StatsComponent>())
                         {
                             stats->takeDamage(actualDamage);
-                            //stats->setLastDamageSourceKey();
-
-                            // --- NAK£ADANIE EFEKTÓW ---
-                            //if (proj->getStatusEffect() == game::components::StatusEffect::Slow) {
-                            //    // Spowalnia 50% przez 2s
-                            //    stats->addEffect(game::components::StatusType::Slow, 2.0f, 0.5f);
-                            //}
 
                             if (auto* sprite = player->getComponent<game::components::SpriteComponent>()) {
                                 sprite->triggerHitFlash();
                             }
 
+                            // LAT?J?CY TEKST OBRA?E?
                             auto textEntity = std::make_unique<game::entities::Entity>();
-                            if (auto* transform = textEntity->getComponent<game::components::TransformComponent>()) {
-                                transform->position = player_transform->position;
-                                transform->velocity = sf::Vector2f(static_cast<float>((rand() % 100) - 50), -140.0f);
-                            }
+                            auto textTrans = std::make_unique<game::components::TransformComponent>(player_transform->position);
+                            textTrans->velocity = sf::Vector2f(static_cast<float>((rand() % 100) - 50), -140.0f);
+                            textEntity->addComponent(std::move(textTrans));
 
                             textEntity->addComponent(std::make_unique<game::components::TextComponent>(
                                 game_->mainFont, "-" + std::to_string(static_cast<int>(actualDamage)), 22, sf::Color::Red));
                             textEntity->addComponent(std::make_unique<game::components::LifespanComponent>(0.6f, true));
+
                             context_.spawnEntity(std::move(textEntity));
                         }
                     }
@@ -190,17 +184,17 @@ namespace game::systems
 
                     if (rm.hasTexture(splashKey)) {
                         auto splashEntity = std::make_unique<game::entities::Entity>();
-                        if (auto* transform = splashEntity->getComponent<game::components::TransformComponent>()) {
-                            transform->position = explodePos;
-                            // Generowanie losowego k¹ta w stopniach
-                            transform->rotation = static_cast<float>(rand() % 360);
 
-                            float baseScale = 0.55f + static_cast<float>(rand() % 40) / 100.0f;
-                            transform->scale = { baseScale * 1.35f, baseScale * 0.7f };
+                        // TRANSFORM SPLASHU
+                        auto splashTrans = std::make_unique<game::components::TransformComponent>(explodePos);
+                        splashTrans->rotation = static_cast<float>(rand() % 360);
+                        float baseScale = 0.55f + static_cast<float>(rand() % 40) / 100.0f;
+                        splashTrans->scale = { baseScale * 1.35f, baseScale * 0.7f };
 
-                            splashEntity->addComponent(std::make_unique<game::components::PopAnimationComponent>(
-                                transform->scale, sf::Vector2f(baseScale, baseScale), 10.0f));
-                        }
+                        splashEntity->addComponent(std::make_unique<game::components::PopAnimationComponent>(
+                            splashTrans->scale, sf::Vector2f(baseScale, baseScale), 10.0f));
+
+                        splashEntity->addComponent(std::move(splashTrans));
 
                         auto spriteComp = std::make_unique<game::components::SpriteComponent>();
                         spriteComp->setTexture(rm.getTextureShared(splashKey));
@@ -216,20 +210,15 @@ namespace game::systems
             // 4. AOE DLA TRUCIZNY 
             if (proj->getStatusEffect() == game::components::StatusEffect::Poison)
             {
-                float r = 80.0f;
-                float dps = 5.0f;
-
                 auto aoeEntity = std::make_unique<game::entities::Entity>();
-                if (auto* transform = aoeEntity->getComponent<game::components::TransformComponent>()) {
-                    transform->position = explodePos;
-                }
+
+                // TRANSFORM AOE
+                aoeEntity->addComponent(std::make_unique<game::components::TransformComponent>(explodePos));
 
                 auto poisonAoE = std::make_unique<game::components::AoEComponent>(
                     80.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f, proj->getIsFriendly());
                 poisonAoE->isVisible = false;
                 aoeEntity->addComponent(std::move(poisonAoE));
-
-                // Dodajemy czas zycia z wygaszaniem 
                 aoeEntity->addComponent(std::make_unique<game::components::LifespanComponent>(5.0f, true));
 
                 context_.spawnEntity(std::move(aoeEntity));
@@ -239,33 +228,33 @@ namespace game::systems
             // 5. Spore AoE
             if (proj->getStatusEffect() == game::components::StatusEffect::SporePoison)
             {
-                float r = 120.0f;
-                float dps = 25.0f;
-
                 auto sporeEntity = std::make_unique<game::entities::Entity>();
-                if (auto* transform = sporeEntity->getComponent<game::components::TransformComponent>()) {
-                    transform->position = explodePos;
-                }
+
+                // POPRAWIONY TRANSFORM SPORE AOE
+                sporeEntity->addComponent(std::make_unique<game::components::TransformComponent>(explodePos));
 
                 auto sporeAoE = std::make_unique<game::components::AoEComponent>(
                     120.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f);
                 sporeAoE->isVisible = false;
                 sporeEntity->addComponent(std::move(sporeAoE));
 
+                context_.spawnEntity(std::move(sporeEntity));
+
                 std::string baseKey = proj->getSplashKeyBase();
                 auto& rm = game::core::ResourceManager::get();
                 if (!baseKey.empty() && rm.hasTexture(baseKey)) {
                     auto splashEntity = std::make_unique<game::entities::Entity>();
-                    if (auto* transform = splashEntity->getComponent<game::components::TransformComponent>()) {
-                        transform->position = explodePos;
-                        transform->rotation = static_cast<float>(rand() % 360);
 
-                        float baseScale = 0.55f + static_cast<float>(rand() % 40) / 100.0f;
-                        transform->scale = { baseScale * 1.35f, baseScale * 0.7f };
+                    // TRANSFORM SPLASHU SPORE
+                    auto splashTrans = std::make_unique<game::components::TransformComponent>(explodePos);
+                    splashTrans->rotation = static_cast<float>(rand() % 360);
+                    float baseScale = 0.55f + static_cast<float>(rand() % 40) / 100.0f;
+                    splashTrans->scale = { baseScale * 1.35f, baseScale * 0.7f };
 
-                        splashEntity->addComponent(std::make_unique<game::components::PopAnimationComponent>(
-                            transform->scale, sf::Vector2f(baseScale, baseScale), 10.0f));
-                    }
+                    splashEntity->addComponent(std::make_unique<game::components::PopAnimationComponent>(
+                        splashTrans->scale, sf::Vector2f(baseScale, baseScale), 10.0f));
+
+                    splashEntity->addComponent(std::move(splashTrans));
 
                     auto spriteComp = std::make_unique<game::components::SpriteComponent>();
                     spriteComp->setTexture(rm.getTextureShared(baseKey));
@@ -276,24 +265,20 @@ namespace game::systems
                 }
             }
 
+
             // 6. EXPLOSION LOGIC: ICE SHATTER (Sople jako encje)
             if (proj->getStatusEffect() == game::components::StatusEffect::IceShatter)
             {
                 auto iceEntity = std::make_unique<game::entities::Entity>();
-                if (auto* transform = iceEntity->getComponent<game::components::TransformComponent>()) {
-                    transform->position = explodePos;
-                }
 
-                // Dodajemy komponent AoE (Lod zadaje 40 DPS i spowalnia o 0.4x)
+                // transform Lodu
+                iceEntity->addComponent(std::make_unique<game::components::TransformComponent>(explodePos));
+
                 auto iceAoE = std::make_unique<game::components::AoEComponent>(
                     120.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f);
                 iceAoE->isVisible = false;
                 iceEntity->addComponent(std::move(iceAoE));
-
-                // Czas zycia z wygaszaniem (3 sekundy)
                 iceEntity->addComponent(std::make_unique<game::components::LifespanComponent>(3.0f, true));
-
-                
 
                 context_.spawnEntity(std::move(iceEntity));
 
@@ -304,13 +289,16 @@ namespace game::systems
                 std::uniform_real_distribution<float> angleDist(0.f, 3.14159f * 2.f);
                 std::uniform_real_distribution<float> speedDist(400.f, 750.f);
 
+                // --- WYRZUT KAWALKOW LODU ---
                 for (int s = 0; s < 6; ++s)
                 {
                     float angle = angleDist(gen);
                     sf::Vector2f dir(std::cos(angle), std::sin(angle));
 
                     auto shardEntity = std::make_unique<game::entities::Entity>();
-                    if (auto* t = shardEntity->getComponent<game::components::TransformComponent>()) t->position = explodePos;
+
+                    // transform odlamka LODU
+                    shardEntity->addComponent(std::make_unique<game::components::TransformComponent>(explodePos));
 
                     auto shardProj = std::make_unique<game::components::ProjectileComponent>(explodePos, dir);
                     shardProj->setAppearance(12.0f, sf::Color(150, 220, 255));

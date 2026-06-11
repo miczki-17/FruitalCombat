@@ -37,15 +37,13 @@ namespace game::components
         position_ = start;
         speed_ = customSpeed;
 
-
-
         sf::Vector2f diff = target - start;
         totalDistance_ = std::sqrt(diff.x * diff.x + diff.y * diff.y);
         if (totalDistance_ > 0.0001f) {
             velocity_ = (diff / totalDistance_) * speed_;
         }
 
-
+        maxArcHeight_ = std::min(totalDistance_ * 0.35f, 200.0f);
 
         shadowShape_.setRadius(radius_);
         shadowShape_.setFillColor(sf::Color(0, 0, 0, 150));
@@ -211,14 +209,13 @@ namespace game::components
         }
 
         // --- PARABOLIC MOVEMENT ---
-
         else if (isParabolic_)
         {
-            sf::Vector2f diff = targetPos_ - position_;
-            float currentDist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+            sf::Vector2f diffStart = position_ - startPos_;
+            float distMoved = std::sqrt(diffStart.x * diffStart.x + diffStart.y * diffStart.y);
 
-
-            if (currentDist < 15.0f)
+            // Je?li przelecia? swój przewidziany dystans, wybuchnij pewnie i bez b??dów!
+            if (distMoved >= totalDistance_ - 10.0f)
             {
                 position_ = targetPos_;
                 spawnSplash_ = true;
@@ -228,11 +225,11 @@ namespace game::components
 
             position_ += velocity_ * dt * speedMultiplier_;
 
-
-            float progress = 1.0f - (currentDist / totalDistance_);
+            // Post?p lotu (od 0.0 na starcie do 1.0 na ko?cu)
+            float progress = distMoved / totalDistance_;
             progress = std::clamp(progress, 0.0f, 1.0f);
 
-
+            // Rysowanie matematycznego ?uku z u?yciem Sinusa
             float currentArcHeight = maxArcHeight_ * std::sin(progress * 3.14159f);
             if (currentArcHeight < minArcHeight_) currentArcHeight = minArcHeight_;
 

@@ -21,6 +21,7 @@
 #include "../abilities/RindRollAbility.h"
 #include "../abilities/ShootAbility.h"
 #include "../abilities/PoisonExplosionAbility.h"
+#include "../abilities/WindupBruisierAbility.h"
 
 #include "../core/ResourceManager.h"
 
@@ -120,34 +121,48 @@ namespace game::factories
                 std::string projTex = baseData.contains("projectileTexturePath")
                     ? (dna.skinKey + "_bullet")
                     : "default_bullet";
-				float attackCooldown = baseData.value("attackCooldown", 2.0f);
+
+                // JSON
+                float attackCooldown = baseData.value("attackCooldown", 2.0f);
+                float projDamage = baseData.value("projectileDamage", 1.0f);
+                float bulletScale = baseData.value("projectileScale", 1.2f);
+
+                // ab
                 abilities->setWeapon(std::make_unique<game::components::ShootAbility>(
-                    &context, entity.get(), projTex, 1.5f, attackCooldown));
+                    &context, entity.get(), projTex, bulletScale, attackCooldown, projDamage));
             }
+
             else if (abName == "Armor") {
-                // Armor mo?e by? pasywn? umiej?tno?ci? przypinan? do StatsComponent, 
-                // ale obs?ugiwan? w systemie obra?e?.
+                // component
+				float damageReduction = baseData.value("damageReduction", 0.30f);
                 auto* stats = entity->getComponent<game::components::StatsComponent>();
-                if (stats) stats->setDamageReduction(0.30f); // Dodaj t? metod? do StatsComponent
+                if (stats) stats->setDamageReduction(damageReduction);
             }
+
             else if (abName == "SplitOnDeath") {
+                // JSON
                 int splitCount = baseData.value("splitCount", 3);
                 std::string splitSkin = baseData.value("splitSkinKey", ""); 
                 float splitScale = baseData.value("splitScale", 0.5f);
 
+                // component
                 entity->addComponent(std::make_unique<game::components::SplitOnDeathComponent>(
                     splitCount, splitSkin, splitScale));
             }
-            else if (abName == "WindupBruiser") {
-                // BruiserAttackAbility wewn?trz metody update zatrzymuje MovementComponent na 0.5s przed uderzeniem
-                // abilities->setSkill(std::make_unique<game::components::BruiserAttackAbility>(entity.get()));
+
+            else if (abName == "WindupBruiser")
+            {
+                nlohmann::json bruiserCfg = baseData.contains("bruiserConfig") ? baseData["bruiserConfig"] : nlohmann::json::object();
+                abilities->setSkill(std::make_unique<game::components::WindupBruiserAbility>(
+                    &context, entity.get(), targetPlayer, bruiserCfg
+                ));
             }
+
             else if (abName == "PoisonExplosion") {
                 float explosionRadius = baseData.value("explosionRadius", 150.0f);
                 float poisonDps = baseData.value("poisonDps", 20.0f);
                 float cloudDuration = baseData.value("cloudDuration", 5.0f);
 
-                // Sprawdzamy, czy potwór ma zdefiniowan? tekstur? chmury
                 std::string cloudTexKey = baseData.contains("cloudTexturePath")
                     ? (dna.skinKey + "_cloud")
                     : "default_cloud";

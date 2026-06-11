@@ -91,7 +91,7 @@ namespace game::core
 
         // COLLISIONS
         collisionSystem->updatePickups(player.get(), dt);
-        collisionSystem->updateBulletIntersections(dt, collisionMask_, mapScale_);
+        collisionSystem->updateBulletIntersections(dt, collisionMask_, mapScale_, player.get());
 
         // COMBAT
         combatSystem->processItemCollection(player.get());

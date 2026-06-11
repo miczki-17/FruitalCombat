@@ -24,12 +24,14 @@ namespace game::components
         game::entities::Entity* owner,
         const std::string& textureKey,
         float projectileScale,
-        float cooldown)
+        float cooldown,
+        float damage)
         : context_(context),
         owner_(owner),
         textureKey_(textureKey),
         projectileScale_(projectileScale),
-        cooldown_(cooldown)
+        cooldown_(cooldown),
+        damage_(damage)
     {
     }
 
@@ -97,32 +99,31 @@ namespace game::components
 
         auto bulletEntity = std::make_unique<game::entities::Entity>();
 
+        // TRANSFORM POCISKU
+        bulletEntity->addComponent(std::make_unique<game::components::TransformComponent>(origin));
+
         auto projectile = std::make_unique<game::components::ProjectileComponent>(
             origin,
             direction);
 
         projectile->addVelocity(ownerVelocity);
 
+        // Przekazanie obra?e? na pocisk
+        projectile->setDamage(damage_);
+
         bool isPlayer = (owner_->getComponent<game::components::PlayerInputComponent>() != nullptr);
         projectile->setFriendly(isPlayer);
 
-        // --- POPRAWNY SPOSÓB NAK£ADANIA TEKSTURY ---
+        // NAKLADANIE TEXTURY
         if (!textureKey_.empty())
         {
             auto tex = game::core::ResourceManager::get().getTextureShared(textureKey_);
             if (tex)
             {
                 auto size = tex->getSize();
-
-                // setAnimation automatycznie ukrywa ¿ó³te kó³ko i aplikuje sprite!
                 projectile->setAnimation(
-                    tex,
-                    1,
-                    1.0f,
-                    { static_cast<int>(size.x), static_cast<int>(size.y) }
+                    tex, 1, 1.0f, { static_cast<int>(size.x), static_cast<int>(size.y) }
                 );
-
-                // Ustawiamy ¿¹dan¹ skalê
                 projectile->setSpriteScale(projectileScale_, projectileScale_);
             }
         }

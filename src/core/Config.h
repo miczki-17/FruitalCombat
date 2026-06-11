@@ -12,4 +12,6 @@ namespace game::config
 
 	constexpr unsigned WINDOW_WIDTH = 1280;
 	constexpr unsigned WINDOW_LENGTH = 720;
+
+	constexpr unsigned ENTITY_POOL_SIZE = 500;
 }

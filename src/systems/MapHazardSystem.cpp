@@ -54,7 +54,8 @@ namespace game::systems
         sf::Vector2f startPos = { targetPos.x, targetPos.y - config_.dropHeight };
 
         auto hazardEntity = std::make_unique<game::entities::Entity>();
-        if (auto* transform = hazardEntity->getComponent<game::components::TransformComponent>()) transform->position = startPos;
+        //if (auto* transform = hazardEntity->getComponent<game::components::TransformComponent>()) transform->position = startPos;
+        hazardEntity->addComponent(std::make_unique<game::components::TransformComponent>(startPos));
 
         auto knife = std::make_unique<game::components::ProjectileComponent>(startPos, sf::Vector2f{ 0.f, 1.f });
 
@@ -85,7 +86,8 @@ namespace game::systems
         sf::Vector2f startPos = { targetPos.x, targetPos.y - config_.dropHeight };
 
         auto hazardEntity = std::make_unique<game::entities::Entity>();
-        if (auto* transform = hazardEntity->getComponent<game::components::TransformComponent>()) transform->position = startPos;
+        //if (auto* transform = hazardEntity->getComponent<game::components::TransformComponent>()) transform->position = startPos;
+        hazardEntity->addComponent(std::make_unique<game::components::TransformComponent>(startPos));
 
         auto icicle = std::make_unique<game::components::ProjectileComponent>(startPos, sf::Vector2f{ 0.f, 1.f });
 
@@ -116,7 +118,8 @@ namespace game::systems
         sf::Vector2f startPos = { targetPos.x, targetPos.y - config_.dropHeight };
 
         auto hazardEntity = std::make_unique<game::entities::Entity>();
-        if (auto* transform = hazardEntity->getComponent<game::components::TransformComponent>()) transform->position = startPos;
+        //if (auto* transform = hazardEntity->getComponent<game::components::TransformComponent>()) transform->position = startPos;
+        hazardEntity->addComponent(std::make_unique<game::components::TransformComponent>(startPos));
 
         auto spore = std::make_unique<game::components::ProjectileComponent>(startPos, sf::Vector2f{ 0.f, 1.f });
 

@@ -78,14 +78,23 @@ namespace game::components
         {
             auto* transform = owner->getComponent<TransformComponent>();
             if (transform) {
-                sprite_->setPosition(transform->position);
+                sprite_->setPosition({ transform->position.x, transform->position.y + transform->zOffset });
                 sprite_->setRotation(sf::degrees(transform->rotation));
+
                 sprite_->setScale({
-                    transform->scale.x * BASE_SPRITE_SCALE * currentScale_,
-                    transform->scale.y * BASE_SPRITE_SCALE * currentScale_
+                    transform->scale.x * BASE_SPRITE_SCALE * currentScale_ * squashScale_.x,
+                    transform->scale.y * BASE_SPRITE_SCALE * currentScale_ * squashScale_.y
                     });
             }
             window.draw(*sprite_);
+        }
+        else
+        {
+            auto* transform = owner->getComponent<TransformComponent>();
+            if (transform) {
+                fallbackShape_.setPosition({ transform->position.x, transform->position.y + transform->zOffset });
+            }
+            window.draw(fallbackShape_);
         }
 
         if (hasSprite())
@@ -194,6 +203,34 @@ namespace game::components
                 // Posta? patrzy w lewo - odwracamy CA?? animacj? Idle w lewo
                 sprite_->setTextureRect(sf::IntRect({ rectLeftX + frameSize_.x, 0 }, { -frameSize_.x, frameSize_.y }));
             }
+
+            // 5. EFEKT SQUASH & STRETCH
+            bool isPlayer = (owner->getComponent<PlayerInputComponent>() != nullptr);
+
+            // Animowanie ruchu
+            if (!isPlayer && transform->isMoving && !owner->isDead())
+            {
+                walkBounceTimer_ += deltaTime;
+
+                const float bounceSpeed = 5.7f;    // bounce speed
+                const float bounceIntensity = 0.13f; // streetch percentage 
+
+                // Fala sinusoidalna od -1 do 1
+                float squash = std::sin(walkBounceTimer_ * bounceSpeed) * bounceIntensity;
+
+                // zachowaie objetosci animowanej tekstury
+                squashScale_.x = 1.0f - squash * 0.8f;
+                squashScale_.y = 1.0f + squash * 0.8;
+            }
+            else
+            {
+                // Resetujemy timer, gdy potwór stoi
+                walkBounceTimer_ = 0.0f;
+
+                // P?ynny powrót do standardowej skali (Lekka interpolacja LERP)
+                squashScale_.x += (1.0f - squashScale_.x) * 22.0f * deltaTime;
+                squashScale_.y += (1.0f - squashScale_.y) * 6.5f * deltaTime;
+            }
         }
     }
 
@@ -260,20 +297,23 @@ namespace game::components
         int walkFrames)
     {
         const bool valid =
-            idleTexture &&
-            walkTexture &&
-            idleTexture->getSize().x > 0 &&
-            walkTexture->getSize().x > 0;
+            idleTexture && walkTexture &&
+            idleTexture->getSize().x > 0 && walkTexture->getSize().x > 0;
 
-        if (!valid)
-            return;
+        if (!valid) return;
 
-        // Wstrzykujemy animacje bezposrednio do mapy komponentu
+        // Dzielimy szeroko?? ca?ego pliku przez liczb? klatek
+        frameSize_.x = idleTexture->getSize().x / idleFrames;
+        frameSize_.y = idleTexture->getSize().y; // 1 wiersz wysokosci
+
         addAnimation(AnimState::Idle, *idleTexture, idleFrames, 0.15f, true);
         addAnimation(AnimState::Walk, *walkTexture, walkFrames, 0.10f, true);
 
         sprite_.emplace(*idleTexture);
-        sprite_->setOrigin({ 32.f, 32.f });
+
+        sprite_->setTextureRect(sf::IntRect({ 0, 0 }, frameSize_));
+
+        sprite_->setOrigin({ frameSize_.x / 2.0f, frameSize_.y / 2.0f });
         sprite_->setScale({ BASE_SPRITE_SCALE, BASE_SPRITE_SCALE });
 
         hasTextures_ = true;

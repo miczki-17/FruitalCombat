@@ -81,6 +81,12 @@ namespace game::components
         float hitFlashTimer_ = 0.0f;
         float currentScale_ = 1.0f;
 
+
+        // SQUASH & STREETCH ANIMATION
+        float walkBounceTimer_ = 0.0f;
+        sf::Vector2f squashScale_{ 1.0f, 1.0f };
+        
+
         void initializeTextures(
             sf::Texture* idleTexture,
             int idleFrames,
