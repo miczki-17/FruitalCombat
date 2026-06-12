@@ -13,6 +13,7 @@
 #include "../states/ShopState.h"
 #include "../states/ShopInGameState.h"
 #include "../states/DeathState.h"
+#include "../states/BestiariusState.h"
 
 namespace game
 {
@@ -154,8 +155,10 @@ namespace game
 
         case states::StateType::Death:
             return std::make_unique<states::DeathState>(game_);
-        }
 
+        case states::StateType::Bestiarius:
+            return std::make_unique<states::BestiariusState>(game_);
+        }
         return nullptr;
     }
 }

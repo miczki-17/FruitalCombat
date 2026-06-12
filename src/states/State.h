@@ -33,7 +33,8 @@ namespace game::states
 		Pause,
 		Shop,
 		ShopInGame,
-		Death
+		Death,
+		Bestiarius
 	};
 
 

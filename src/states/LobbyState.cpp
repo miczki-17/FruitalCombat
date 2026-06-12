@@ -341,6 +341,12 @@ namespace game::states
                     game->getStateMachine().pushState(StateType::Shop);
                     return;
                 }
+                if (achievementsBtnSprite && achievementsBtnSprite->getGlobalBounds().contains(worldPos)) {
+                    game->playUIClick();
+                    game->getStateMachine().pushState(StateType::Bestiarius);
+                    return;
+                }
+
 
                 // SprawdŸ klikniêcie w ikonki w popupie (jeœli otwarty)
                 if (isFertilizerPopupOpen) {

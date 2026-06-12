@@ -211,6 +211,19 @@ namespace game::states
             game->mainFont = *fontPtr;
         }
 
+        std::map<std::string, std::string> enemyIcons = {
+            {"enemy_potato_icon", "assets/textures/entities/enemies/potato/idle.png"},
+            {"enemy_garlic_icon", "assets/textures/entities/enemies/garlic/idle.png"},
+            {"enemy_corn_icon", "assets/textures/entities/enemies/corn/idle.png"},
+            {"enemy_carrot_icon", "assets/textures/entities/enemies/carrot/idle.png"},
+            {"enemy_broccoli_icon", "assets/textures/entities/enemies/broccoli/idle.png"}
+        };
+
+        for (const auto& [key, path] : enemyIcons) {
+            // Ładujemy bezpośrednio pod podanym kluczem (bez dopisywania "ui_")
+            rm.loadTexture(key, path, game::core::AssetGroup::Menu);
+        }
+
         loadProgress = 65;
 
         // 2. ELEMENTY MENU
@@ -229,7 +242,10 @@ namespace game::states
             {"spd_icon", "assets/textures/ui/speed_icon.png"},
             {"dmg_icon", "assets/textures/ui/damage_icon.png"},
             {"star_full_icon", "assets/textures/ui/star_full_icon.png"},
-            {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"}
+            {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
+            { "bestiary_book_bg", "assets/textures/ui/bestiarius_bg.png" },
+            {"bestiary_book_bg", "assets/textures/ui/bestiarius_bg.png"},
+
         };
 
         std::map<std::string, std::string> uiGlobalPaths = {
@@ -245,7 +261,8 @@ namespace game::states
             {"coin", "assets/textures/entities/drops/juice_coin.png"},
             {"fert_regular", "assets/textures/items/fert_regular.png"},
             {"fert_medium", "assets/textures/items/fert_medium.png"},
-            {"fert_best", "assets/textures/items/fert_best.png"}
+            {"fert_best", "assets/textures/items/fert_best.png"},
+      
         };
 
         for (const auto& [key, path] : uiPaths) {
