@@ -21,7 +21,7 @@ namespace game::states
     {
         // 1. Ziemniak - Tarcza
         entries.push_back({
-            "Pancerny \nZiemniak",
+            "Pancerna \nPyrka",
             "Ten twardy zawodnik to\nprawdopodobnie kuzyn frytek,\nale zdecydowanie mniej\nchrupiacy. Uzywa swojej\ngruboskornosci, by zaslaniac\nslabszych.\n\nZazwyczaj milczy, chyba ze\nwpadnie do wrzatku.",
             "enemy_potato_icon"
             });
@@ -50,7 +50,7 @@ namespace game::states
         // 5. Kukurydza - Stacjonarna
         entries.push_back({
             "Kukurydz \nCKM",
-            "Zwykly chlopak z pola, ale ma\npelen magazynek. Stoi w miejscu\njak wmurowany i wypluwa z siebie\npopcorn z predkoscia karabinu\nmaszynowego.\n\nPodobno w kinie robi za przekaske.",
+            "Zwykly chlopak z pola, ale ma\npelen magazynek. Stoi w miejscu\njak wmurowany i wypluwa z\n siebie popcorn z predkoscia\n karabinu maszynowego.\n\nPodobno w kinie robi za przekaske.",
             "enemy_corn_icon"
             });
     }
@@ -88,8 +88,8 @@ namespace game::states
         titleText->setPosition({ centerX, 70.f });
 
         // --- 4. STRZAŁKI DO PRZEWIJANIA (POD KSIĄŻKĄ) ---
-        float arrowOffset = 80.f; 
-        float arrowY = centerY + 280.f; 
+        float arrowOffset = 80.f;
+        float arrowY = centerY + 280.f;
 
         setupButton("ui_left_arrow", leftArrowBtn, { centerX - arrowOffset, arrowY }, { 60.f, 60.f });
         setupButton("ui_right_arrow", rightArrowBtn, { centerX + arrowOffset, arrowY }, { 60.f, 60.f });
@@ -98,12 +98,12 @@ namespace game::states
         enemyNameText.emplace(game->mainFont);
         enemyNameText->setCharacterSize(static_cast<int>(30 * GLOBAL_FONT_SCALE));
         enemyNameText->setFillColor(sf::Color(80, 50, 20));
-        enemyNameText->setPosition({ centerX + 35.f, centerY - 180.f }); 
+        enemyNameText->setPosition({ centerX + 35.f, centerY - 180.f });
 
         enemyDescText.emplace(game->mainFont);
         enemyDescText->setCharacterSize(static_cast<int>(18 * GLOBAL_FONT_SCALE));
         enemyDescText->setFillColor(sf::Color(60, 40, 20));
-        enemyDescText->setPosition({ centerX + 35.f, centerY - 100.f }); 
+        enemyDescText->setPosition({ centerX + 35.f, centerY - 100.f });
     }
 
     void BestiariusState::updatePage()
@@ -117,10 +117,11 @@ namespace game::states
         auto& rm = ResourceManager::get();
         auto& currentEnemy = entries[currentPage];
 
-        
+
         if (enemyNameText) {
             enemyNameText->setString(currentEnemy.name);
             sf::FloatRect bounds = enemyNameText->getLocalBounds();
+
             enemyNameText->setOrigin({ 0.f, std::round(bounds.position.y + bounds.size.y / 2.0f) });
         }
 
@@ -133,7 +134,7 @@ namespace game::states
         if (rm.hasTexture(currentEnemy.textureKey)) {
             enemySprite.emplace(*rm.getTexture(currentEnemy.textureKey));
             sf::Vector2u texSize = enemySprite->getTexture().getSize();
-            enemySprite->setOrigin({ texSize.x / 2.0f, texSize.y / 2.0f });
+            enemySprite->setOrigin({ texSize.x / 2.5f, texSize.y / 2.0f });
 
             // Środek lewej kartki
             enemySprite->setPosition({ centerX - 230.f, centerY - 50.f });
@@ -147,6 +148,36 @@ namespace game::states
 
     void BestiariusState::handleEvent(const sf::Event& event)
     {
+        // --- Obsługa Klawiatury (Strzałki / WSAD) ---
+        if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
+        {
+            if (keyPressed->code == sf::Keyboard::Key::A || keyPressed->code == sf::Keyboard::Key::Left)
+            {
+                if (currentPage > 0) {
+                    game->playUIClick();
+                    currentPage--;
+                    updatePage();
+                    return;
+                }
+            }
+            else if (keyPressed->code == sf::Keyboard::Key::D || keyPressed->code == sf::Keyboard::Key::Right)
+            {
+                if (currentPage < static_cast<int>(entries.size()) - 1) {
+                    game->playUIClick();
+                    currentPage++;
+                    updatePage();
+                    return;
+                }
+            }
+            else if (keyPressed->code == sf::Keyboard::Key::Escape)
+            {
+                game->playUIClick();
+                game->getStateMachine().popState();
+                return;
+            }
+        }
+
+        // --- Obsługa Myszki ---
         if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>())
         {
             if (mousePressed->button == sf::Mouse::Button::Left)
@@ -193,7 +224,7 @@ namespace game::states
         if (currentPage > 0) updateHover(leftArrowBtn, { 60.0f, 60.0f }, mousePos);
         if (currentPage < entries.size() - 1) updateHover(rightArrowBtn, { 60.0f, 60.0f }, mousePos);
 
-        // Pływający tytuł Bestiariusza
+        // tytuł Bestiariusza
         if (titleText) {
             float time = animationClock.getElapsedTime().asSeconds();
             float floatOffset = std::sin(time * 2.0f) * 5.0f;
