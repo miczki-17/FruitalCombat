@@ -229,7 +229,8 @@ namespace game::states
             {"spd_icon", "assets/textures/ui/speed_icon.png"},
             {"dmg_icon", "assets/textures/ui/damage_icon.png"},
             {"star_full_icon", "assets/textures/ui/star_full_icon.png"},
-            {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"}
+            {"star_empty_icon", "assets/textures/ui/star_empty_icon.png"},
+            { "bestiary_book_bg", "assets/textures/ui/bestiarius_bg.png" }
         };
 
         std::map<std::string, std::string> uiGlobalPaths = {
