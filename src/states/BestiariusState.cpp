@@ -1,7 +1,7 @@
-// --- BestiariusState.cpp ---
 #include "BestiariusState.h"
 #include "../core/Game.h"
 #include "../core/ResourceManager.h"
+#include "../core/LocalizationManager.h"
 #include <cmath>
 #include <iostream>
 
@@ -12,6 +12,9 @@ namespace game::states
     BestiariusState::BestiariusState(game::Game* game)
         : State(game)
     {
+        // Inicjalizacja kodu języka na start
+        lastLangCode = LocalizationManager::get().getCurrentLanguageCode();
+
         initEntries();
         initUI();
         updatePage();
@@ -19,38 +22,40 @@ namespace game::states
 
     void BestiariusState::initEntries()
     {
+        // Zamiast sztywnych tekstów, zapisujemy klucze dla translatora
+
         // 1. Ziemniak - Tarcza
         entries.push_back({
-            "Pancerna \nPyrka",
-            "Ten twardy zawodnik to\nprawdopodobnie kuzyn frytek,\nale zdecydowanie mniej\nchrupiacy. Uzywa swojej\ngruboskornosci, by zaslaniac\nslabszych.\n\nZazwyczaj milczy, chyba ze\nwpadnie do wrzatku.",
+            "enemy_potato_name",
+            "enemy_potato_desc",
             "enemy_potato_icon"
             });
 
         // 2. Czosnek - Wysadzacz
         entries.push_back({
-            "Wybuchowy \nCzosnek",
-            "Jego zapach powala na kolana,\na wybuch robi to doslownie.\nPrawdziwy koszmar wampirow.\n\nNiestabilny emocjonalnie, lubi\nglosne i wybuchowe pozegnania.\nUwaga: nie dodawac do spaghetti!",
+            "enemy_garlic_name",
+            "enemy_garlic_desc",
             "enemy_garlic_icon"
             });
 
         // 3. Marchewa - Snajper
         entries.push_back({
-            "Snajper \nMarchewa",
-            "Mowili, ze od jedzenia marchwi\npoprawia sie wzrok... i mieli racje.\nTen gosc potrafi trafic cie w oko\nz drugiego konca ogrodu.\n\nZawsze zachowuje zimna krew.\nSok z niego jest niebezpieczny.",
+            "enemy_carrot_name",
+            "enemy_carrot_desc",
             "enemy_carrot_icon"
             });
 
         // 4. Brokuł - Skoczek
         entries.push_back({
-            "Skaczacy \nBrokul",
-            "Trauma z dziecinstwa powraca\npod postacia zmutowanego\ndrzewka.\n\nTrenuje parkour od kielkowania.\nZanim zdazysz powiedziec\n'zdrowa dieta', on juz laduje\nz impetem na twojej glowie.",
+            "enemy_broccoli_name",
+            "enemy_broccoli_desc",
             "enemy_broccoli_icon"
             });
 
         // 5. Kukurydza - Stacjonarna
         entries.push_back({
-            "Kukurydz \nCKM",
-            "Zwykly chlopak z pola, ale ma\npelen magazynek. Stoi w miejscu\njak wmurowany i wypluwa z\n siebie popcorn z predkoscia\n karabinu maszynowego.\n\nPodobno w kinie robi za przekaske.",
+            "enemy_corn_name",
+            "enemy_corn_desc",
             "enemy_corn_icon"
             });
     }
@@ -78,7 +83,7 @@ namespace game::states
 
         // --- 3. Tytuł na samej górze ekranu ---
         titleText.emplace(game->mainFont);
-        titleText->setString("BESTIARIUSZ");
+        titleText->setString(LocUTF8("ui_bestiary_title")); // Użycie lokalizacji
         titleText->setCharacterSize(static_cast<int>(45 * GLOBAL_FONT_SCALE));
         titleText->setFillColor(sf::Color::White);
         titleText->setOutlineThickness(4.0f);
@@ -117,17 +122,15 @@ namespace game::states
         auto& rm = ResourceManager::get();
         auto& currentEnemy = entries[currentPage];
 
-
         if (enemyNameText) {
-            enemyNameText->setString(currentEnemy.name);
+            enemyNameText->setString(LocUTF8(currentEnemy.name)); // Pobieranie przetłumaczonej nazwy wroga
             sf::FloatRect bounds = enemyNameText->getLocalBounds();
-
             enemyNameText->setOrigin({ 0.f, std::round(bounds.position.y + bounds.size.y / 2.0f) });
         }
 
-        // Aktualizacja opisu
+        // Aktualizacja opisu z pliku językowego
         if (enemyDescText) {
-            enemyDescText->setString(currentEnemy.description);
+            enemyDescText->setString(LocUTF8(currentEnemy.description)); // Pobieranie przetłumaczonego opisu
         }
 
         // Wyświetlanie Sprite'a wroga na LEWEJ stronie
@@ -214,6 +217,12 @@ namespace game::states
 
     void BestiariusState::update(float dt)
     {
+        std::string currentLang = game::core::LocalizationManager::get().getCurrentLanguageCode();
+        if (lastLangCode != currentLang) {
+            lastLangCode = currentLang;
+            refreshTexts();
+        }
+
         sf::Vector2f mousePos = game->getWindow().mapPixelToCoords(
             sf::Mouse::getPosition(game->getWindow()),
             game->getWindow().getDefaultView());
@@ -224,7 +233,7 @@ namespace game::states
         if (currentPage > 0) updateHover(leftArrowBtn, { 60.0f, 60.0f }, mousePos);
         if (currentPage < entries.size() - 1) updateHover(rightArrowBtn, { 60.0f, 60.0f }, mousePos);
 
-        // tytuł Bestiariusza
+        // Tytuł Bestiariusza (animacja falowania)
         if (titleText) {
             float time = animationClock.getElapsedTime().asSeconds();
             float floatOffset = std::sin(time * 2.0f) * 5.0f;
@@ -251,5 +260,18 @@ namespace game::states
         }
 
         game->drawMenuCursor();
+    }
+
+    void BestiariusState::refreshTexts()
+    {
+        // Odświeżenie tytułu głównego
+        if (titleText) {
+            titleText->setString(LocUTF8("ui_bestiary_title"));
+            sf::FloatRect textBounds = titleText->getLocalBounds();
+            titleText->setOrigin({ std::round(textBounds.size.x / 2.0f), std::round(textBounds.position.y + textBounds.size.y / 2.0f) });
+        }
+
+        // Przeładowanie tekstów na aktualnej karcie wroga
+        updatePage();
     }
 }

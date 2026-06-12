@@ -70,5 +70,16 @@
   "map_ChoppingBlock_name": "La Tabla de Cortar",
   "map_ChoppingBlock_desc": "¡Cuidado! Esta encimera es una zona de guerra.",
   "map_CrisperDrawer_name": "Nevera Congelante",
-  "map_CrisperDrawer_desc": "¡Las temperaturas bajo cero hacen los combates resbaladizos!"
+  "map_CrisperDrawer_desc": "¡Las temperaturas bajo cero hacen los combates resbaladizos!",
+  "ui_bestiary_title": "BESTIARIO",
+  "enemy_potato_name": "Patata \nBlindada",
+  "enemy_potato_desc": "Este duro competidor es\nprobablemente el primo de las patatas fritas,\npero definitivamente menos\ncrujiente. Usa su piel gruesa\npara proteger a los más débiles.\n\nNormalmente callado, a menos que\ncaiga en agua hirviendo.",
+  "enemy_garlic_name": "Ajo \nExplosivo",
+  "enemy_garlic_desc": "Su olor te deja de rodillas,\ny la explosión lo hace literalmente.\nUna verdadera pesadilla para los vampiros.\n\nEmocionalmente inestable, le gustan\nlas despedidas ruidosas y explosivas.\nAtención: ¡no añadir a los espaguetis!",
+  "enemy_carrot_name": "Zanahoria \nFrancotiradora",
+  "enemy_carrot_desc": "Decían que comer zanahorias\nmejora la vista... y tenían razón.\nEste tipo puede darte en el ojo\ndesde el otro extremo del jardín.\n\nSiempre mantiene la sangre fría.\nSu zumo es peligroso.",
+  "enemy_broccoli_name": "Brócoli \nSaltarín",
+  "enemy_broccoli_desc": "El trauma de la infancia regresa\nen forma de un pequeño árbol\nmutado.\n\nEntrena parkour desde la germinación.\nAntes de que puedas decir\n'dieta saludable', ya está aterrizando\ncon ímpetu sobre tu cabeza.",
+  "enemy_corn_name": "Maíz \nAmetrallador",
+  "enemy_corn_desc": "Un simple chico del campo, pero tiene\nun cargador lleno. Se queda inmóvil\ny escupe palomitas a la velocidad\nde una ametralladora.\n\nSe rumorea que en el cine sirve de merienda."
 }

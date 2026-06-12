@@ -70,5 +70,16 @@
   "map_ChoppingBlock_name": "La Planche à Découper",
   "map_ChoppingBlock_desc": "Attention ! Ce plan de travail est un champ de bataille.",
   "map_CrisperDrawer_name": "Frigo Gelé",
-  "map_CrisperDrawer_desc": "Les températures négatives rendent les combats glissants !"
+  "map_CrisperDrawer_desc": "Les températures négatives rendent les combats glissants !",
+  "ui_bestiary_title": "BESTIAIRE",
+  "enemy_potato_name": "Patate \nBlindée",
+  "enemy_potato_desc": "Ce solide gaillard est\nprobablement le cousin des frites,\nmais nettement moins\ncroustillant. Il utilise sa peau dure\npour protéger les plus faibles.\n\nHabituellement silencieux, sauf\ns'il tombe dans l'eau bouillante.",
+  "enemy_garlic_name": "Ail \nExplosif",
+  "enemy_garlic_desc": "Son odeur met à genoux,\net son explosion le fait littéralement.\nUn vrai cauchemar pour les vampires.\n\nÉmotionnellement instable, il aime\nles adieux bruyants et explosifs.\nAttention : ne pas ajouter aux spaghettis !",
+  "enemy_carrot_name": "Carotte \nSniper",
+  "enemy_carrot_desc": "On disait que manger des carottes\naméliore la vue... et c'était vrai.\nCe gars peut vous toucher dans l'œil\ndepuis l'autre bout du jardin.\n\nGarde toujours son sang-froid.\nSon jus est dangereux.",
+  "enemy_broccoli_name": "Brocoli \nSauteur",
+  "enemy_broccoli_desc": "Le traumatisme de l'enfance revient\nsous la forme d'un petit arbre\nmutant.\n\nIl s'entraîne au parkour depuis la germination.\nAvant que vous ne puissiez dire\n'alimentation saine', il atterrit déjà\navec fracas sur votre tête.",
+  "enemy_corn_name": "Maïs \nMitrailleur",
+  "enemy_corn_desc": "Un simple gars des champs, mais il a\nun chargeur plein. Il reste immobile\net crache du pop-corn à la vitesse\nd'une mitrailleuse.\n\nOn dit qu'au cinéma, il sert de collation."
 }

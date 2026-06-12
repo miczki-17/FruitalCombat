@@ -70,5 +70,16 @@
   "map_ChoppingBlock_name": "Deska do Krojenia",
   "map_ChoppingBlock_desc": "Uważaj pod nogi! Ten kuchenny blat to strefa wojny.",
   "map_CrisperDrawer_name": "Lodowata Szuflada",
-  "map_CrisperDrawer_desc": "Temperatury poniżej zera oznaczają śliskie bitwy!"
+  "map_CrisperDrawer_desc": "Temperatury poniżej zera oznaczają śliskie bitwy!",
+  "ui_bestiary_title": "BESTIARIUSZ",
+  "enemy_potato_name": "Pancerna \nPyrka",
+  "enemy_potato_desc": "Ten twardy zawodnik to\nprawdopodobnie kuzyn frytek,\nale zdecydowanie mniej\nchrupiacy. Używa swojej\ngruboskorności, by zasłaniać\nsłabszych.\n\nZazwyczaj milczy, chyba że\nwpadnie do wrzątku.",
+  "enemy_garlic_name": "Wybuchowy \nCzosnek",
+  "enemy_garlic_desc": "Jego zapach powala na kolana,\na wybuch robi to dosłownie.\nPrawdziwy koszmar wampirow.\n\nNiestabilny emocjonalnie, lubi\ngłośne i wybuchowe pożegnania.\nUwaga: nie dodawać do spaghetti!",
+  "enemy_carrot_name": "Snajper \nMarchewa",
+  "enemy_carrot_desc": "Mówili, że od jedzenia marchwi\npoprawia się wzrok... i mieli rację.\nTen gość potrafi trafić cię w oko\nz drugiego końca ogrodu.\n\nZawsze zachowuje zimną krew.\nSok z niego jest niebezpieczny.",
+  "enemy_broccoli_name": "Skaczący \nBrokul",
+  "enemy_broccoli_desc": "Trauma z dzieciństwa powraca\npod postacią zmutowanego\ndrzewka.\n\nTrenuje parkour od kiełkowania.\nZanim zdążysz powiedzieć\n'zdrowa dieta', on już ląduje\nz impetem na twojej głowie.",
+  "enemy_corn_name": "Kukurydz \nCKM",
+  "enemy_corn_desc": "Zwykły chłopak z pola, ale ma\npełen magazynek. Stoi w miejscu\njak wmurowany i wypluwa z\n siebie popcorn z prędkością\n karabinu maszynowego.\n\nPodobno w kinie robi za przekąskę."
 }

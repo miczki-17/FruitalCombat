@@ -70,5 +70,16 @@
   "map_ChoppingBlock_name": "Tábua de Corte",
   "map_ChoppingBlock_desc": "Cuidado! Esta bancada é uma zona de guerra.",
   "map_CrisperDrawer_name": "Geladeira Congelante",
-  "map_CrisperDrawer_desc": "Temperaturas abaixo de zero deixam as batalhas escorregadias!"
+  "map_CrisperDrawer_desc": "Temperaturas abaixo de zero deixam as batalhas escorregadias!",
+  "ui_bestiary_title": "BESTIÁRIO",
+  "enemy_potato_name": "Batata \nBlindada",
+  "enemy_potato_desc": "Este competidor durão é\nprovavelmente primo das batatas fritas,\nmas definitivamente menos\ncrocante. Usa sua casca grossa\npara proteger os mais fracos.\n\nGeralmente silencioso, a menos que\ncaia na água fervente.",
+  "enemy_garlic_name": "Alho \nExplosivo",
+  "enemy_garlic_desc": "Seu cheiro te deixa de joelhos,\ne a explosão faz isso literalmente.\nUm verdadeiro pesadelo para os vampiros.\n\nEmocionalmente instável, gosta de\ndespedidas barulhentas e explosivas.\nAtenção: não adicione ao espaguete!",
+  "enemy_carrot_name": "Cenoura \nAtiradora",
+  "enemy_carrot_desc": "Diziam que comer cenoura\nmelhora a visão... e eles estavam certos.\nEsse cara pode te acertar no olho\ndo outro lado do jardim.\n\nSempre mantém a calma.\nSeu suco é perigoso.",
+  "enemy_broccoli_name": "Brócolis \nSaltador",
+  "enemy_broccoli_desc": "O trauma de infância retorna\nna forma de uma arvorezinha\nmutante.\n\nTreina parkour desde a germinação.\nAntes que você possa dizer\n'dieta saudável', ele já está pousando\ncom força na sua cabeça.",
+  "enemy_corn_name": "Milho \nMetralhadora",
+  "enemy_corn_desc": "Um garoto comum do campo, mas tem\num pente cheio. Fica parado no lugar\ne cospe pipoca com a velocidade\nde uma metralhadora.\n\nDizem que no cinema ele serve de lanche."
 }

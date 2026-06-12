@@ -70,5 +70,16 @@
   "map_ChoppingBlock_name": "The Chopping Block",
   "map_ChoppingBlock_desc": "Watch your step! This kitchen counter is a warzone.",
   "map_CrisperDrawer_name": "Frostbite Fridge",
-  "map_CrisperDrawer_desc": "Sub-zero temperatures make for slippery battles!"
+  "map_CrisperDrawer_desc": "Sub-zero temperatures make for slippery battles!",
+  "ui_bestiary_title": "BESTIARY",
+  "enemy_potato_name": "Armored \nSpud",
+  "enemy_potato_desc": "This tough competitor is\nprobably a cousin of french fries,\nbut definitely less\ncrispy. Uses its thick skin\nto shield the weaker ones.\n\nUsually silent, unless\nit falls into boiling water.",
+  "enemy_garlic_name": "Explosive \nGarlic",
+  "enemy_garlic_desc": "Its smell knocks you off your feet,\nand the explosion does it literally.\nA true vampire nightmare.\n\nEmotionally unstable, loves\nloud and explosive goodbyes.\nWarning: do not add to spaghetti!",
+  "enemy_carrot_name": "Sniper \nCarrot",
+  "enemy_carrot_desc": "They said eating carrots\nimproves your eyesight... and they were right.\nThis guy can hit you in the eye\nfrom the other side of the garden.\n\nAlways keeps his cool.\nHis juice is dangerous.",
+  "enemy_broccoli_name": "Jumping \nBroccoli",
+  "enemy_broccoli_desc": "Childhood trauma returns\nin the form of a mutated\nlittle tree.\n\nHas been training parkour since sprouting.\nBefore you can say\n'healthy diet', he's already landing\nwith a bang on your head.",
+  "enemy_corn_name": "Heavy MG \nCorn",
+  "enemy_corn_desc": "Just a regular farm boy, but he's got\na full magazine. Stands perfectly still\nand spits out popcorn at the speed\nof a machine gun.\n\nRumor has it he works as a snack at the cinema."
 }

@@ -70,5 +70,16 @@
   "map_ChoppingBlock_name": "Das Hackbrett",
   "map_ChoppingBlock_desc": "Vorsicht! Diese Küchenplatte ist ein Kriegsgebiet.",
   "map_CrisperDrawer_name": "Frostbeiß-Kühlschrank",
-  "map_CrisperDrawer_desc": "Eisige Temperaturen sorgen für rutschige Kämpfe!"
+  "map_CrisperDrawer_desc": "Eisige Temperaturen sorgen für rutschige Kämpfe!",
+  "ui_bestiary_title": "BESTIARIUM",
+  "enemy_potato_name": "Gepanzerter \nErdapfel",
+  "enemy_potato_desc": "Dieser harte Kämpfer ist\nwahrscheinlich ein Cousin der Pommes,\naber definitiv weniger\nknusprig. Er nutzt seine dicke Haut,\num Schwächere zu schützen.\n\nMeistens schweigsam, es sei denn,\ner landet in kochendem Wasser.",
+  "enemy_garlic_name": "Explosiver \nKnoblauch",
+  "enemy_garlic_desc": "Sein Geruch haut dich um,\nund die Explosion tut das buchstäblich.\nEin wahrer Albtraum für Vampire.\n\nEmotional instabil, liebt\nlautstarke und explosive Abschiede.\nAchtung: Nicht zu Spaghetti hinzufügen!",
+  "enemy_carrot_name": "Scharfschützen-\nKarotte",
+  "enemy_carrot_desc": "Es hieß, Karotten essen\nverbessert die Sehkraft... und sie hatten recht.\nDieser Typ trifft dich direkt ins Auge\nvom anderen Ende des Gartens.\n\nBehält immer einen kühlen Kopf.\nSein Saft ist gefährlich.",
+  "enemy_broccoli_name": "Springender \nBrokkoli",
+  "enemy_broccoli_desc": "Das Kindheitstrauma kehrt zurück\nin Form eines mutierten\nBäumchens.\n\nTrainiert Parkour seit der Keimung.\nBevor du 'gesunde Ernährung'\nsagen kannst, landet er schon\nmit Wucht auf deinem Kopf.",
+  "enemy_corn_name": "Maschinengewehr-\nMais",
+  "enemy_corn_desc": "Ein ganz normaler Junge vom Feld, aber er hat\nein volles Magazin. Steht wie eingemauert\nund spuckt Popcorn mit der Geschwindigkeit\neines Maschinengewehrs aus.\n\nEs heißt, im Kino taugt er als Snack."
 }

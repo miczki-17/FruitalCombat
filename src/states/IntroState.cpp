@@ -220,7 +220,6 @@ namespace game::states
         };
 
         for (const auto& [key, path] : enemyIcons) {
-            // Ładujemy bezpośrednio pod podanym kluczem (bez dopisywania "ui_")
             rm.loadTexture(key, path, game::core::AssetGroup::Menu);
         }
 

@@ -33,6 +33,8 @@ namespace game::states
 
         sf::Clock animationClock;
 
+        std::string lastLangCode;
+
         // --- BAZA DANYCH BESTIARIUSZA ---
         int currentPage = 0;
         std::vector<BestiaryEntry> entries;
@@ -40,6 +42,7 @@ namespace game::states
         void initUI();
         void initEntries(); // Inicjuje potwory i ich opisy
         void updatePage();  // Odświeża UI po zmianie strony
+		void refreshTexts(); // Odświeża teksty (po zmianie języka)
 
     public:
         BestiariusState(game::Game* game);
