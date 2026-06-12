@@ -100,9 +100,16 @@ namespace game::systems
         }
 
         // Layer 10: Floating Texts & Traits (NA SAMYM WIERZCHU)
-        for (auto& enemy : enemies) {
+        /*for (auto& enemy : enemies) {
             if (auto* traitDisplay = enemy->getComponent<game::components::TraitDisplayComponent>()) {
                 traitDisplay->render(window);
+            }
+        }*/
+
+		// Layer 11: Floating Texts
+        for (auto& entity : context_.entities) {
+            if (auto* textComp = entity->getComponent<game::components::TextComponent>()) {
+                textComp->render(window);
             }
         }
 

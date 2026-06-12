@@ -19,6 +19,7 @@ namespace game::components
         constexpr float PROJECTILE_SPREAD_ANGLE = 0.35f;
         constexpr float PROJECTILE_SPEED = 380.0f;
         constexpr float PROJECTILE_RADIUS = 14.0f;
+        constexpr float ACID_AOE_RADIUS = 80.0f;
         const sf::Color PROJECTILE_COLOR(100, 255, 0, 240);
     }
 
@@ -138,6 +139,7 @@ namespace game::components
 
         projectile->setAppearance(0.0f, sf::Color::Transparent); // Ukrywamy domyœlne kó³ko
         projectile->setStatusEffect(game::components::StatusEffect::Poison);
+        projectile->setAoERadius(ACID_AOE_RADIUS);
         projectile->setWobble(false, false);
         projectile->setupParabolic(origin, targetPosition, PROJECTILE_SPEED);
         projectile->setFriendly(isFriendly_);

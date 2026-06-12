@@ -29,6 +29,26 @@
 #include <string>
 #include <random>
 
+// HELPER FUNCTION TO CALCULATE SCALE FOR SPLASH EFFECT BASED ON AOE RADIUS AND TEXTURE SIZE
+namespace
+{
+    float CalculateSplashScale(
+        const sf::Texture& texture,
+        float aoeRadius)
+    {
+        constexpr float BASE_SPRITE_SCALE = 2.0f;
+
+        float textureDiameter =
+            static_cast<float>(texture.getSize().x);
+
+        float desiredDiameter =
+            aoeRadius * 2.0f;
+
+        return desiredDiameter /
+            (textureDiameter * BASE_SPRITE_SCALE);
+    }
+}
+
 namespace game::systems
 {
     CombatSystem::CombatSystem(game::Game* game, game::ArenaContext& context, std::vector<std::unique_ptr<game::entities::Entity>>& enemiesRef)
@@ -172,7 +192,7 @@ namespace game::systems
                 }
             }
 
-            // 3. WIZUALNY EFEKT ROZPRYSKU (SPLASH - ECS!)
+            // 3. WIZUALNY EFEKT ROZPRYSKU (SPLASH - ECS)
             if (proj->getStatusEffect() != game::components::StatusEffect::IceShatter &&
                 proj->getStatusEffect() != game::components::StatusEffect::SporePoison)
             {
@@ -185,19 +205,32 @@ namespace game::systems
                     if (rm.hasTexture(splashKey)) {
                         auto splashEntity = std::make_unique<game::entities::Entity>();
 
-                        // TRANSFORM SPLASHU
                         auto splashTrans = std::make_unique<game::components::TransformComponent>(explodePos);
                         splashTrans->rotation = static_cast<float>(rand() % 360);
-                        float baseScale = 0.55f + static_cast<float>(rand() % 40) / 100.0f;
-                        splashTrans->scale = { baseScale * 1.35f, baseScale * 0.7f };
+
+                        float targetScaleX = 1.2f + static_cast<float>(rand() % 20) / 100.0f;
+                        float targetScaleY = targetScaleX;
+
+                        sf::Vector2f startScale = { targetScaleX * 0.15f, targetScaleY * 0.15f };
+                        sf::Vector2f finalScale = { targetScaleX, targetScaleY };
+
+                        splashTrans->scale = startScale;
 
                         splashEntity->addComponent(std::make_unique<game::components::PopAnimationComponent>(
-                            splashTrans->scale, sf::Vector2f(baseScale, baseScale), 10.0f));
+                            startScale, finalScale, 10.0f));
 
                         splashEntity->addComponent(std::move(splashTrans));
 
                         auto spriteComp = std::make_unique<game::components::SpriteComponent>();
-                        spriteComp->setTexture(rm.getTextureShared(splashKey));
+                        auto texture =
+                            rm.getTextureShared(splashKey);
+
+                        spriteComp->setTexture(texture);
+
+                        float splashScale = CalculateSplashScale(*texture, proj->getAoERadius());
+
+                        spriteComp->setCustomScale(splashScale);
+
                         splashEntity->addComponent(std::move(spriteComp));
                         splashEntity->addComponent(std::make_unique<game::components::LifespanComponent>(1.5f, true));
 
@@ -211,16 +244,27 @@ namespace game::systems
             if (proj->getStatusEffect() == game::components::StatusEffect::Poison)
             {
                 auto aoeEntity = std::make_unique<game::entities::Entity>();
-
-                // TRANSFORM AOE
                 aoeEntity->addComponent(std::make_unique<game::components::TransformComponent>(explodePos));
 
+                float aoeRadius =
+                    std::max(
+                        8.0f,
+                        proj->getAoERadius());
+
                 auto poisonAoE = std::make_unique<game::components::AoEComponent>(
-                    80.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f, proj->getIsFriendly());
+                    aoeRadius,
+                    sf::Color(100, 200, 255, 80),
+                    actualDamage,
+                    false,
+                    0.0f,
+                    true,
+                    0.4f,
+                    proj->getIsFriendly());
+
                 poisonAoE->isVisible = false;
+                poisonAoE->isFriendly = proj->getIsFriendly();
                 aoeEntity->addComponent(std::move(poisonAoE));
                 aoeEntity->addComponent(std::make_unique<game::components::LifespanComponent>(5.0f, true));
-
                 context_.spawnEntity(std::move(aoeEntity));
             }
 
@@ -229,13 +273,21 @@ namespace game::systems
             if (proj->getStatusEffect() == game::components::StatusEffect::SporePoison)
             {
                 auto sporeEntity = std::make_unique<game::entities::Entity>();
-
-                // POPRAWIONY TRANSFORM SPORE AOE
                 sporeEntity->addComponent(std::make_unique<game::components::TransformComponent>(explodePos));
 
+                float aoeRadius = proj->getAoERadius();
+
                 auto sporeAoE = std::make_unique<game::components::AoEComponent>(
-                    120.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f);
+                    aoeRadius,
+                    sf::Color(100, 200, 255, 80),
+                    actualDamage,
+                    false,
+                    0.0f,
+                    true,
+                    0.4f);
+
                 sporeAoE->isVisible = false;
+                sporeAoE->isFriendly = proj->getIsFriendly();
                 sporeEntity->addComponent(std::move(sporeAoE));
 
                 context_.spawnEntity(std::move(sporeEntity));
@@ -245,19 +297,34 @@ namespace game::systems
                 if (!baseKey.empty() && rm.hasTexture(baseKey)) {
                     auto splashEntity = std::make_unique<game::entities::Entity>();
 
-                    // TRANSFORM SPLASHU SPORE
                     auto splashTrans = std::make_unique<game::components::TransformComponent>(explodePos);
                     splashTrans->rotation = static_cast<float>(rand() % 360);
-                    float baseScale = 0.55f + static_cast<float>(rand() % 40) / 100.0f;
-                    splashTrans->scale = { baseScale * 1.35f, baseScale * 0.7f };
+
+                    float targetScaleX = 1.2f + static_cast<float>(rand() % 20) / 100.0f;
+                    float targetScaleY = targetScaleX;
+
+                    sf::Vector2f startScale = { targetScaleX * 0.15f, targetScaleY * 0.15f };
+                    sf::Vector2f finalScale = { targetScaleX, targetScaleY };
+
+                    splashTrans->scale = startScale;
 
                     splashEntity->addComponent(std::make_unique<game::components::PopAnimationComponent>(
-                        splashTrans->scale, sf::Vector2f(baseScale, baseScale), 10.0f));
+                        startScale, finalScale, 10.0f));
 
                     splashEntity->addComponent(std::move(splashTrans));
 
+                    auto texture = rm.getTextureShared(baseKey);
+
                     auto spriteComp = std::make_unique<game::components::SpriteComponent>();
-                    spriteComp->setTexture(rm.getTextureShared(baseKey));
+                    spriteComp->setTexture(texture);
+
+                    float splashScale =
+                        CalculateSplashScale(
+                            *texture,
+                            aoeRadius);
+
+                    spriteComp->setCustomScale(splashScale);
+
                     splashEntity->addComponent(std::move(spriteComp));
                     splashEntity->addComponent(std::make_unique<game::components::LifespanComponent>(1.5f, true));
 
@@ -270,16 +337,23 @@ namespace game::systems
             if (proj->getStatusEffect() == game::components::StatusEffect::IceShatter)
             {
                 auto iceEntity = std::make_unique<game::entities::Entity>();
-
-                // transform Lodu
                 iceEntity->addComponent(std::make_unique<game::components::TransformComponent>(explodePos));
 
+                float aoeRadius = proj->getAoERadius();
+
                 auto iceAoE = std::make_unique<game::components::AoEComponent>(
-                    120.0f, sf::Color(100, 200, 255, 80), 40.0f, false, 0.0f, true, 0.4f);
+                    aoeRadius,
+                    sf::Color(100, 200, 255, 80),
+                    actualDamage,
+                    false,
+                    0.0f,
+                    true,
+                    0.4f);
+
                 iceAoE->isVisible = false;
+                iceAoE->isFriendly = proj->getIsFriendly();
                 iceEntity->addComponent(std::move(iceAoE));
                 iceEntity->addComponent(std::make_unique<game::components::LifespanComponent>(3.0f, true));
-
                 context_.spawnEntity(std::move(iceEntity));
 
                 auto& rm = game::core::ResourceManager::get();
@@ -508,11 +582,12 @@ namespace game::systems
 
                     if (distSq <= aoe->radius * aoe->radius)
                     {
-                        if (aoe->dps > 0.0f)
-                        {
-                            enemyStats->takeDamage(
-                                aoe->dps * deltaTime
-                            );
+                        if (aoe->dps > 0.0f) {
+                            enemyStats->takeDamage(aoe->dps * deltaTime);
+
+                            if (auto* sprite = enemy->getComponent<game::components::SpriteComponent>()) {
+                                if (std::rand() % 60 == 0) sprite->triggerHitFlash();
+                            }
                         }
 
                         if (aoe->appliesSlow)

@@ -59,6 +59,10 @@ namespace game::components
         void setImpactSound(const std::string& id);
         const std::string& getImpactSound() const;
 
+		// AoE radius for explosion-type projectiles (0 means no AoE)
+        void setAoERadius(float radius) { aoeRadius_ = radius; }
+        float getAoERadius() const { return aoeRadius_; }
+
 
     private:
         sf::Vector2f position_;
@@ -69,6 +73,8 @@ namespace game::components
         bool isActive_ = true;
 
         float damage_ = 25.0f; // default damage
+
+        float aoeRadius_ = 0.0f;
 
         bool useTexture_ = false;
         bool renderFallbackShape_ = true;

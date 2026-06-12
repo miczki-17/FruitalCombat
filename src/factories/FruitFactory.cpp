@@ -10,6 +10,7 @@
 #include "../abilities/RindRollAbility.h"
 #include "../abilities/AcidPoolUltimate.h"
 #include "../abilities/CiderDashAbility.h"
+#include "../abilities/MultiShootAbility.h"
 
 // Components
 #include "../components/MovementComponent.h"
@@ -139,18 +140,37 @@ namespace game::factories
         const std::string& name,
         game::entities::Entity* entity,
         const nlohmann::json& fruitData,
-        const std::string& key) // ODBIERAMY DANE OWOCU!
+        const std::string& key)
     {
         if (!abilities) return; // Safety check
 
         if (name == "Shoot") {
             // JSON
+            std::string projTex = fruitData.contains("projectileTexturePath") ? (key + "_bullet") : "default_bullet";
+
             float attackCooldown = fruitData.value("attackCooldown", 0.5f);
-            float projDamage = fruitData.value("projectileDamage", 25.0f);
+            float projDamage = fruitData.value("damage", 25.0f);
             float bulletScale = fruitData.value("projectileScale", 1.0f);
 
+            // ab
             abilities->setWeapon(std::make_unique<game::components::ShootAbility>(
-                &context, entity, key + "_bullet", bulletScale, attackCooldown, projDamage));
+                &context, entity, projTex, bulletScale, attackCooldown, projDamage));
+        }
+
+        else if (name == "MultiShoot")
+        {
+            // JSON
+            std::string projTex = fruitData.contains("projectileTexturePath") ? (key + "_bullet") : "default_bullet";
+
+            int count = fruitData.value("projectileCount", 3);
+            float burstDelay = fruitData.value("burstDelay", 0.15f);
+            float attackCooldown = fruitData.value("attackCooldown", 2.0f);
+            float projDamage = fruitData.value("damage", 5.0f);
+            float bulletScale = fruitData.value("bulletScale", 1.0f);
+
+            // ab
+            abilities->setWeapon(std::make_unique<game::components::MultiShootAbility>(
+                &context, entity, projTex, count, burstDelay, bulletScale, attackCooldown, projDamage));
         }
         else if (name == "Shotgun") {
             abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(&context, entity));

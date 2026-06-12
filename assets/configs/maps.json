@@ -31,7 +31,7 @@
       "damage": 4.0,
       "speed": 600.0,
       "dropHeight": 1200.0,
-      "radius": 8.0,
+      "radius": 80.0,
       "minSpawnTime": 25.0,
       "maxSpawnTime": 30.0
     },
@@ -78,7 +78,7 @@
 
 
     "hazard": {
-      "damage": 20.0,
+      "damage": 15.0,
       "speed": 900.0,
       "dropHeight": 1200.0,
       "radius": 50.0,
@@ -131,7 +131,7 @@
       "damage": 8.0,
       "speed": 900.0,
       "dropHeight": 1200.0,
-      "radius": 35.0,
+      "radius": 45.0,
       "minSpawnTime": 16.5,
       "maxSpawnTime": 20.0
     },

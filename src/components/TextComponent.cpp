@@ -4,10 +4,6 @@
 #include "../entities/Entity.h"
 #include "TransformComponent.h"
 
-#include "TextComponent.h"
-#include "../entities/Entity.h"
-#include "TransformComponent.h"
-
 namespace game::components
 {
     TextComponent::TextComponent(const sf::Font& font, const std::string& str, unsigned int size, sf::Color color)

@@ -81,6 +81,7 @@ namespace game::components
                 sprite_->setPosition({ transform->position.x, transform->position.y + transform->zOffset });
                 sprite_->setRotation(sf::degrees(transform->rotation));
 
+                //POP ANIMATION
                 sprite_->setScale({
                     transform->scale.x * BASE_SPRITE_SCALE * currentScale_ * squashScale_.x,
                     transform->scale.y * BASE_SPRITE_SCALE * currentScale_ * squashScale_.y
@@ -90,9 +91,16 @@ namespace game::components
         }
         else
         {
+            // ZAPASOWE KÓ?KO (Gdy tekstura si? nie za?aduje)
             auto* transform = owner->getComponent<TransformComponent>();
             if (transform) {
                 fallbackShape_.setPosition({ transform->position.x, transform->position.y + transform->zOffset });
+
+                //
+                fallbackShape_.setScale({
+                    transform->scale.x * currentScale_ * squashScale_.x,
+                    transform->scale.y * currentScale_ * squashScale_.y
+                    });
             }
             window.draw(fallbackShape_);
         }
@@ -106,11 +114,9 @@ namespace game::components
         auto* transform = owner->getComponent<TransformComponent>();
         if (transform && !owner->isDead() && stats)
         {
-            // Rysujemy HP dla wszystkich
             window.draw(hpBarBackground_);
             window.draw(hpBarFill_);
 
-            // Rysujemy Mane tylko dla gracza
             if (owner->getComponent<PlayerInputComponent>() != nullptr) {
                 window.draw(manaBarBackground_);
                 window.draw(manaBarFill_);
@@ -348,12 +354,15 @@ namespace game::components
 
         const float width = HEALTH_BAR_WIDTH * currentScale_;
 
-        // --- Pasek HP (Rysowany dla kazdego: gracza i wrogow) ---
+        // Pasek zawisa idealnie na po?owie wysoko?ci ramki (czubek g?owy) + margines 15 pikseli
+        float dynamicOffsetY = (frameSize_.y / 2.0f * BASE_SPRITE_SCALE * currentScale_) + 15.0f;
+
+        // Pasek HP (Dla Gracza i Wrogów)
         hpBarBackground_.setSize({ width, HEALTH_BAR_HEIGHT });
         hpBarBackground_.setOrigin({ width / 2.f, HEALTH_BAR_HEIGHT / 2.f });
         hpBarBackground_.setPosition({
             transform->position.x,
-            transform->position.y - HEALTH_BAR_OFFSET_Y * currentScale_
+            transform->position.y - dynamicOffsetY
             });
 
         float hpFillWidth = std::max(width * stats->getHpPercentage(), HEALTH_BAR_HEIGHT);
@@ -361,14 +370,14 @@ namespace game::components
         hpBarFill_.setOrigin({ width / 2.f, HEALTH_BAR_HEIGHT / 2.f });
         hpBarFill_.setPosition({
             transform->position.x,
-            transform->position.y - HEALTH_BAR_OFFSET_Y * currentScale_
+            transform->position.y - dynamicOffsetY
             });
 
-        // --- Pasek Many (Rysowany TYLKO dla gracza) ---
+        // Pasek Many (Tylko Gracz)
         bool isPlayer = (owner->getComponent<PlayerInputComponent>() != nullptr);
         if (isPlayer) {
-            // second bar offeset
-            float manaYOffset = (HEALTH_BAR_OFFSET_Y - 8.5f) * currentScale_;
+            // Drugi pasek jest lekko wy?ej
+            float manaYOffset = dynamicOffsetY + 8.5f;
 
             manaBarBackground_.setSize({ width, HEALTH_BAR_HEIGHT });
             manaBarBackground_.setOrigin({ width / 2.f, HEALTH_BAR_HEIGHT / 2.f });
@@ -410,6 +419,8 @@ namespace game::components
 
         auto size = texture_->getSize();
         sprite_->setOrigin({ size.x / 2.0f, size.y / 2.0f });
+
+        sprite_->setScale({ BASE_SPRITE_SCALE * currentScale_, BASE_SPRITE_SCALE * currentScale_ });
 
         hasTextures_ = true;
     }

@@ -104,6 +104,7 @@ namespace game::systems
             icicle->setSpriteScale(3.5f, 3.5f);
             icicle->enableShadow(16.0f);
             icicle->setImpactSound("icicle_shatter");
+            icicle->setAoERadius(config_.radius);
         }
         else {
             icicle->setAppearance(config_.radius, sf::Color(100, 200, 255));
@@ -128,6 +129,7 @@ namespace game::systems
         spore->setStatusEffect(game::components::StatusEffect::SporePoison);
         spore->setFriendly(false);
         spore->setSplashKeyBase("hazard_spore_splash");
+        spore->setAoERadius(config_.radius);
 
         auto& rm = game::core::ResourceManager::get();
         if (rm.hasTexture("hazard_spore"))
@@ -135,7 +137,7 @@ namespace game::systems
             auto tex = rm.getTextureShared("hazard_spore");
             auto size = tex->getSize();
             spore->setAnimation(tex, 1, 1.0f, { static_cast<int>(size.x), static_cast<int>(size.y) });
-            spore->setSpriteScale(2.5f, 2.5f);
+            spore->setSpriteScale(0.8f, 0.8f);
             spore->setWobble(true, false);
             spore->enableShadow(16.0f);
             spore->setImpactSound("spore_splat");

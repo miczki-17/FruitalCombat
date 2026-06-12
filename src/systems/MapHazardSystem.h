@@ -13,7 +13,7 @@ namespace game::systems
 	// default configuration for hazards, can be overridden by map-specific JSON config
     struct HazardConfig
     {
-        float damage = 25.0f;
+        float damage = 5.0f;
         float speed = 800.0f;
         float dropHeight = 1000.0f;
         float radius = 10.0f;

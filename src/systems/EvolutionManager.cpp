@@ -320,7 +320,7 @@ namespace game::systems
             }
 
             childDNA.maxHp = std::max(5.0f, parentDNA.maxHp * 0.25f);
-            childDNA.speed = parentDNA.speed * 1.4f;
+            childDNA.speed = parentDNA.speed * 1.6f;
 
             childDNA.sizeScale = parentDNA.sizeScale * splitScale;
 
@@ -338,6 +338,8 @@ namespace game::systems
                 std::uniform_real_distribution<float> offsetDist(-37.0f, 37.0f);
                 transform->position = position + sf::Vector2f(offsetDist(rng), offsetDist(rng));
             }
+
+            childDNA.isMutated = false;
 
             activeEnemies.push_back(std::move(childMutant));
         }
