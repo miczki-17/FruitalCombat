@@ -567,6 +567,7 @@ namespace game::states
         case sf::Keyboard::Key::LShift: return "LShift";
         case sf::Keyboard::Key::RShift: return "RShift";
         case sf::Keyboard::Key::Tab: return "Tab";
+        case sf::Keyboard::Key::LControl: return "LCtrl";
         default: return "Key";
         }
     }
