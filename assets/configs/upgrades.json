@@ -5,50 +5,240 @@
       "name": "Thick Skin",
       "desc": "+10 Max HP",
       "cost": 25,
-      "target": "hp",
-      "value": 10.0
+      "iconKey": "icon_hp",
+      "effects": [
+        {
+          "stat": "hp",
+          "value": 10.0
+        }
+      ]
     },
     {
       "id": "spd_up",
       "name": "Light Roots",
-      "desc": "+5% Speed",
+      "desc": "+6% Speed",
       "cost": 30,
-      "target": "speed_pct",
-      "value": 0.05
+      "iconKey": "icon_speed",
+      "effects": [
+        {
+          "stat": "speed_pct",
+          "value": 0.06
+        }
+      ]
     },
     {
       "id": "mana_up",
       "name": "Deep Well",
       "desc": "+15 Max Mana",
       "cost": 25,
-      "target": "mana",
-      "value": 15.0
+      "iconKey": "icon_mana",
+      "effects": [
+        {
+          "stat": "mana",
+          "value": 15.0
+        }
+      ]
     },
     {
       "id": "mana_regen",
       "name": "Fresh Dew",
       "desc": "+2 Mana Regen",
       "cost": 35,
-      "target": "mana_regen",
-      "value": 2.0
+      "iconKey": "icon_regen",
+      "effects": [
+        {
+          "stat": "mana_regen",
+          "value": 2.0
+        }
+      ]
+    },
+    {
+      "id": "heavy_pulp",
+      "name": "Heavy Pulp",
+      "desc": "+12% Damage\n-3% Speed",
+      "cost": 40,
+      "iconKey": "icon_pulp",
+      "effects": [
+        {
+          "stat": "dmg_pct",
+          "value": 0.12
+        },
+        {
+          "stat": "speed_pct",
+          "value": -0.03
+        }
+      ]
+    },
+    {
+      "id": "acid_gland",
+      "name": "Acid Gland",
+      "desc": "+4 Poison DPS",
+      "cost": 35,
+      "iconKey": "icon_acid",
+      "effects": [
+        {
+          "stat": "poison_dps",
+          "value": 4.0
+        }
+      ]
+    },
+    {
+      "id": "quick_spray",
+      "name": "Quick Spray",
+      "desc": "+10% Attack Speed",
+      "cost": 30,
+      "iconKey": "icon_atk_speed",
+      "effects": [
+        {
+          "stat": "atk_speed_pct",
+          "value": 0.10
+        }
+      ]
+    },
+    {
+      "id": "thick_rind",
+      "name": "Thick Rind",
+      "desc": "+6% Armor",
+      "cost": 40,
+      "iconKey": "icon_armor",
+      "effects": [
+        {
+          "stat": "armor_pct",
+          "value": 0.06
+        }
+      ]
+    },
+    {
+      "id": "fertilizer",
+      "name": "Rich Fertilizer",
+      "desc": "+15% Ult Charge",
+      "cost": 30,
+      "iconKey": "icon_fertilizer",
+      "effects": [
+        {
+          "stat": "ult_rate",
+          "value": 0.15
+        }
+      ]
+    },
+    {
+      "id": "long_stems",
+      "name": "Long Stems",
+      "desc": "+40 Range",
+      "cost": 25,
+      "iconKey": "icon_range",
+      "effects": [
+        {
+          "stat": "range",
+          "value": 40.0
+        }
+      ]
     }
   ],
   "Epic": [
     {
       "id": "vampire",
       "name": "Vampiric Roots",
-      "desc": "1% Lifesteal",
-      "cost": 80,
-      "target": "lifesteal",
-      "value": 0.01
+      "desc": "+2% Lifesteal",
+      "cost": 75,
+      "iconKey": "icon_vampire",
+      "effects": [
+        {
+          "stat": "lifesteal",
+          "value": 0.02
+        }
+      ]
     },
     {
-      "id": "double_dmg",
-      "name": "Genetic Mutation",
-      "desc": "+25% Damage",
-      "cost": 90,
-      "target": "dmg_pct",
-      "value": 0.25
+      "id": "mutation",
+      "name": "Hyper Mutation",
+      "desc": "+30% Damage\n-8 Max HP",
+      "cost": 85,
+      "iconKey": "icon_mutation",
+      "effects": [
+        {
+          "stat": "dmg_pct",
+          "value": 0.30
+        },
+        {
+          "stat": "hp",
+          "value": -8.0
+        }
+      ]
+    },
+    {
+      "id": "overdrive",
+      "name": "Overclocked Sap",
+      "desc": "+25% Attack Speed\n-10 Max Mana",
+      "cost": 80,
+      "iconKey": "icon_overdrive",
+      "effects": [
+        {
+          "stat": "atk_speed_pct",
+          "value": 0.25
+        },
+        {
+          "stat": "mana",
+          "value": -10.0
+        }
+      ]
+    },
+    {
+      "id": "split_seed",
+      "name": "Split Seed",
+      "desc": "+1 Projectile\n-12% Damage",
+      "cost": 95,
+      "iconKey": "icon_split",
+      "effects": [
+        {
+          "stat": "bonusProjectiles",
+          "value": 1.0
+        },
+        {
+          "stat": "dmg_pct",
+          "value": -0.12
+        }
+      ]
+    },
+    {
+      "id": "brambles",
+      "name": "Thorn Armor",
+      "desc": "+8% Armor\n+6 Thorns Damage",
+      "cost": 80,
+      "iconKey": "icon_thorns",
+      "effects": [
+        {
+          "stat": "armor_pct",
+          "value": 0.08
+        },
+        {
+          "stat": "thorns",
+          "value": 6.0
+        }
+      ]
+    }
+  ],
+  "Mythic": [
+    {
+      "id": "core_reboot",
+      "name": "Nuclear Reboot",
+      "desc": "+50% Damage\n+20% Speed\n-25 Max HP",
+      "cost": 160,
+      "iconKey": "icon_nuclear",
+      "effects": [
+        {
+          "stat": "dmg_pct",
+          "value": 0.50
+        },
+        {
+          "stat": "speed_pct",
+          "value": 0.20
+        },
+        {
+          "stat": "hp",
+          "value": -25.0
+        }
+      ]
     }
   ]
 }

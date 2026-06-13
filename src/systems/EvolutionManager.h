@@ -32,19 +32,28 @@ namespace game::systems
         float mutationRate = 0.15f;
 
         std::vector<game::genetics::DNA> harvestedDNA;
-        std::vector<game::genetics::DNA> spawnQueue;
+        std::vector<game::genetics::DNA> breedingPool;
         float spawnTimer = 0.0f;
         float spawnInterval = 1.2f;
 
         std::mt19937 rng;
 
+        // wave timers
+        bool isWaveTimerActive = false;
+        float waveTimer = 0.0f;
+
+        // --- DELAY DO SKLEPU ---
+        bool isShopDelayActive = false;
+        float shopDelayTimer = 0.0f;
+
         void evolveNextWaveGenomes();
         void generateBaseWaveGenomes();
-        void spawnNextEnemyFromQueue();
+        void spawnEnemyFromPool();
 
         // --- HELPER METHOD FOR VALID POSITION HUNTING ---
         // Uses a loop to roll coordinates until a walkable white pixel on the mask is found
         sf::Vector2f getRandomValidPosition(bool aroundPlayer);
+        std::vector<game::genetics::DNA> getCleanGenomesFromConfig();
 
         void applyGeneticRules(game::genetics::DNA& dna);
         std::string behaviorToStr(game::genetics::AiBehavior b) const;
@@ -62,6 +71,9 @@ namespace game::systems
         void update(float dt);
         void onEnemyDeath(const game::genetics::DNA& fallenDNA);
         int getCurrentWave() const;
+        float getWaveTimeLeft() const;
+        float getShopDelayTimeLeft() const;
+        bool isInShopDelay() const;
         bool isSpawningActive() const;
 
         // death split

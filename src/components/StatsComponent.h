@@ -66,10 +66,19 @@ namespace game::components
             int count);
 
 
-        void increaseMaxHealth(
-            float amount);
+        // SHOP
+        ///////////////////////////////////////////////////////
+        void addDamageMultiplier(float pct);
+        float getDamageMultiplier() const;
 
-        void heal(
+        void addLifesteal(float pct);
+        float getLifesteal() const;
+
+        void addArmor(float pct);
+
+        void increaseManaRegen(float amount);
+
+        void increaseMaxHealth(
             float amount);
 
         void multiplyBaseSpeed(
@@ -77,6 +86,11 @@ namespace game::components
 
         void multiplyAttackSpeed(
             float multiplier);
+
+        /////////////////////////////////////////////////////
+
+        void heal(
+            float amount);
 
         void increaseUltChargeRate(
             float amount);
@@ -97,6 +111,8 @@ namespace game::components
         float getManaPercentage() const;
         void increaseMaxMana(float newMaxMana);
 
+        float getArmor() const { return damageReduction_; }
+
 
     private:
         float maxHealth_;
@@ -111,6 +127,9 @@ namespace game::components
 
         float baseMovementSpeed_;
         float currentMovementSpeed_;
+
+        float damageMultiplier_ = 1.0f;
+        float lifestealPct_ = 0.0f;
 
 
         // --- MANA (JUICE) ---

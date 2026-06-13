@@ -39,6 +39,7 @@ namespace game::states
         std::optional<sf::Text> hpText;
         std::optional<sf::Text> waveText;
         std::optional<sf::Text> biomassText;
+        std::optional<sf::Text> waveTimerText;
 
         // Fertilizer
         std::optional<sf::Sprite> activeFertilizerSprite;

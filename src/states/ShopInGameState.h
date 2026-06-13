@@ -6,15 +6,22 @@
 
 namespace game::states
 {
-    enum class ItemRarity { Common, Epic, Unique };
+    // --- Rozbudowane klasy rzadkoœci ---
+    enum class ItemRarity { Common, Epic, Mythic, Unique };
+
+    // Struktura dla pojedynczego efektu (pozwala na trade-offs: coœ za coœ)
+    struct ItemEffect {
+        std::string stat;
+        float value = 0.0f;
+    };
 
     struct ShopInGameItem {
         std::string id;
         std::string name;
         std::string desc;
         int cost = 0;
-        std::string targetStat;
-        float value = 0.0f;
+        std::string iconKey;               // Klucz do tekstury ikony ulepszenia
+        std::vector<ItemEffect> effects;   // TABLICA EFEKTÓW (Data-Driven)
         ItemRarity rarity = ItemRarity::Common;
     };
 
@@ -22,12 +29,17 @@ namespace game::states
         sf::RectangleShape bg;
         std::optional<sf::Text> name;
         std::optional<sf::Text> desc;
-
         std::optional<sf::Text> cost;
         std::optional<sf::Sprite> costIcon;
+        std::optional<sf::Sprite> itemIcon; // Grafika samego przedmiotu wewn¹trz karty
+
+        // --- Nowe przyciski wewn¹trz karty ---
+        sf::RectangleShape lockBtn;
+        std::optional<sf::Text> lockText;
 
         ShopInGameItem data;
         bool soldOut = false;
+        bool isLocked = false;             // Czy karta zosta³a zamro¿ona na kolejn¹ rundê
 
         UIInGameItem() = default;
     };

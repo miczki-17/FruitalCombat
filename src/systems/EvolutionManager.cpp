@@ -25,40 +25,20 @@ namespace game::systems
     {
         currentWave = 1;
         harvestedDNA.clear();
-        spawnQueue.clear();
+        breedingPool.clear(); // Czyszczenie puli
 
         generateBaseWaveGenomes();
+
+        // --- Aktywujemy timer i flagi dla Fali 1 ---
+        waveTimer = 30.0f;          // Fala 1 trwa 30 sekund (krótsza na rozgrzewkê)
+        isWaveTimerActive = true;
         spawnTimer = 0.0f;
+        spawnInterval = 1.2f;
+        pendingShopBreak = false;   // Sklep jest zamkniêty na start
+        isShopDelayActive = false;
+        shopDelayTimer = 0.0f;
 
-        std::cout << "[EVOLUTION] Wave 1 Genomes generated. Queue size: " << spawnQueue.size() << "\n";
-    }
-
-    void EvolutionManager::update(float dt)
-    {
-        if (targetPlayer == nullptr || targetPlayer->isDead()) return;
-
-        if (!spawnQueue.empty())
-        {
-            spawnTimer -= dt;
-            if (spawnTimer <= 0.0f)
-            {
-                spawnNextEnemyFromQueue();
-                float adjustedInterval = std::max(0.4f, spawnInterval - (currentWave * 0.05f));
-                spawnTimer = adjustedInterval;
-            }
-        }
-
-        if (activeEnemies.empty() && spawnQueue.empty() && currentWave > 0)
-        {
-            if (currentWave % 3 == 0 && !pendingShopBreak)
-            {
-                pendingShopBreak = true;
-            }
-            else if (!pendingShopBreak)
-            {
-                evolveNextWaveGenomes();
-            }
-        }
+        std::cout << "[EVOLUTION] Wave 1 started properly with timer.\n";
     }
 
     void EvolutionManager::onEnemyDeath(const game::genetics::DNA& fallenDNA)
@@ -129,18 +109,73 @@ namespace game::systems
         return rolledPos;
     }
 
-    void EvolutionManager::spawnNextEnemyFromQueue()
+    void EvolutionManager::update(float dt)
     {
-        if (spawnQueue.empty() || targetPlayer == nullptr) return;
+        if (targetPlayer == nullptr || targetPlayer->isDead()) return;
 
-        game::genetics::DNA nextDNA = spawnQueue.back();
-        spawnQueue.pop_back();
+        // 1. ZARZ¥DZANIE CZASEM FALI
+        if (isWaveTimerActive)
+        {
+            waveTimer -= dt;
 
-        // Use our new smart mask-aware validation system!
+            int maxSafeEnemies = std::min(100, 15 + (currentWave * 8));
+
+            if (activeEnemies.size() < static_cast<size_t>(maxSafeEnemies))
+            {
+                spawnTimer -= dt;
+                if (spawnTimer <= 0.0f)
+                {
+                    spawnEnemyFromPool();
+                    spawnTimer = spawnInterval;
+                }
+            }
+
+            if (waveTimer <= 0.0f)
+            {
+                isWaveTimerActive = false;
+                std::cout << "[EVOLUTION] Wave time is over! Waiting for arena clear...\n";
+            }
+        }
+        // --- 2. ODLICZANIE 5 SEKUND DO SKLEPU ---
+        else if (isShopDelayActive)
+        {
+            shopDelayTimer -= dt;
+            if (shopDelayTimer <= 0.0f)
+            {
+                isShopDelayActive = false;
+                if (!pendingShopBreak)
+                {
+                    pendingShopBreak = true; // Koniec czekania
+                }
+            }
+        }
+        // 3. CZYSZCZENIE MAPY (Zegar dobi³ do zera, czekamy na eliminacjê niedobitków)
+        else
+        {
+            if (activeEnemies.empty())
+            {
+                // Zamiast od razu wchodziæ do sklepu, uruchamiamy 5 sekund opóŸnienia!
+                isShopDelayActive = true;
+                shopDelayTimer = 5.0f;
+                std::cout << "[EVOLUTION] Arena cleared! Shop opens in 5 seconds...\n";
+            }
+        }
+    }
+
+    void EvolutionManager::spawnEnemyFromPool()
+    {
+        if (breedingPool.empty() || targetPlayer == nullptr) return;
+
+        // Bierzemy LOSOWY wzorzec z naszej puli rozrodczej fali (Klonowanie)
+        std::uniform_int_distribution<size_t> dist(0, breedingPool.size() - 1);
+        game::genetics::DNA nextDNA = breedingPool[dist(rng)];
+
         sf::Vector2f safeSpawnPos = getRandomValidPosition(true);
 
         auto enemy = mutantFactory.createMutant(nextDNA, targetPlayer);
-        auto* enemy_transform = enemy->getComponent<game::components::TransformComponent>(); if (!enemy_transform) return;
+        auto* enemy_transform = enemy->getComponent<game::components::TransformComponent>();
+        if (!enemy_transform) return;
+
         enemy_transform->position = safeSpawnPos;
 
         activeEnemies.push_back(std::move(enemy));
@@ -148,42 +183,55 @@ namespace game::systems
 
     void EvolutionManager::evolveNextWaveGenomes()
     {
-		currentWave++;
+        currentWave++;
 
-        int maxSafeEnemies = 90; // Limit dla bezpiecze?stwa CPU i czytelno?ci gry
+        // Reset Timera Fali 
+        // W póŸniejszym etapie mo¿esz to uzale¿niæ od numeru fali (np. currentWave * 5s + 30s)
+        waveTimer = 55.0f;
 
-        float multiplier = 7.78;
+        isWaveTimerActive = true;
+        spawnTimer = 0.5f;
 
-        // Funkcja ro?nie szybko na pocz?tku, a potem bardzo powoli
-        int calculatedSize = baseWaveSize + static_cast<int>(multiplier * (std::sqrt(currentWave) - 1.0f));
+        isShopDelayActive = false;
+        shopDelayTimer = 0.0f;
 
-        // Wybieramy mniejsz? warto?? (Zabezpieczenie przed Armagedonem)
-        int newWaveSize = std::min(maxSafeEnemies, calculatedSize);
+        // Zwiêkszamy szybkoœæ spawnowania z ka¿d¹ fal¹!
+        spawnInterval = std::max(0.2f, 1.2f - (currentWave * 0.05f));
+
         mutationRate = std::min(0.45f, 0.12f + (currentWave * 0.02f));
 
         std::cout << "\n==================================================\n";
         std::cout << "[EVOLUTION] Wave " << currentWave << " breeding session started...\n";
 
+        // Czyœcimy nasz¹ "Pule Rozrodcz¹" (Dawne spawnQueue)
+        breedingPool.clear();
+
+        // Jeœli to pierwsza fala (lub gracz nie zabi³ NIKOGO), ³adujemy bazowe geny
         if (harvestedDNA.empty()) {
             generateBaseWaveGenomes();
             return;
         }
 
-        // 1. Sortowanie po Fitness Score
+        // 1. Sortowanie zebranego DNA po Fitness Score
         std::sort(harvestedDNA.begin(), harvestedDNA.end(), [](const game::genetics::DNA& a, const game::genetics::DNA& b) {
             return a.fitnessScore > b.fitnessScore;
             });
 
+        // Bierzemy 50% najlepszych (Elity)
         size_t eliteCount = std::max(static_cast<size_t>(1), harvestedDNA.size() / 2);
         std::vector<game::genetics::DNA> elites(harvestedDNA.begin(), harvestedDNA.begin() + eliteCount);
-        harvestedDNA.clear();
+        harvestedDNA.clear(); // Czyœcimy cmentarzysko na kolejn¹ falê
 
-        // --- ZAPEWNIENIE RÓ?NORODNO?CI ---
-        int randomSpawns = std::max(1, static_cast<int>(newWaveSize * 0.25f)); // 25% fali to czy?ci, nowi wrogowie
-        int bredSpawns = newWaveSize - randomSpawns;
+        // 2. Krzy¿owanie najlepszych (Tworzymy np. 15 wzorców ewolucyjnych)
+        int poolSize = 15;
 
-        // 2. Krzy?owanie najlepszych (75% fali)
-        for (int i = 0; i < bredSpawns; ++i)
+        // --- Matematyka Mno¿ników (Skalowanie Trudnoœci Fali) ---
+        // Obliczamy raz i APLIKUJEMY do ka¿dego wzorca
+        float waveHpMultiplier = std::pow(1.10f, currentWave); // +10% HP co falê
+        float waveSpeedMultiplier = std::pow(1.02f, currentWave); // +2% Speed co falê
+        float waveDmgMultiplier = std::pow(1.05f, currentWave); // Obra¿enia pocisków wrogów (jeœli dodasz do DNA)
+
+        for (int i = 0; i < poolSize; ++i)
         {
             std::uniform_int_distribution<size_t> dist(0, elites.size() - 1);
             const auto& parentA = elites[dist(rng)];
@@ -191,23 +239,55 @@ namespace game::systems
 
             game::genetics::DNA childDNA = parentA.crossover(parentB, rng);
             childDNA.mutate(mutationRate, rng);
-            applyGeneticRules(childDNA); // Oczyszczamy DNA naszym interpreterem z JSON-a
+            applyGeneticRules(childDNA);
             childDNA.fitnessScore = 0.0f;
 
-            spawnQueue.push_back(childDNA);
+            // --- APLIKACJA MATEMATYKI FALI DO DZIECKA ---
+            // dziecko ma swój "base", a my modyfikujemy go przed wpuszczeniem do puli.
+            childDNA.maxHp *= waveHpMultiplier;
+            childDNA.speed *= waveSpeedMultiplier;
+            childDNA.damageMultiplier *= waveDmgMultiplier;
+
+            // Limitujemy prêdkoœæ maksymaln¹ ¿eby gra nie sta³a siê zepsuta
+            childDNA.speed = std::clamp(childDNA.speed, 50.0f, 450.0f);
+
+            breedingPool.push_back(childDNA);
         }
 
-        // --- Mno?niki wyk?adnicze ---
-        // Wyliczane RAZ na ca?? fal?. 
-        // HP ro?nie o 4% co fal? (pot?gowanie)
-        float waveHpMultiplier = std::pow(1.04f, currentWave);
-        // Pr?dko?? ro?nie tylko o 1.2%
-        float waveSpeedMultiplier = std::pow(1.012f, currentWave);
+        // 3. Wstrzykiwanie "Œwie¿ej Krwi" (¯eby zapobiec stagnacji genetycznej)
+        // Wrzucamy 5 losowych, czystych genotypów z JSON-a do puli rozrodczej
+        std::vector<game::genetics::DNA> cleanPool = getCleanGenomesFromConfig();
+        if (!cleanPool.empty()) {
+            std::uniform_int_distribution<size_t> dist(0, cleanPool.size() - 1);
+            for (int i = 0; i < 5; ++i) {
+                game::genetics::DNA freshDNA = cleanPool[dist(rng)];
 
+                // Czyste DNA równie¿ musi dostaæ buffy fali!
+                freshDNA.maxHp *= waveHpMultiplier;
+                freshDNA.speed *= waveSpeedMultiplier;
+                freshDNA.speed = std::clamp(freshDNA.speed, 50.0f, 450.0f);
 
+                breedingPool.push_back(freshDNA);
+            }
+        }
 
-        // wstrzykniecie nowych 25 % czystych genow z configu
-        std::vector<game::genetics::DNA> basePool;
+        std::cout << "[EVOLUTION] Wave mathematical multipliers applied. HPx" << waveHpMultiplier << " | SPDx" << waveSpeedMultiplier << "\n";
+        std::cout << "[EVOLUTION] Breeding Pool updated with " << breedingPool.size() << " blueprints.\n";
+        std::cout << "==================================================\n\n";
+    }
+
+    std::vector<game::genetics::DNA> EvolutionManager::getCleanGenomesFromConfig()
+    {
+        // Pula rzadkich i niebezpiecznych umiejêtnoœci
+        std::vector<std::string> extraAbilities = {
+            "Dash"
+            // ...
+        };
+
+        std::uniform_real_distribution<float> chanceDist(0.0f, 1.0f);
+        std::uniform_int_distribution<size_t> abDist(0, extraAbilities.size() - 1);
+
+        std::vector<game::genetics::DNA> pool;
         for (auto& [key, data] : enemiesConfig.items()) {
             if (key == "geneticRules") continue;
             if (!data.value("spawnable", true)) continue;
@@ -220,90 +300,66 @@ namespace game::systems
             dna.sizeScale = data.value("sizeScale", 1.0f);
             dna.baseJuice = data.value("baseJuice", 4.0f);
             dna.dropChance = data.value("dropChance", 1.0f);
+            dna.damageMultiplier = 1.0f;
 
             std::string beh = data.value("behavior", "Charger");
-            if (beh == "Sniper")          dna.behavior = game::genetics::AiBehavior::Sniper;
-            else if (beh == "Skirmisher") dna.behavior = game::genetics::AiBehavior::Skirmisher;
-            else if (beh == "Stationary") dna.behavior = game::genetics::AiBehavior::Stationary;
-            else if (beh == "Kamikaze")   dna.behavior = game::genetics::AiBehavior::Kamikaze;
-            else                          dna.behavior = game::genetics::AiBehavior::Charger;
+            dna.behavior = strToBehavior(beh);
 
             if (data.contains("abilities")) {
                 for (const auto& ab : data["abilities"]) {
                     dna.abilities.push_back(ab.get<std::string>());
                 }
             }
-            basePool.push_back(dna);
-        }
 
-        if (!basePool.empty()) {
-            std::uniform_int_distribution<size_t> poolDist(0, basePool.size() - 1);
-            for (int i = 0; i < randomSpawns; ++i) {
-                spawnQueue.push_back(basePool[poolDist(rng)]);
+            float waveDmgMultiplier = std::pow(1.05f, currentWave);
+            dna.damageMultiplier *= waveDmgMultiplier;
+
+            // --- (Rzadkie Mutacje) ---
+
+            // Szansa roœnie z ka¿d¹ fal¹
+            float rareChance = 0.02f + (currentWave * 0.5 * 0.005f);
+
+            if (chanceDist(rng) <= rareChance)
+            {
+                std::string rareAb = extraAbilities[abDist(rng)];
+
+                // Upewniamy siê, ¿e genotyp jeszcze nie ma tej zdolnoœci
+                if (std::find(dna.abilities.begin(), dna.abilities.end(), rareAb) == dna.abilities.end())
+                {
+                    dna.abilities.push_back(rareAb);
+
+                    // --- WIZUALNE OZNACZENIE ELITY ---
+                    dna.sizeScale *= 1.25f; // Jest o 25% wiêkszy od pobratymców
+                    dna.maxHp *= 1.50f;     // Ma 50% wiêcej bazowego zdrowia
+                    dna.r = 255;            // Zabieramy zielony i niebieski kolor...
+                    dna.g = 80;             // ...by nadaæ mu groŸny, agresywny szkar³atno-czerwony odcieñ
+                    dna.b = 80;
+                    dna.isMutated = true;   // Oznaczamy jako mutant, by wypad³o z niego wiêcej monet
+                    
+
+                    std::cout << "[EVOLUTION] Patient Zero created! A " << dna.skinKey << " evolved: " << rareAb << "!\n";
+                }
             }
+
+            pool.push_back(dna);
         }
-
-        // 4. Tasujemy kolejk?, ?eby wrogowie wychodzili wymieszani (inaczej na ko?cu fali by?yby same randomy)
-        std::shuffle(spawnQueue.begin(), spawnQueue.end(), rng);
-
-        spawnTimer = 0.5f;
-        std::cout << "[EVOLUTION] " << bredSpawns << " bred and " << randomSpawns << " random genomes queued.\n";
-        std::cout << "==================================================\n\n";
+        return pool;
     }
 
     void EvolutionManager::generateBaseWaveGenomes()
     {
-        std::vector<game::genetics::DNA> basePool;
-
-        if (!enemiesConfig.empty())
-        {
-            for (auto& [key, data] : enemiesConfig.items())
-            {
-				// pomijamy klucz geneticRules, bo to nie jest definicja przeciwnika
-                if (key == "geneticRules") continue;
-
-                bool isSpawnable = data.value("spawnable", true);
-                if (!isSpawnable) {
-                    continue;
-                }
-
-                game::genetics::DNA dna;
-                dna.skinKey = key;
-                dna.r = data.value("r", 255); dna.g = data.value("g", 255); dna.b = data.value("b", 255);
-                dna.speed = data.value("speed", 200.0f);
-                dna.maxHp = data.value("maxHp", 100.0f);
-                dna.sizeScale = data.value("sizeScale", 1.0f);
-
-                dna.dropChance = data.value("dropChance", 1.0f);
-                dna.baseJuice = data.value("baseJuice", 4.0f);
-
-                std::string beh = data.value("behavior", "Charger");
-                if (beh == "Sniper")          dna.behavior = game::genetics::AiBehavior::Sniper;
-                else if (beh == "Skirmisher") dna.behavior = game::genetics::AiBehavior::Skirmisher;
-                else if (beh == "Stationary")      dna.behavior = game::genetics::AiBehavior::Stationary;
-                else if (beh == "Kamikaze")        dna.behavior = game::genetics::AiBehavior::Kamikaze;
-                else                          dna.behavior = game::genetics::AiBehavior::Charger;
-
-                if (data.contains("abilities")) {
-                    for (const auto& ab : data["abilities"]) {
-                        dna.abilities.push_back(ab.get<std::string>());
-                    }
-                }
-                basePool.push_back(dna);
-            }
-        }
-
+        std::vector<game::genetics::DNA> basePool = getCleanGenomesFromConfig();
         if (basePool.empty()) basePool.push_back(game::genetics::DNA());
 
-        for (int i = 0; i < baseWaveSize; ++i)
-        {
+        breedingPool.clear();
+        for (int i = 0; i < 15; ++i) { // Wystarczy wrzuciæ 15 do bazy
             std::uniform_int_distribution<size_t> dist(0, basePool.size() - 1);
-            spawnQueue.push_back(basePool[dist(rng)]);
+            breedingPool.push_back(basePool[dist(rng)]);
         }
     }
 
     int EvolutionManager::getCurrentWave() const { return currentWave; }
-    bool EvolutionManager::isSpawningActive() const { return !spawnQueue.empty(); }
+    bool EvolutionManager::isSpawningActive() const { return spawnTimer <= 0; }
 
     // spawn splits
     void EvolutionManager::spawnSplits(const game::genetics::DNA& parentDNA, sf::Vector2f position, int count, const std::string& splitSkinKey, float splitScale) // <--- Dodany argument
@@ -354,6 +410,21 @@ namespace game::systems
     {
         pendingShopBreak = false;
         evolveNextWaveGenomes();
+    }
+
+    float EvolutionManager::getWaveTimeLeft() const
+    {
+        return std::max(0.0f, waveTimer);
+    }
+
+    float EvolutionManager::getShopDelayTimeLeft() const 
+    { 
+        return std::max(0.0f, shopDelayTimer); 
+    }
+
+    bool EvolutionManager::isInShopDelay() const 
+    {
+        return isShopDelayActive; 
     }
 
 

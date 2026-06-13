@@ -289,6 +289,7 @@ namespace game::systems
                 sporeAoE->isVisible = false;
                 sporeAoE->isFriendly = proj->getIsFriendly();
                 sporeEntity->addComponent(std::move(sporeAoE));
+                sporeEntity->addComponent(std::make_unique<game::components::LifespanComponent>(5.0f, true));
 
                 context_.spawnEntity(std::move(sporeEntity));
 

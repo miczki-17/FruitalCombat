@@ -4,6 +4,7 @@
 #include "../entities/Entity.h"
 #include "../components/TransformComponent.h"
 #include "../components/ProjectileComponent.h"
+#include "../components/LifespanComponent.h"
 #include "../components/AoEComponent.h"
 #include <random>
 
@@ -119,8 +120,8 @@ namespace game::systems
         sf::Vector2f startPos = { targetPos.x, targetPos.y - config_.dropHeight };
 
         auto hazardEntity = std::make_unique<game::entities::Entity>();
-        //if (auto* transform = hazardEntity->getComponent<game::components::TransformComponent>()) transform->position = startPos;
         hazardEntity->addComponent(std::make_unique<game::components::TransformComponent>(startPos));
+        hazardEntity->addComponent(std::make_unique<game::components::LifespanComponent>(5.0, true));
 
         auto spore = std::make_unique<game::components::ProjectileComponent>(startPos, sf::Vector2f{ 0.f, 1.f });
 

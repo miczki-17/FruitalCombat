@@ -5,47 +5,42 @@ project(FruitalCombat LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ?cie?ka do SFML (Wskazujemy podfolder z plikami konfiguracji .cmake)
-set(SFML_DIR "${CMAKE_SOURCE_DIR}/vendor/SFML/lib/cmake/SFML")
-
-
-# --- 1. ZALE?NO?CI ZEWN?TRZNE (SFML) ---
+# --- 1. ZALEØNOåCI ZEWN TRZNE (SFML) ---
+# UsuniÍto sztywnπ úcieøkÍ SFML_DIR. Teraz CMake szuka biblioteki uniwersalnie.
 find_package(SFML CONFIG REQUIRED COMPONENTS System Window Graphics Audio)
 
 
-# --- 2. PLIKI ?R”D?OWE GRY ---
+# --- 2. PLIKI èR”D£OWE GRY ---
 add_executable(FruitalCombat
     src/main.cpp
-    src/core/AssetGroup.h
 
     # --- ABILITIES ---
-    src/abilities/AcidSquirtAbility.h
-    src/abilities/AcidSquirtAbility.cpp
-    src/abilities/RindRollAbility.h
-    src/abilities/RindRollAbility.cpp
+    src/abilities/Ability.h
     src/abilities/AcidPoolUltimate.h
     src/abilities/AcidPoolUltimate.cpp
+    src/abilities/AcidSquirtAbility.h
+    src/abilities/AcidSquirtAbility.cpp
     src/abilities/CiderDashAbility.h
     src/abilities/CiderDashAbility.cpp
-    src/abilities/PoisonExplosionAbility.h
-    src/abilities/PoisonExplosionAbility.cpp
-    src/abilities/WindupBruisierAbility.h
-    src/abilities/WindupBruisierAbility.cpp
-    src/abilities/MultiShootAbility.h
-    src/abilities/MultiShootAbility.cpp
-    src/abilities/Ability.h
     src/abilities/DashAbility.h
     src/abilities/DashAbility.cpp
+    src/abilities/MultiShootAbility.h
+    src/abilities/MultiShootAbility.cpp
+    src/abilities/PoisonExplosionAbility.h
+    src/abilities/PoisonExplosionAbility.cpp
+    src/abilities/RindRollAbility.h
+    src/abilities/RindRollAbility.cpp
     src/abilities/ShootAbility.h
     src/abilities/ShootAbility.cpp
     src/abilities/ShotgunAbility.cpp
+    src/abilities/WindupBruisierAbility.h
+    src/abilities/WindupBruisierAbility.cpp
 
     # --- ENTITIES ---
     src/entities/EntityTypes.h
     src/entities/Entity.h
 
-
-    # --- CORE ---`
+    # --- CORE ---
     src/core/Config.h
     src/core/Game.h
     src/core/Game.cpp
@@ -87,6 +82,7 @@ add_executable(FruitalCombat
     src/components/TransformComponent.h
     src/components/TransformComponent.cpp
     src/components/TextComponent.h
+    src/components/TextComponent.cpp
     src/components/PopAnimationComponent.h
     src/components/PopAnimationComponent.cpp
     src/components/ParticleComponent.h
@@ -97,22 +93,15 @@ add_executable(FruitalCombat
     src/components/AnimationComponent.h
     src/components/AnimationComponent.cpp
     src/components/TraitDisplayComponent.h
+    src/components/TraitDisplayComponent.cpp
     src/components/DeathRattleComponent.h
     src/components/SplitOnDeathComponent.h
     src/components/MedkitComponent.h
     src/components/PickupComponent.h
     src/components/PickupComponent.cpp
     src/components/ManaPouchComponent.h
-    src/components/ProjectileComponent.h
-    src/components/ProjectileComponent.cpp
     src/components/LifespanComponent.h
     src/components/LifespanComponent.cpp
-    src/components/TextComponent.h
-    src/components/TextComponent.cpp
-    src/components/TransformComponent.h
-    src/components/TransformComponent.cpp
-    src/components/TraitDisplayComponent.h
-    src/components/TraitDisplayComponent.cpp
 
     # --- FACTORIES & SYSTEMS ---
     src/factories/MutantFactory.h
@@ -135,6 +124,7 @@ add_executable(FruitalCombat
     src/systems/ItemSpawnSystem.cpp
 
     # --- STATES ---
+    src/states/State.h
     src/states/State.cpp
     src/states/ShopState.h
     src/states/ShopState.cpp
@@ -144,7 +134,6 @@ add_executable(FruitalCombat
     src/states/LobbyState.cpp
     src/states/ShopInGameState.h
     src/states/ShopInGameState.cpp
-    src/states/State.h
     src/states/IntroState.h
     src/states/IntroState.cpp
     src/states/MenuState.h
@@ -153,8 +142,8 @@ add_executable(FruitalCombat
     src/states/PlayingState.cpp
     src/states/SettingsState.h
     src/states/SettingsState.cpp
-    src/states/BestiariusState.cpp
     src/states/BestiariusState.h
+    src/states/BestiariusState.cpp
     src/states/CharacterSelectState.h
     src/states/CharacterSelectState.cpp
     src/states/PauseState.h
@@ -168,11 +157,9 @@ add_executable(FruitalCombat
 )
 
 
-# --- 3. NAG?”WKI I LINKOWANIE ---
-# Dodajemy wewn?trzny folder nag?Ûwkowy 'include'
+# --- 3. NAG£”WKI I LINKOWANIE ---
 target_include_directories(FruitalCombat PRIVATE include)
 
-# Linkujemy wy??cznie biblioteki SFML
 target_link_libraries(FruitalCombat PRIVATE 
     SFML::System 
     SFML::Window 
@@ -182,8 +169,6 @@ target_link_libraries(FruitalCombat PRIVATE
 
 
 # --- 4. OPERACJE PO KOMPILACJI (POST-BUILD) ---
-
-# Kopiowanie folderu z zasobami (assets)
 add_custom_command(TARGET FruitalCombat POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/assets"

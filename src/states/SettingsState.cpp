@@ -79,7 +79,7 @@ namespace game::states
         controlsTitle->setFillColor(sf::Color(200, 200, 200));
 
         // Tlo pod liste bindow
-        bindsBackground.setSize({ 450.f, 350.f });
+        bindsBackground.setSize({ 480.f, 350.f });
         bindsBackground.setFillColor(sf::Color(20, 20, 20, 180));
         bindsBackground.setOutlineThickness(2.0f);
         bindsBackground.setOutlineColor(sf::Color(100, 100, 100));
@@ -119,9 +119,10 @@ namespace game::states
         setupBindRow(leftLabel, leftBtnText, startY + spacing);
         setupBindRow(downLabel, downBtnText, startY + spacing * 2);
         setupBindRow(rightLabel, rightBtnText, startY + spacing * 3);
-        setupBindRow(fertilizerLabel, fertilizerBtnText, startY + spacing * 4); // Nowy bind nawozu
+        setupBindRow(fertilizerLabel, fertilizerBtnText, startY + spacing * 4);
+        setupBindRow(abilityLabel, abilityBtnText, startY + spacing * 5);
 
-        maxScroll = 50.0f; // Limit przewijania
+        maxScroll = 70.0f; // Limit przewijania
 
         // --- BACK BUTTON ---
         if (rm.hasTexture("ui_back")) {
@@ -228,24 +229,29 @@ namespace game::states
         rightLabel->setString(sf::String::fromUtf8(rawStr.begin(), rawStr.end()));
         rawStr = Loc("ui_use_fertilizer");
         fertilizerLabel->setString(sf::String::fromUtf8(rawStr.begin(), rawStr.end()));
+        rawStr = Loc("ui_use_ability");
+        abilityLabel->setString(sf::String::fromUtf8(rawStr.begin(), rawStr.end()));
 
         alignTextRight(*upLabel);
         alignTextRight(*leftLabel);
         alignTextRight(*downLabel);
         alignTextRight(*rightLabel);
         alignTextRight(*fertilizerLabel);
+        alignTextRight(*abilityLabel);
 
         upLabel->setPosition({ labelColumnX, upLabel->getPosition().y });
         leftLabel->setPosition({ labelColumnX, leftLabel->getPosition().y });
         downLabel->setPosition({ labelColumnX, downLabel->getPosition().y });
         rightLabel->setPosition({ labelColumnX, rightLabel->getPosition().y });
         fertilizerLabel->setPosition({ labelColumnX, fertilizerLabel->getPosition().y });
+        abilityLabel->setPosition({ labelColumnX, abilityLabel->getPosition().y });
 
         upBtnText->setPosition({ keyColumnX, upBtnText->getPosition().y });
         leftBtnText->setPosition({ keyColumnX, leftBtnText->getPosition().y });
         downBtnText->setPosition({ keyColumnX, downBtnText->getPosition().y });
         rightBtnText->setPosition({ keyColumnX, rightBtnText->getPosition().y });
         fertilizerBtnText->setPosition({ keyColumnX, fertilizerBtnText->getPosition().y });
+        abilityBtnText->setPosition({ keyColumnX, abilityBtnText->getPosition().y });
     }
 
     void SettingsState::setupButton(const std::string& key, std::optional<sf::Sprite>& spr, sf::Vector2f pos, sf::Vector2f targetSize)
@@ -317,6 +323,7 @@ namespace game::states
                 case RebindTarget::Down:       game->keyDown = keyEvent->code; break;
                 case RebindTarget::Right:      game->keyRight = keyEvent->code; break;
                 case RebindTarget::Fertilizer: game->keyFertilizer = keyEvent->code; break;
+                case RebindTarget::Ability:    game->keyAbility = keyEvent->code; break;
                 default: break;
                 }
                 currentRebind = RebindTarget::None;
@@ -403,6 +410,7 @@ namespace game::states
                     if (downBtnText->getGlobalBounds().contains(scrolledMousePos))       currentRebind = RebindTarget::Down;
                     if (rightBtnText->getGlobalBounds().contains(scrolledMousePos))      currentRebind = RebindTarget::Right;
                     if (fertilizerBtnText->getGlobalBounds().contains(scrolledMousePos)) currentRebind = RebindTarget::Fertilizer;
+                    if (abilityBtnText->getGlobalBounds().contains(scrolledMousePos))    currentRebind = RebindTarget::Ability;
                 }
             }
         }
@@ -442,6 +450,7 @@ namespace game::states
         downBtnText->setString(currentRebind == RebindTarget::Down ? Loc("ui_press_key") : "[ " + keyToString(game->keyDown) + " ]");
         rightBtnText->setString(currentRebind == RebindTarget::Right ? Loc("ui_press_key") : "[ " + keyToString(game->keyRight) + " ]");
         fertilizerBtnText->setString(currentRebind == RebindTarget::Fertilizer ? Loc("ui_press_key") : "[ " + keyToString(game->keyFertilizer) + " ]");
+        abilityBtnText->setString(currentRebind == RebindTarget::Ability ? Loc("ui_press_key") : "[ " + keyToString(game->keyAbility) + " ]");
 
         // Hover dla guzika jezyka
         if (langBtnText) {
@@ -531,6 +540,7 @@ namespace game::states
         window.draw(*downLabel); window.draw(*downBtnText);
         window.draw(*rightLabel); window.draw(*rightBtnText);
         window.draw(*fertilizerLabel); window.draw(*fertilizerBtnText);
+        window.draw(*abilityLabel); window.draw(*abilityBtnText);
 
         // 3. Zawsze na koncu wracamy do domyslnej kamery, zeby kursor dzialal poprawnie
         window.setView(window.getDefaultView());
@@ -552,6 +562,8 @@ namespace game::states
         case sf::Keyboard::Key::F: return "F";
         case sf::Keyboard::Key::E: return "E";
         case sf::Keyboard::Key::Q: return "Q";
+        case sf::Keyboard::Key::G: return "G";
+        case sf::Keyboard::Key::R: return "R";
         case sf::Keyboard::Key::LShift: return "LShift";
         case sf::Keyboard::Key::RShift: return "RShift";
         case sf::Keyboard::Key::Tab: return "Tab";

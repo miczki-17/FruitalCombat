@@ -380,7 +380,31 @@ namespace game::components
 
     void StatsComponent::setDamageReduction(float reduction)
     {
-        // Ograniczamy redukcj? do przedzia?u 0.0 (brak) do 1.0 (100% redukcji / niesko?czono??)
+        // Ograniczamy redukcje do przedzialu 0.0 (brak) do 1.0 (100% redukcji / nieskonczonosc)
         damageReduction_ = std::clamp(reduction, 0.0f, 1.0f);
+    }
+
+    void StatsComponent::addDamageMultiplier(float pct) {
+        damageMultiplier_ += pct;
+    }
+    float StatsComponent::getDamageMultiplier() const {
+        return damageMultiplier_;
+    }
+
+    void StatsComponent::addLifesteal(float pct) {
+        lifestealPct_ += pct;
+    }
+    float StatsComponent::getLifesteal() const {
+        return lifestealPct_;
+    }
+
+    void StatsComponent::addArmor(float pct) {
+        // Dodajemy pancerz (maksymalna ochrona to powiedzmy 85%, ¿eby nie byæ nieœmiertelnym)
+        damageReduction_ += pct;
+        if (damageReduction_ > 0.85f) damageReduction_ = 0.85f;
+    }
+
+    void StatsComponent::increaseManaRegen(float amount) {
+        manaRegenRate_ += amount;
     }
 }

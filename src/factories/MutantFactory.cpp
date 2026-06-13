@@ -124,14 +124,14 @@ namespace game::factories
 
                 // JSON
                 float attackCooldown = baseData.value("attackCooldown", 2.0f);
-                float projDamage = baseData.value("projectileDamage", 1.0f);
+                float projDamage = baseData.value("projectileDamage", 1.0f) * dna.damageMultiplier;
                 float bulletScale = baseData.value("projectileScale", 1.2f);
 
                 // ab
                 abilities->setWeapon(std::make_unique<game::components::ShootAbility>(
                     &context, entity.get(), projTex, bulletScale, attackCooldown, projDamage));
             }
-
+            
             else if (abName == "Armor") {
                 // component
 				float damageReduction = baseData.value("damageReduction", 0.30f);
@@ -160,7 +160,7 @@ namespace game::factories
 
             else if (abName == "PoisonExplosion") {
                 float explosionRadius = baseData.value("explosionRadius", 150.0f);
-                float poisonDps = baseData.value("poisonDps", 20.0f);
+                float poisonDps = baseData.value("poisonDps", 5.0f) * dna.damageMultiplier;
                 float cloudDuration = baseData.value("cloudDuration", 5.0f);
 
                 std::string cloudTexKey = baseData.contains("cloudTexturePath")
@@ -173,7 +173,9 @@ namespace game::factories
                 entity->addComponent(std::make_unique<game::components::DeathRattleComponent>(
                     explosionRadius, poisonDps, cloudDuration, cloudTexKey)); // I przekazujemy do ?mierci!
             }
-            // ... reszta starych umiej?tno?ci ...
+            else if (abName == "Dash") {
+                abilities->setSkill(std::make_unique<game::components::DashAbility>(entity.get()));
+            }
         }
 
         entity->addComponent(std::move(abilities));

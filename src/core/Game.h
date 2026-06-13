@@ -60,6 +60,7 @@ namespace game
 		sf::Keyboard::Key keyDown = sf::Keyboard::Key::S;
 		sf::Keyboard::Key keyRight = sf::Keyboard::Key::D;
 		sf::Keyboard::Key keyFertilizer = sf::Keyboard::Key::F;
+		sf::Keyboard::Key keyAbility = sf::Keyboard::Key::LShift;
 
 		
 
@@ -84,12 +85,18 @@ namespace game
 		ArenaContext arenaContext;
 
 
+		// --------- GAME LOOP ---------
+		int currentWaveNum = 0;
+
+
+
 		// --- EKONOMIA I ULEPSZENIA (Zmienne globalne) ---
 		game::core::PlayerProfile profile;
 		float upgrade_speedMod = 0.0f;    // Pasywny bonus do szybko?ci
 		int upgrade_maxHpBonus = 0;       // Pasywny bonus do HP
 		float upgrade_atkSpeedMod = 0.0f; // Pasywny bonus do szybkostrzelno?ci
 		int upgrade_uniqueCount = 0;      // Licznik unikalnych umiej?tno?ci
+
 	
 		// logic
 		std::atomic<bool> isGameRun = false;

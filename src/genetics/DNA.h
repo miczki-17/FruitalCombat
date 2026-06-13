@@ -27,6 +27,8 @@ namespace game::genetics
         float maxHp = 100.0f;
         float sizeScale = 1.0f;
 
+        float damageMultiplier = 1.0f;
+
         int r = 255, g = 255, b = 255;
 
         AiBehavior behavior = AiBehavior::Charger;
@@ -69,6 +71,7 @@ namespace game::genetics
             child.sizeScale = (this->sizeScale + partner.sizeScale) / 2.0f;
             child.dropChance = (this->dropChance + partner.dropChance) / 2.0f;
             child.baseJuice = (this->baseJuice + partner.baseJuice) / 2.0f;
+            child.damageMultiplier = (this->damageMultiplier + partner.damageMultiplier) / 2.0f;
 
             // --- PRAWDZIWE ??CZENIE UMIEJ?TNO?CI ---
             child.abilities = this->abilities; // Bierzemy geny rodzica A
@@ -112,6 +115,13 @@ namespace game::genetics
             if (chance(rng) < mutationRate) {
                 std::uniform_real_distribution<float> mod(0.8f, 1.3f);
                 maxHp *= mod(rng);
+                mutatedThisGeneration = true;
+            }
+
+            // Mutate DMG
+            if (chance(rng) < mutationRate) {
+                std::uniform_real_distribution<float> mod(0.9f, 1.25f); // od -10% do +25%
+                damageMultiplier *= mod(rng);
                 mutatedThisGeneration = true;
             }
 

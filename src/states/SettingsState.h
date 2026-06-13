@@ -8,7 +8,7 @@
 
 namespace game::states
 {
-    enum class RebindTarget { None, Up, Left, Down, Right, Fertilizer };
+    enum class RebindTarget { None, Up, Left, Down, Right, Fertilizer, Ability };
 
     class SettingsState : public State
     {
@@ -53,6 +53,7 @@ namespace game::states
         std::optional<sf::Text> leftLabel;    std::optional<sf::Text> leftBtnText;
         std::optional<sf::Text> downLabel;    std::optional<sf::Text> downBtnText;
         std::optional<sf::Text> rightLabel;   std::optional<sf::Text> rightBtnText;
+        std::optional<sf::Text> abilityLabel; std::optional<sf::Text> abilityBtnText;
         std::optional<sf::Text> fertilizerLabel; std::optional<sf::Text> fertilizerBtnText;
 
         RebindTarget currentRebind = RebindTarget::None;

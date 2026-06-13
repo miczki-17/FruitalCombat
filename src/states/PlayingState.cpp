@@ -269,6 +269,13 @@ namespace game::states
         waveText->setOutlineColor(sf::Color::Black);
         waveText->setStyle(sf::Text::Bold);
 
+        // --- Tekst Odliczania Czasu ---
+        waveTimerText.emplace(game->mainFont);
+        waveTimerText->setCharacterSize(static_cast<int>(22 * GLOBAL_FONT_SCALE));
+        waveTimerText->setFillColor(sf::Color(200, 200, 200));
+        waveTimerText->setOutlineThickness(3.0f);
+        waveTimerText->setOutlineColor(sf::Color::Black);
+
         // --- Sok ---
         if (rm.hasTexture("juice")) {
             biomassSprite.emplace(*rm.getTexture("juice"));
@@ -330,7 +337,7 @@ namespace game::states
             // Player input
             auto* player = world->getPlayer();
             if (player != nullptr) {
-                if (keyPressed->code == sf::Keyboard::Key::LShift) {
+                if (keyPressed->code == game->keyAbility) {
                     sf::Vector2f mouseWorldPos = game->getWindow().mapPixelToCoords(sf::Mouse::getPosition(game->getWindow()), cameraView);
                     if (auto* ab = player->getComponent<game::components::AbilityComponent>()) ab->useSkill(mouseWorldPos);
                 }
@@ -435,10 +442,10 @@ namespace game::states
 
     void PlayingState::update(float dt)
     {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::H)) {
+        /*if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::H)) {
             shakeIntensity = 20.0f;
             sf::sleep(sf::milliseconds(45));
-        }
+        }*/
 
         // 1. Logika awiata gry
         world->update(dt);
@@ -460,9 +467,9 @@ namespace game::states
         sf::Vector2f uiHoverPos = game->getWindow().mapPixelToCoords(sf::Mouse::getPosition(game->getWindow()), game->getWindow().getDefaultView());
         updateHover(settingsBtnSprite, { 60.f, 60.f }, uiHoverPos);
 
-        // 4. Przejscie do sklepu
         if (world->requiresShop()) {
-            world->resolveShopBreak();
+            world->resolveShopBreak(); 
+            game->currentWaveNum = world->getEvolutionManager()->getCurrentWave();
             game->getWindow().setMouseCursorVisible(true);
             game->getStateMachine().pushState(StateType::ShopInGame);
         }
@@ -550,13 +557,55 @@ namespace game::states
             }
         }
 
-        // --- WAVE UPDATE ---
+        // --- WAVE & TIMER UPDATE ---
         if (waveText)
         {
             waveText->setString(LocUTF8("ui_wave") + " " + std::to_string(world->getEvolutionManager()->getCurrentWave()));
             sf::FloatRect waveBounds = waveText->getLocalBounds();
             waveText->setOrigin({ std::round(waveBounds.size.x / 2.0f), std::round(waveBounds.position.y + waveBounds.size.y / 2.0f) });
-            waveText->setPosition({ std::round(game->getWindow().getView().getSize().x / 2.0f), 60.f });
+
+            waveText->setPosition({ std::round(game->getWindow().getView().getSize().x / 2.0f), 40.f });
+        }
+
+        if (waveTimerText)
+        {
+            auto* evo = world->getEvolutionManager();
+
+            // --- CZY CZEKAMY NA SKLEP? ---
+            if (evo->isInShopDelay())
+            {
+                float delayLeft = evo->getShopDelayTimeLeft();
+
+                // Formatowanie do 1 miejsca po przecinku (np. "SHOP IN: 3.2")
+                char buffer[32];
+                snprintf(buffer, sizeof(buffer), "SHOP IN: %.1f", delayLeft);
+
+                waveTimerText->setString(buffer);
+                waveTimerText->setFillColor(sf::Color(255, 215, 0)); // Z³oty kolor odliczania
+            }
+            // --- NORMALNY CZAS FALI ---
+            else
+            {
+                float timeLeft = evo->getWaveTimeLeft();
+                if (timeLeft > 0.0f) {
+                    int minutes = static_cast<int>(timeLeft) / 60;
+                    int seconds = static_cast<int>(timeLeft) % 60;
+                    std::string timeStr = std::to_string(minutes) + ":" + (seconds < 10 ? "0" : "") + std::to_string(seconds);
+
+                    waveTimerText->setString(timeStr);
+                    if (timeLeft <= 5.0f) waveTimerText->setFillColor(sf::Color(255, 100, 100));
+                    else waveTimerText->setFillColor(sf::Color(220, 220, 220));
+                }
+                else {
+                    waveTimerText->setString("CLEAR THE AREA!");
+                    waveTimerText->setFillColor(sf::Color(80, 255, 120));
+                }
+            }
+
+            // Centrowanie tekstu (wspólne dla obu przypadków)
+            sf::FloatRect timerBounds = waveTimerText->getLocalBounds();
+            waveTimerText->setOrigin({ std::round(timerBounds.size.x / 2.0f), std::round(timerBounds.position.y + timerBounds.size.y / 2.0f) });
+            waveTimerText->setPosition({ std::round(game->getWindow().getView().getSize().x / 2.0f), 75.f });
         }
 
         // --- BIOMASS UPDATE ---
@@ -604,6 +653,7 @@ namespace game::states
         if (waveText) window.draw(*waveText);
         if (biomassSprite) window.draw(*biomassSprite);
         if (biomassText) window.draw(*biomassText);
+        if (waveTimerText) window.draw(*waveTimerText);
         if (settingsBtnSprite) window.draw(*settingsBtnSprite);
 
         if (activeFertilizerSprite) window.draw(*activeFertilizerSprite);
