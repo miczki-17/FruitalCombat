@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <cstdint>
+#include "../core/LocalizationManager.h"
 
 namespace game::genetics
 {
@@ -183,6 +184,61 @@ namespace game::genetics
             if (mutatedThisGeneration) {
                 isMutated = true;
             }
+        }
+
+        // Generuje zaawansowan¹, naukow¹ nazwê mutanta bazuj¹c na jego genotypie i fenotypie
+        std::string generateScientificName() const
+        {
+            std::string fullName = "";
+            auto& loc = game::core::LocalizationManager::get();
+
+            // 1. Przedrostek rozmiaru
+            if (sizeScale >= 1.35f) {
+                // loc.get() lub LocUTF8() w zale¿noœci od Twojego API
+                fullName += loc.getText("prefix_goliath") + " ";
+            }
+            else if (sizeScale <= 0.75f) {
+                fullName += loc.getText("prefix_pygmy") + " ";
+            }
+
+            // 2. Przedrostek pochodzenia genetycznego
+            if (isClone) {
+                fullName += loc.getText("prefix_synthetic") + " ";
+            }
+            else if (isMutated) {
+                fullName += loc.getText("prefix_aberrant") + " ";
+            }
+
+            // 3. Przedrostek behawioralny (profil sztucznej inteligencji)
+            switch (behavior) {
+            case AiBehavior::Charger:    fullName += loc.getText("behavior_aggressor") + " "; break;
+            case AiBehavior::Sniper:     fullName += loc.getText("behavior_marksman") + " "; break;
+            case AiBehavior::Skirmisher: fullName += loc.getText("behavior_stalker") + " "; break;
+            case AiBehavior::Stationary: fullName += loc.getText("behavior_sentinel") + " "; break;
+            case AiBehavior::Kamikaze:   fullName += loc.getText("behavior_volatile") + " "; break;
+            }
+
+            // 4. Rdzeñ (Baza owocu/warzywa)
+            // Zak³adam, ¿e klucze postaci nazywasz "char_Tomato_name", "char_Broccoli_name" itp.
+            fullName += loc.getText("char_" + skinKey + "_name");
+
+            // 5. Sufiks (Cechy szczególne i umiejêtnoœci)
+            if (!abilities.empty()) {
+                std::string mainTrait = abilities.front(); // Bierzemy pierwsz¹ umiejêtnoœæ
+
+                fullName += " (";
+
+                if (mainTrait == "Dash") fullName += loc.getText("trait_swift");
+                else if (mainTrait == "Armor") fullName += loc.getText("trait_carapace");
+                else if (mainTrait == "PoisonExplosion") fullName += loc.getText("trait_toxic");
+                else if (mainTrait == "SplitOnDeath") fullName += loc.getText("trait_mitosis");
+                else if (mainTrait == "Shoot") fullName += loc.getText("trait_projectile");
+                else fullName += loc.getText("trait_unknown"); // Failsafe
+
+                fullName += " " + loc.getText("word_trait") + ")"; // Np. " (Zwinna Cecha)" lub " (Swift Trait)"
+            }
+
+            return fullName;
         }
     };
 }

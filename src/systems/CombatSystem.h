@@ -3,6 +3,7 @@
 #pragma once
 #include <vector>
 #include <memory>
+#include <random>
 
 namespace game
 {
@@ -40,5 +41,6 @@ namespace game::systems
         game::Game* game_;
         game::ArenaContext& context_;
         std::vector<std::unique_ptr<game::entities::Entity>>& enemies_;
+        std::mt19937 rng_{ std::random_device{}() };
     };
 }

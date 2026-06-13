@@ -23,8 +23,10 @@ namespace game::components
     }
 
     DashAbility::DashAbility(
-        game::entities::Entity* owner)
-        : owner_(owner)
+        game::entities::Entity* owner,
+        std::string sourceName)
+        : owner_(owner),
+        Ability(std::move(sourceName))
     {
     }
 

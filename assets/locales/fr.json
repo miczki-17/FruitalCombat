@@ -82,5 +82,36 @@
   "enemy_broccoli_name": "Brocoli \nSauteur",
   "enemy_broccoli_desc": "Le traumatisme de l'enfance revient\nsous la forme d'un petit arbre\nmutant.\n\nIl s'entraîne au parkour depuis la germination.\nAvant que vous ne puissiez dire\n'alimentation saine', il atterrit déjà\navec fracas sur votre tête.",
   "enemy_corn_name": "Maïs \nMitrailleur",
-  "enemy_corn_desc": "Un simple gars des champs, mais il a\nun chargeur plein. Il reste immobile\net crache du pop-corn à la vitesse\nd'une mitrailleuse.\n\nOn dit qu'au cinéma, il sert de collation."
+  "enemy_corn_desc": "Un simple gars des champs, mais il a\nun chargeur plein. Il reste immobile\net crache du pop-corn à la vitesse\nd'une mitrailleuse.\n\nOn dit qu'au cinéma, il sert de collation.",
+
+  "prefix_goliath": "Goliath",
+  "prefix_pygmy": "Pygmée",
+  "prefix_synthetic": "Synthétique",
+  "prefix_aberrant": "Aberrant",
+  "behavior_aggressor": "Agresseur",
+  "behavior_marksman": "Tireur",
+  "behavior_stalker": "Traqueur",
+  "behavior_sentinel": "Sentinelle",
+  "behavior_volatile": "Volatil",
+  "trait_swift": "Vif",
+  "trait_carapace": "Carapace",
+  "trait_toxic": "Toxique",
+  "trait_mitosis": "Mitose",
+  "trait_projectile": "Projectile",
+  "trait_unknown": "Muté",
+  "word_trait": "Trait",
+
+  "char_Carrot_name": "Carotte",
+  "char_Broccoli_name": "Brocoli",
+  "char_Potato_name": "Pomme de Terre",
+  "char_Corn_name": "Maïs",
+  "char_Garlic_name": "Ail",
+  "char_Fry_name": "Frite",
+
+  "hazard_knife_name": "Couteau",
+  "hazard_spore_name": "Spore",
+  "hazard_ice_shatter_name": "Éclat de Glace",
+  "hazard_icicle_shard_name": "Fragments de Glaçon",
+
+  "Poison_name": "Poison"
 }

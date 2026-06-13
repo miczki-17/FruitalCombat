@@ -1,6 +1,7 @@
 #include "MapHazardSystem.h"
 #include "../core/ArenaContext.h"
 #include "../core/ResourceManager.h"
+#include "../core/LocalizationManager.h"
 #include "../entities/Entity.h"
 #include "../components/TransformComponent.h"
 #include "../components/ProjectileComponent.h"
@@ -52,13 +53,15 @@ namespace game::systems
 
     void MapHazardSystem::spawnChoppingBlockHazard(game::ArenaContext& context, const sf::Vector2f& targetPos)
     {
+        auto& loc = game::core::LocalizationManager::get();
+
         sf::Vector2f startPos = { targetPos.x, targetPos.y - config_.dropHeight };
 
         auto hazardEntity = std::make_unique<game::entities::Entity>();
         //if (auto* transform = hazardEntity->getComponent<game::components::TransformComponent>()) transform->position = startPos;
         hazardEntity->addComponent(std::make_unique<game::components::TransformComponent>(startPos));
 
-        auto knife = std::make_unique<game::components::ProjectileComponent>(startPos, sf::Vector2f{ 0.f, 1.f });
+        auto knife = std::make_unique<game::components::ProjectileComponent>(startPos, sf::Vector2f{ 0.f, 1.f }, loc.getText("hazard_knife"));
 
         knife->setupDropFromSky(targetPos, config_.dropHeight, config_.speed);
         knife->setDamage(config_.damage);
@@ -84,13 +87,15 @@ namespace game::systems
 
     void MapHazardSystem::spawnCrisperDrawerHazard(game::ArenaContext& context, const sf::Vector2f& targetPos)
     {
+        auto& loc = game::core::LocalizationManager::get();
+
         sf::Vector2f startPos = { targetPos.x, targetPos.y - config_.dropHeight };
 
         auto hazardEntity = std::make_unique<game::entities::Entity>();
         //if (auto* transform = hazardEntity->getComponent<game::components::TransformComponent>()) transform->position = startPos;
         hazardEntity->addComponent(std::make_unique<game::components::TransformComponent>(startPos));
 
-        auto icicle = std::make_unique<game::components::ProjectileComponent>(startPos, sf::Vector2f{ 0.f, 1.f });
+        auto icicle = std::make_unique<game::components::ProjectileComponent>(startPos, sf::Vector2f{ 0.f, 1.f }, loc.getText("hazard_ice_shatter"));
 
         icicle->setupDropFromSky(targetPos, config_.dropHeight, config_.speed);
         icicle->setDamage(config_.damage);
@@ -117,13 +122,15 @@ namespace game::systems
 
     void MapHazardSystem::spawnWildOrchardHazard(game::ArenaContext& context, const sf::Vector2f& targetPos)
     {
+        auto& loc = game::core::LocalizationManager::get();
+
         sf::Vector2f startPos = { targetPos.x, targetPos.y - config_.dropHeight };
 
         auto hazardEntity = std::make_unique<game::entities::Entity>();
         hazardEntity->addComponent(std::make_unique<game::components::TransformComponent>(startPos));
         hazardEntity->addComponent(std::make_unique<game::components::LifespanComponent>(5.0, true));
 
-        auto spore = std::make_unique<game::components::ProjectileComponent>(startPos, sf::Vector2f{ 0.f, 1.f });
+        auto spore = std::make_unique<game::components::ProjectileComponent>(startPos, sf::Vector2f{ 0.f, 1.f }, loc.getText("hazard_spore"));
 
         spore->setupDropFromSky(targetPos, config_.dropHeight, config_.speed);
         spore->setDamage(config_.damage);

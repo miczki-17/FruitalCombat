@@ -2,6 +2,7 @@
 
 #include "StatsComponent.h"
 
+
 #include <algorithm>
 
 namespace game::components
@@ -43,19 +44,19 @@ namespace game::components
     }
 
     void StatsComponent::takeDamage(
-        float amount)
+        float amount, 
+        const std::string& sourceName)
     {
-        // Obliczamy ostateczne obra?enia:
-        // Je?li amount = 20, a damageReduction_ = 0.3 (30% pancerza),
-        // to finalDamage = 20 * (1.0 - 0.3) = 20 * 0.7 = 14.
         float finalDamage = amount * (1.0f - damageReduction_);
 
         currentHealth_ -= finalDamage;
 
-        currentHealth_ =
-            std::max(
-                0.0f,
-                currentHealth_);
+        currentHealth_ = std::max(0.0f, currentHealth_);
+                
+        // Zawsze zapisujemy, jeœli to nie by³o leczenie na minus
+        if (amount > 0.0f) {
+            setLastDamageSourceKey(sourceName);
+        }
     }
 
     void StatsComponent::addUltCharge(
@@ -88,7 +89,8 @@ namespace game::components
     void StatsComponent::addEffect(
         StatusType type,
         float duration,
-        float value)
+        float value,
+        std::string sourceName)
     {
         for (auto& effect : activeEffects_)
         {
@@ -118,6 +120,8 @@ namespace game::components
                 break;
             }
 
+            effect.sourceName = sourceName;
+
             return;
         }
 
@@ -125,7 +129,8 @@ namespace game::components
             type,
             duration,
             value,
-            0.0f
+            0.0f,
+            sourceName
             });
     }
 
@@ -269,7 +274,8 @@ namespace game::components
 
         takeDamage(
             effect.value *
-            POISON_TICK_INTERVAL);
+            POISON_TICK_INTERVAL,
+            effect.sourceName);
 
         effect.tickTimer =
             0.0f;

@@ -20,7 +20,8 @@ namespace game::components
             const std::string& textureKey,
             const std::string& splashKeyBase,
             float projectileScale = 1.0f,
-            bool isFriendly = true);
+            bool isFriendly = true,
+            std::string sourceName = "Undefined Biomass");
 
         void update(float deltaTime) override;
 

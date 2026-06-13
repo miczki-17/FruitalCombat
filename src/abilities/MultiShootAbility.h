@@ -18,7 +18,8 @@ namespace game::components
             float burstDelay = 0.1f,
             float projectileScale = 1.0f,
             float cooldown = 1.0f,
-            float damage = 5.0f
+            float damage = 5.0f,
+            std::string sourceName = "Undefined Biomass"
         );
 
         void update(float deltaTime) override;

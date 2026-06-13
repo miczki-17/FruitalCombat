@@ -82,5 +82,36 @@
   "enemy_broccoli_name": "Springender \nBrokkoli",
   "enemy_broccoli_desc": "Das Kindheitstrauma kehrt zurück\nin Form eines mutierten\nBäumchens.\n\nTrainiert Parkour seit der Keimung.\nBevor du 'gesunde Ernährung'\nsagen kannst, landet er schon\nmit Wucht auf deinem Kopf.",
   "enemy_corn_name": "Maschinengewehr-\nMais",
-  "enemy_corn_desc": "Ein ganz normaler Junge vom Feld, aber er hat\nein volles Magazin. Steht wie eingemauert\nund spuckt Popcorn mit der Geschwindigkeit\neines Maschinengewehrs aus.\n\nEs heißt, im Kino taugt er als Snack."
+  "enemy_corn_desc": "Ein ganz normaler Junge vom Feld, aber er hat\nein volles Magazin. Steht wie eingemauert\nund spuckt Popcorn mit der Geschwindigkeit\neines Maschinengewehrs aus.\n\nEs heißt, im Kino taugt er als Snack.",
+
+  "prefix_goliath": "Goliath",
+  "prefix_pygmy": "Zwergen",
+  "prefix_synthetic": "Synthetischer",
+  "prefix_aberrant": "Aberranter",
+  "behavior_aggressor": "Aggressor",
+  "behavior_marksman": "Schütze",
+  "behavior_stalker": "Pirscher",
+  "behavior_sentinel": "Wächter",
+  "behavior_volatile": "Flüchtiger",
+  "trait_swift": "Flinkheit",
+  "trait_carapace": "Panzer",
+  "trait_toxic": "Toxisch",
+  "trait_mitosis": "Mitose",
+  "trait_projectile": "Geschoss",
+  "trait_unknown": "Mutiert",
+  "word_trait": "Eigenschaft",
+
+  "char_Carrot_name": "Karotte",
+  "char_Broccoli_name": "Brokkoli",
+  "char_Potato_name": "Kartoffel",
+  "char_Corn_name": "Mais",
+  "char_Garlic_name": "Knoblauch",
+  "char_Fry_name": "Pommes",
+
+  "hazard_knife_name": "Messer",
+  "hazard_spore_name": "Spore",
+  "hazard_ice_shatter_name": "Eissplitter",
+  "hazard_icicle_shard_name": "Eiszapfen-Splitter",
+
+  "Poison_name": "Gift"
 }

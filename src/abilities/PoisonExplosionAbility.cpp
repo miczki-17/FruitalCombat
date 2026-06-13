@@ -1,3 +1,5 @@
+// --- PoisonExplosionAbility.cpp ---
+
 #include "PoisonExplosionAbility.h"
 #include "../core/ArenaContext.h"
 #include "../entities/Entity.h"
@@ -15,14 +17,15 @@ namespace game::components
         float radius,
         float dps,
         float duration,
-        const std::string& textureKey)
-        : context_(context), owner_(owner), radius_(radius), dps_(dps), duration_(duration), textureKey_(textureKey)
+        const std::string& textureKey,
+        std::string sourceName)
+        : Ability(std::move(sourceName)),
+        context_(context), owner_(owner), radius_(radius), dps_(dps), duration_(duration), textureKey_(textureKey)
     {
     }
 
     void PoisonExplosionAbility::update(float deltaTime)
     {
-        // Ta umiej?tno?? nie ma cooldownu, odpala si? raz i niszczy w?a?ciciela
     }
 
     void PoisonExplosionAbility::execute(
@@ -30,25 +33,22 @@ namespace game::components
         const sf::Vector2f& targetPosition,
         const sf::Vector2f& ownerVelocity)
     {
-        if (!context_ || !owner_ /* || owner_->isDead() */ ) return;
+        if (!context_ || !owner_) return;
 
         auto cloudEntity = std::make_unique<game::entities::Entity>();
         if (auto* transform = cloudEntity->getComponent<TransformComponent>()) {
             transform->position = origin;
-            transform->scale = { 2.0f, 2.0f }; // Skala chmury (dostosuj do PNG)
+            transform->scale = { 2.0f, 2.0f };
         }
 
-        // 1. NAPRAWA SPOWOLNIENIA: 
-        // 0.6f oznacza, ?e gracz w chmurze porusza si? z 60% swojej normalnej pr?dko?ci
         auto poisonAoE = std::make_unique<AoEComponent>(
-            radius_, sf::Color::Transparent, dps_, false, 0.0f, true, 0.6f, false);
-        // Ukrywamy domy?lne rysowanie okr?gu, bo teraz u?yjemy tekstury!
+            radius_, sf::Color::Transparent, dps_, false, 0.0f, true, 0.6f, false, sourceName_); // PRZEKAZANO NAZWÊ
+
         poisonAoE->isFriendly = false;
         poisonAoE->isVisible = false;
 
         cloudEntity->addComponent(std::move(poisonAoE));
 
-        // 2. DODANIE TEKSTURY (z obs?ug? przezroczysto?ci)
         if (!textureKey_.empty())
         {
             auto& rm = game::core::ResourceManager::get();
@@ -64,7 +64,6 @@ namespace game::components
         cloudEntity->addComponent(std::make_unique<LifespanComponent>(duration_, true));
         context_->spawnEntity(std::move(cloudEntity));
 
-        // Samobójstwo Kamikaze
         owner_->destroy();
     }
 }

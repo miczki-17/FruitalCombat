@@ -14,7 +14,8 @@ namespace game::components
         explicit CiderDashAbility(
             game::ArenaContext* context,
             game::entities::Entity* owner,
-            const std::string& puddleTextureKey = "");
+            const std::string& puddleTextureKey = "",
+            std::string sourceName = "Undefined Biomass");
 
         void update(float deltaTime) override;
 

@@ -15,7 +15,8 @@ namespace game::components
         WindupBruiserAbility(game::ArenaContext* context,
             game::entities::Entity* owner,
             game::entities::Entity* targetPlayer,
-            const nlohmann::json& config = nlohmann::json::object());
+            const nlohmann::json& config = nlohmann::json::object(),
+            std::string sourceName = "Undefined Biomass");
 
         void update(float deltaTime) override;
 
@@ -38,6 +39,7 @@ namespace game::components
         float recoveryTime_;
         float damageRadius_;
         float damage_;
+
 
         // Zmienne stanu
         BruiserState state_ = BruiserState::Idle;

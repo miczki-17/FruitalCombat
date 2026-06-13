@@ -4,6 +4,7 @@
 #include "../core/Game.h"
 #include "../core/ArenaContext.h"
 #include "../core/ResourceManager.h"
+#include "../core/LocalizationManager.h"
 #include "../core/AudioManager.h"
 #include "../entities/Entity.h"
 #include "../components/StatsComponent.h"
@@ -103,6 +104,8 @@ namespace game::systems
 
     void CombatSystem::processBulletDamage(game::entities::Entity* player)
     {
+        auto& loc = game::core::LocalizationManager::get();
+
         auto& entities = context_.entities;
 
         for (int i = static_cast<int>(entities.size()) - 1; i >= 0; --i)
@@ -132,7 +135,7 @@ namespace game::systems
                     {
                         if (auto* stats = enemy->getComponent<game::components::StatsComponent>())
                         {
-                            stats->takeDamage(actualDamage);
+                            stats->takeDamage(actualDamage, proj->sourceName_);
 
                             // --- NAK?ADANIE EFEKTÓW ---
                             if (proj->getStatusEffect() == game::components::StatusEffect::Slow) {
@@ -170,7 +173,7 @@ namespace game::systems
                     {
                         if (auto* stats = player->getComponent<game::components::StatsComponent>())
                         {
-                            stats->takeDamage(actualDamage);
+                            stats->takeDamage(actualDamage, proj->sourceName_);
 
                             if (auto* sprite = player->getComponent<game::components::SpriteComponent>()) {
                                 sprite->triggerHitFlash();
@@ -259,7 +262,8 @@ namespace game::systems
                     0.0f,
                     true,
                     0.4f,
-                    proj->getIsFriendly());
+                    proj->getIsFriendly(),
+                    loc.getText("Poison_name"));
 
                 poisonAoE->isVisible = false;
                 poisonAoE->isFriendly = proj->getIsFriendly();
@@ -284,7 +288,9 @@ namespace game::systems
                     false,
                     0.0f,
                     true,
-                    0.4f);
+                    0.4f,
+                    proj->getIsFriendly(),
+                    loc.getText("hazard_spore_name"));
 
                 sporeAoE->isVisible = false;
                 sporeAoE->isFriendly = proj->getIsFriendly();
@@ -349,7 +355,9 @@ namespace game::systems
                     false,
                     0.0f,
                     true,
-                    0.4f);
+                    0.4f,
+                    proj->getIsFriendly(),
+                    loc.getText("hazard_ice_shatter_name"));
 
                 iceAoE->isVisible = false;
                 iceAoE->isFriendly = proj->getIsFriendly();
@@ -375,7 +383,7 @@ namespace game::systems
                     // transform odlamka LODU
                     shardEntity->addComponent(std::make_unique<game::components::TransformComponent>(explodePos));
 
-                    auto shardProj = std::make_unique<game::components::ProjectileComponent>(explodePos, dir);
+                    auto shardProj = std::make_unique<game::components::ProjectileComponent>(explodePos, dir, loc.getText("hazard_icicle_shard_name"));
                     shardProj->setAppearance(12.0f, sf::Color(150, 220, 255));
                     shardProj->setFriendly(proj->getIsFriendly());
                     shardProj->setDamage(actualDamage * 0.25f);
@@ -584,7 +592,7 @@ namespace game::systems
                     if (distSq <= aoe->radius * aoe->radius)
                     {
                         if (aoe->dps > 0.0f) {
-                            enemyStats->takeDamage(aoe->dps * deltaTime);
+                            enemyStats->takeDamage(aoe->dps * deltaTime, aoe->sourceName_);
 
                             if (auto* sprite = enemy->getComponent<game::components::SpriteComponent>()) {
                                 if (std::rand() % 60 == 0) sprite->triggerHitFlash();
@@ -596,7 +604,8 @@ namespace game::systems
                             enemyStats->addEffect(
                                 game::components::StatusType::Slow,
                                 0.15f,
-                                aoe->slowMultiplier
+                                aoe->slowMultiplier,
+                                aoe->sourceName_
                             );
                         }
                     }
@@ -629,7 +638,8 @@ namespace game::systems
                         if (aoe->dps > 0.0f)
                         {
                             playerStats->takeDamage(
-                                aoe->dps * deltaTime
+                                aoe->dps * deltaTime,
+                                aoe->sourceName_
                             );
                         }
 
@@ -638,7 +648,8 @@ namespace game::systems
                             playerStats->addEffect(
                                 game::components::StatusType::Slow,
                                 0.15f,
-                                aoe->slowMultiplier
+                                aoe->slowMultiplier,
+                                aoe->sourceName_
                             );
                         }
                     }

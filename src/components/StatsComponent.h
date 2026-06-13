@@ -21,6 +21,7 @@ namespace game::components
         float duration;
         float value;
         float tickTimer = 0.0f;
+        std::string sourceName;
     };
 
     class StatsComponent final : public Component
@@ -34,12 +35,14 @@ namespace game::components
         void update(float deltaTime) override;
 
         void takeDamage(
-            float amount);
+            float amount,
+            const std::string& sourceName);
 
         void addEffect(
             StatusType type,
             float duration,
-            float value);
+            float value,
+            std::string sourceName = "Toxic Hazard");
 
         void setDamageReduction(
 			float reduction);

@@ -7,9 +7,9 @@
 namespace game::components
 {
     AoEComponent::AoEComponent(float r, sf::Color color, float damagePerSec,
-        bool poison, float pDps, bool slow, float slowMult, bool friendly)
+        bool poison, float pDps, bool slow, float slowMult, bool friendly, std::string sourceName)
         : radius(r), dps(damagePerSec), appliesPoison(poison), poisonDps(pDps),
-        appliesSlow(slow), slowMultiplier(slowMult), isFriendly(friendly)
+        appliesSlow(slow), slowMultiplier(slowMult), isFriendly(friendly), sourceName_(sourceName)
     {
         shape.setRadius(radius);
         shape.setOrigin({ radius, radius });
@@ -28,14 +28,13 @@ namespace game::components
         float targetDiameter = radius * 2.0f;
         sprite->setScale({ targetDiameter / size.x, targetDiameter / size.y });
 
-        sprite->setRotation( sf::degrees(static_cast<float>(std::rand() % 360)) );
+        sprite->setRotation(sf::degrees(static_cast<float>(std::rand() % 360)));
     }
 
     void AoEComponent::update(float dt)
     {
         if (!owner) return;
 
-        // Kszta³t strefy pod¹¿a za TransformComponent
         if (auto* transform = owner->getComponent<TransformComponent>()) {
             shape.setPosition(transform->position);
 

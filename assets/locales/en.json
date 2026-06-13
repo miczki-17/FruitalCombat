@@ -82,5 +82,36 @@
   "enemy_broccoli_name": "Jumping \nBroccoli",
   "enemy_broccoli_desc": "Childhood trauma returns\nin the form of a mutated\nlittle tree.\n\nHas been training parkour since sprouting.\nBefore you can say\n'healthy diet', he's already landing\nwith a bang on your head.",
   "enemy_corn_name": "Heavy MG \nCorn",
-  "enemy_corn_desc": "Just a regular farm boy, but he's got\na full magazine. Stands perfectly still\nand spits out popcorn at the speed\nof a machine gun.\n\nRumor has it he works as a snack at the cinema."
+  "enemy_corn_desc": "Just a regular farm boy, but he's got\na full magazine. Stands perfectly still\nand spits out popcorn at the speed\nof a machine gun.\n\nRumor has it he works as a snack at the cinema.",
+
+  "prefix_goliath": "Goliath",
+  "prefix_pygmy": "Pygmy",
+  "prefix_synthetic": "Synthetic",
+  "prefix_aberrant": "Aberrant",
+  "behavior_aggressor": "Aggressor",
+  "behavior_marksman": "Marksman",
+  "behavior_stalker": "Stalker",
+  "behavior_sentinel": "Sentinel",
+  "behavior_volatile": "Volatile",
+  "trait_swift": "Swift",
+  "trait_carapace": "Carapace",
+  "trait_toxic": "Toxic",
+  "trait_mitosis": "Mitosis",
+  "trait_projectile": "Projectile",
+  "trait_unknown": "Mutated",
+  "word_trait": "Trait",
+
+  "char_Carrot_name": "Carrot",
+  "char_Broccoli_name": "Broccoli",
+  "char_Potato_name": "Potato",
+  "char_Corn_name": "Corn",
+  "char_Garlic_name": "Garlic",
+  "char_Fry_name": "Fry",
+
+  "hazard_knife_name": "Knife",
+  "hazard_spore_name": "Spore",
+  "hazard_ice_shatter_name": "Ice shatter",
+  "hazard_icicle_shard_name": "Icicle shards",
+  
+  "Poison_name": "Poison"
 }

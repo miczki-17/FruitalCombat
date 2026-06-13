@@ -26,9 +26,11 @@ namespace game::components
 
     AcidPoolUltimate::AcidPoolUltimate(
         game::entities::Entity* owner,
-        game::ArenaContext* arenaContext)
+        game::ArenaContext* arenaContext,
+        std::string sourceName)
         : owner_(owner),
-        arenaContext_(arenaContext)
+        arenaContext_(arenaContext),
+        Ability(std::move(sourceName))
     {
     }
 

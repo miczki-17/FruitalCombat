@@ -1,3 +1,5 @@
+// --- CiderDashAbility.cpp ---
+
 #include "CiderDashAbility.h"
 
 #include "../entities/Entity.h"
@@ -17,8 +19,10 @@ namespace game::components
     CiderDashAbility::CiderDashAbility(
         game::ArenaContext* context,
         game::entities::Entity* owner,
-        const std::string& puddleTextureKey)
-        : context_(context),
+        const std::string& puddleTextureKey,
+        std::string sourceName)
+        : Ability(std::move(sourceName)),
+        context_(context),
         owner_(owner),
         puddleTextureKey_(puddleTextureKey)
     {
@@ -94,36 +98,31 @@ namespace game::components
     {
         if (!context_ || !owner_) return;
 
-        auto* ownerTransform =
-            owner_->getComponent<TransformComponent>();
-
+        auto* ownerTransform = owner_->getComponent<TransformComponent>();
         if (!ownerTransform) return;
 
-        auto puddleEntity =
-            std::make_unique<game::entities::Entity>();
+        auto puddleEntity = std::make_unique<game::entities::Entity>();
 
-        if (auto* transform =
-            puddleEntity->getComponent<TransformComponent>())
+        if (auto* transform = puddleEntity->getComponent<TransformComponent>())
         {
             transform->position = ownerTransform->position;
         }
 
-        auto puddleAoE =
-            std::make_unique<game::components::AoEComponent>(
-                90.0f,                              // radius
-                sf::Color(255, 220, 100, 180),      // fallback color
-                0.0f,                               // dps
-                false,
-                0.0f,
-                true,                               // applies slow
-                0.5f                                // 50% speed
-                );
+        auto puddleAoE = std::make_unique<game::components::AoEComponent>(
+            90.0f,                              // radius
+            sf::Color(255, 220, 100, 180),      // fallback color
+            0.0f,                               // dps
+            false,
+            0.0f,
+            true,                               // applies slow
+            0.5f,                               // 50% speed
+            true,                               // is friendly
+            sourceName_                         // DZIEDZICZONA NAZWA
+            );
 
         if (!puddleTextureKey_.empty())
         {
-            auto tex =
-                game::core::ResourceManager::get()
-                .getTextureShared(puddleTextureKey_);
+            auto tex = game::core::ResourceManager::get().getTextureShared(puddleTextureKey_);
 
             if (tex)
             {
@@ -132,25 +131,14 @@ namespace game::components
                 if (puddleAoE->sprite.has_value())
                 {
                     puddleAoE->sprite->setColor(
-                        sf::Color(
-                            255,   // R
-                            235,   // G
-                            120,   // B
-                            190    // A
-                        )
+                        sf::Color(255, 235, 120, 190)
                     );
                 }
             }
         }
 
         puddleEntity->addComponent(std::move(puddleAoE));
-
-        puddleEntity->addComponent(
-            std::make_unique<LifespanComponent>(
-                4.0f,
-                true
-                )
-        );
+        puddleEntity->addComponent(std::make_unique<LifespanComponent>(4.0f, true));
 
         context_->spawnEntity(std::move(puddleEntity));
     }

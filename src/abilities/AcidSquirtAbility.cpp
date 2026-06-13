@@ -29,13 +29,15 @@ namespace game::components
         const std::string& textureKey,
         const std::string& splashKeyBase,
         float projectileScale,
-        bool isFriendly)
+        bool isFriendly,
+        std::string sourceName)
         : context_(context),
         owner_(owner),
         textureKey_(textureKey),
         splashKeyBase_(splashKeyBase),
         projectileScale_(projectileScale),
-        isFriendly_(isFriendly)
+        isFriendly_(isFriendly),
+        Ability(std::move(sourceName))
     {
     }
 

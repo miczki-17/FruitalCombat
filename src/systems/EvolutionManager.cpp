@@ -41,68 +41,112 @@ namespace game::systems
         std::cout << "[EVOLUTION] Wave 1 started properly with timer.\n";
     }
 
-    void EvolutionManager::onEnemyDeath(const game::genetics::DNA& fallenDNA)
+    void EvolutionManager::onEnemyDeath(game::genetics::DNA fallenDNA)
     {
-        harvestedDNA.push_back(fallenDNA);
+        harvestedDNA.push_back(std::move(fallenDNA));
     }
 
-    // Advanced position validation algorithm using the bitmask
+    // Advanced position validation algorithm using the bitmask + Spiral Search Failsafe
     sf::Vector2f EvolutionManager::getRandomValidPosition(bool aroundPlayer)
     {
-        auto* targetPlayer_transform = targetPlayer->getComponent<game::components::TransformComponent>(); if (!targetPlayer_transform) return {0.0f, 0.0f};
+        if (!targetPlayer) return { 0.0f, 0.0f };
+        auto* targetPlayer_transform = targetPlayer->getComponent<game::components::TransformComponent>();
+        if (!targetPlayer_transform) return { 0.0f, 0.0f };
 
         sf::Vector2f rolledPos;
         bool valid = false;
         int attempts = 0;
-        const int maxAttempts = 100; // Sane limit to prevent infinite loops if map has no white pixels
+        const int maxAttempts = 100;
 
+        // --- 1. G£ÓWNA PÊTLA LOSUJ¥CA ---
         while (!valid && attempts < maxAttempts)
         {
             attempts++;
 
             if (aroundPlayer && targetPlayer != nullptr)
             {
-                // Roll orbitally around the player (Staggered spawns logic)
+                // Lekko poszerzony zakres, daje wiêksz¹ szansê trafienia na maskê w w¹skich miejscach
                 std::uniform_real_distribution<float> angleDist(0.0f, 2.0f * 3.14159f);
-                std::uniform_real_distribution<float> radiusDist(750.0f, 950.0f);
+                std::uniform_real_distribution<float> radiusDist(450.0f, 950.0f);
 
                 float randomAngle = angleDist(rng);
                 float randomRadius = radiusDist(rng);
-
 
                 sf::Vector2f spawnOffset(std::cos(randomAngle) * randomRadius, std::sin(randomAngle) * randomRadius);
                 rolledPos = targetPlayer_transform->position + spawnOffset;
             }
             else
             {
-                // Roll across the entire map bounds (Initial wave 1 distribution logic)
                 std::uniform_real_distribution<float> posDistX(100.0f, static_cast<float>(collisionMask.getSize().x) * mapScale - 100.0f);
                 std::uniform_real_distribution<float> posDistY(100.0f, static_cast<float>(collisionMask.getSize().y) * mapScale - 100.0f);
                 rolledPos = { posDistX(rng), posDistY(rng) };
             }
 
-            // Convert world float coordinates back to mask pixel indices
             int pixelX = static_cast<int>(rolledPos.x / mapScale);
             int pixelY = static_cast<int>(rolledPos.y / mapScale);
 
-            // Bounds check: verify the pixels are actually inside the sf::Image boundaries
             if (pixelX >= 0 && pixelX < static_cast<int>(collisionMask.getSize().x) &&
                 pixelY >= 0 && pixelY < static_cast<int>(collisionMask.getSize().y))
             {
-                sf::Color maskPixelColor = collisionMask.getPixel({ static_cast<unsigned int>(pixelX), static_cast<unsigned int>(pixelY) });
-
-                // If the pixel is pure white, it's a valid walkable area!
-                if (maskPixelColor == sf::Color::White)
+                if (collisionMask.getPixel({ static_cast<unsigned int>(pixelX), static_cast<unsigned int>(pixelY) }) == sf::Color::White)
                 {
                     valid = true;
                 }
             }
         }
 
-        // Failsafe: if we completely fail to find a white pixel after 100 tries, 
-        // fallback to the player's current known safe position so the game doesn't crash.
+        // --- 2. FAILSAFE: WYSZUKIWANIE SPIRALNE (Spiral Search) ---
+        // Aktywuje siê tylko, jeœli wylosowaliœmy 100 razy i ani razu nie trafiliœmy na bia³y pixel.
         if (!valid && targetPlayer != nullptr)
         {
+            // Konwertujemy pozycjê gracza na siatkê (maskê kolizji)
+            int startX = static_cast<int>(targetPlayer_transform->position.x / mapScale);
+            int startY = static_cast<int>(targetPlayer_transform->position.y / mapScale);
+
+            // Zmienne do kontroli poruszania siê po spirali
+            int x = 0;
+            int y = 0;
+            int dx = 0;
+            int dy = -1;
+
+            int maxSteps = 10000; // Górny limit pêtli zapobiegaj¹cy freezom (sprawdzi pole 100x100 wokó³ gracza)
+            int mapWidth = static_cast<int>(collisionMask.getSize().x);
+            int mapHeight = static_cast<int>(collisionMask.getSize().y);
+
+            for (int i = 0; i < maxSteps; i++)
+            {
+                int checkX = startX + x;
+                int checkY = startY + y;
+
+                // Upewniamy siê, czy obecny krok spirali nadal le¿y w granicach mapy
+                if (checkX >= 0 && checkX < mapWidth && checkY >= 0 && checkY < mapHeight)
+                {
+                    // Jeœli trafiliœmy na bia³y pixel, przerywamy wyszukiwanie i zwracamy koordynaty œwiata
+                    if (collisionMask.getPixel({ static_cast<unsigned int>(checkX), static_cast<unsigned int>(checkY) }) == sf::Color::White)
+                    {
+                        // Dodajemy pó³ kafla (mapScale / 2.0f), by wyœrodkowaæ spawn
+                        return {
+                            (static_cast<float>(checkX) * mapScale) + (mapScale / 2.0f),
+                            (static_cast<float>(checkY) * mapScale) + (mapScale / 2.0f)
+                        };
+                    }
+                }
+
+                // Logika "zakrêcania" (tworzenie kwadratowej spirali wokó³ punktu startowego)
+                if (x == y || (x < 0 && x == -y) || (x > 0 && x == 1 - y))
+                {
+                    int temp = dx;
+                    dx = -dy;
+                    dy = temp;
+                }
+
+                x += dx;
+                y += dy;
+            }
+
+            // --- 3. OSTATECZNY FALLBACK ---
+            // Jeœli algorytm jakimœ cudem przeszed³ 10 000 iteracji i nie znalaz³ choæby jednego 
+            // bia³ego pixela (np. gracz zglitchowa³ siê pod mapê), spawniemy na graczu, by unikn¹æ crasha.
             return targetPlayer_transform->position;
         }
 

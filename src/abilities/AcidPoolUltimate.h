@@ -13,7 +13,8 @@ namespace game::components
     public:
         AcidPoolUltimate(
             game::entities::Entity* owner,
-            game::ArenaContext* arenaContext);
+            game::ArenaContext* arenaContext,
+            std::string sourceName = "Undefined Biomass");
 
         void update(float deltaTime) override {}
 

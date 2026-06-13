@@ -36,7 +36,8 @@ namespace game::components
             game::ArenaContext* ctx,
             std::vector<std::unique_ptr<game::entities::Entity>>* targetsList,
             float kRadius = 120.0f,
-            float kForce = 350.0f);
+            float kForce = 350.0f,
+            std::string sourceName = "Undefined Biomass");
 
         // Konstruktor dla mutanta (bije tylko gracza)
         RindRollAbility(

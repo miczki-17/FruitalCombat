@@ -82,5 +82,36 @@
   "enemy_broccoli_name": "Прыгучий \nБрокколи",
   "enemy_broccoli_desc": "Детская травма возвращается\nв виде мутировавшего\nдеревца.\n\nТренирует паркур с самого прорастания.\nПрежде чем ты успеешь сказать\n'здоровая диета', он уже с размаху\nприземляется тебе на голову.",
   "enemy_corn_name": "Кукуруза-\nПулемет",
-  "enemy_corn_desc": "Обычный парень с поля, но у него\nполный магазин. Стоит на месте\nкак вкопанный и выплевывает попкорн\nсо скоростью пулемета.\n\nГоворят, в кинотеатре подрабатывает закуской."
+  "enemy_corn_desc": "Обычный парень с поля, но у него\nполный магазин. Стоит на месте\nкак вкопанный и выплевывает попкорн\nсо скоростью пулемета.\n\nГоворят, в кинотеатре подрабатывает закуской.",
+
+  "prefix_goliath": "Голиаф",
+  "prefix_pygmy": "Карликовый",
+  "prefix_synthetic": "Синтетический",
+  "prefix_aberrant": "Аберрантный",
+  "behavior_aggressor": "Агрессор",
+  "behavior_marksman": "Стрелок",
+  "behavior_stalker": "Ловчий",
+  "behavior_sentinel": "Страж",
+  "behavior_volatile": "Нестабильный",
+  "trait_swift": "Ловкости",
+  "trait_carapace": "Панциря",
+  "trait_toxic": "Токсичности",
+  "trait_mitosis": "Митоза",
+  "trait_projectile": "Снарядов",
+  "trait_unknown": "Мутировавшая",
+  "word_trait": "Черта",
+
+  "char_Carrot_name": "Морковь",
+  "char_Broccoli_name": "Брокколи",
+  "char_Potato_name": "Картофель",
+  "char_Corn_name": "Кукуруза",
+  "char_Garlic_name": "Чеснок",
+  "char_Fry_name": "Картошка Фри",
+
+  "hazard_knife_name": "Нож",
+  "hazard_spore_name": "Спора",
+  "hazard_ice_shatter_name": "Ледяной Взрыв",
+  "hazard_icicle_shard_name": "Осколки Сосульки",
+
+  "Poison_name": "Яд"
 }

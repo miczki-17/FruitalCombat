@@ -14,7 +14,7 @@ namespace game::components
     class DashAbility final : public Ability
     {
     public:
-        explicit DashAbility(game::entities::Entity* owner);
+        explicit DashAbility(game::entities::Entity* owner, std::string sourceName = "Undefined Biomass");
 
         void update(float deltaTime) override;
 

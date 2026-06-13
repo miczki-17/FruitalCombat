@@ -33,7 +33,6 @@ namespace game::states
         sf::Vector2f viewSize = game->getWindow().getDefaultView().getSize();
         float centerX = viewSize.x / 2.0f;
 
-        // overlay
         backgroundOverlay_.setSize(viewSize);
         backgroundOverlay_.setFillColor(sf::Color(25, 0, 0, 200));
 
@@ -52,7 +51,6 @@ namespace game::states
 
         float currentY = viewHeight * 0.38f;
 
-        // --- KILLER ---
         killedByLabel_.emplace(game->mainFont, LocUTF8("ui_killed_by"), static_cast<int>(18 * GLOBAL_FONT_SCALE));
         killedByLabel_->setFillColor(sf::Color(180, 180, 180));
         sf::FloatRect kbBounds = killedByLabel_->getLocalBounds();
@@ -61,7 +59,11 @@ namespace game::states
 
         currentY += 35.0f;
 
-        killerNameText_.emplace(game->mainFont, LocUTF8(game->lastSessionResults.killerNameKey), static_cast<int>(30 * GLOBAL_FONT_SCALE));
+        // kodowanie UTF8
+        std::string rawKillerName = game->lastSessionResults.killerNameKey;
+        sf::String utf8KillerName = sf::String::fromUtf8(rawKillerName.begin(), rawKillerName.end());
+
+        killerNameText_.emplace(game->mainFont, utf8KillerName, static_cast<int>(30 * GLOBAL_FONT_SCALE));
         killerNameText_->setFillColor(sf::Color::White);
         killerNameText_->setStyle(sf::Text::Italic);
         sf::FloatRect knBounds = killerNameText_->getLocalBounds();
@@ -70,7 +72,6 @@ namespace game::states
 
         currentY += 80.0f;
 
-        // --- STATISTICS ---
         auto& rm = ResourceManager::get();
         if (rm.hasTexture("juice")) {
             biomassIcon_.emplace(*rm.getTexture("juice"));
@@ -80,7 +81,6 @@ namespace game::states
             biomassIcon_->setPosition({ centerX - 30.0f, currentY });
         }
 
-        // RESULTS
         scoreText_.emplace(game->mainFont, std::to_string(game->lastSessionResults.biomassCollected), static_cast<int>(24 * GLOBAL_FONT_SCALE));
         scoreText_->setFillColor(sf::Color::White);
         scoreText_->setStyle(sf::Text::Bold);
@@ -90,7 +90,6 @@ namespace game::states
 
         currentY += 45.0f;
 
-        // WAVES NUM
         wavesText_.emplace(game->mainFont, LocUTF8("ui_waves") + " " + std::to_string(game->lastSessionResults.wavesSurvived), static_cast<int>(18 * GLOBAL_FONT_SCALE));
         wavesText_->setFillColor(sf::Color(200, 200, 200));
         sf::FloatRect wBounds = wavesText_->getLocalBounds();
@@ -123,7 +122,6 @@ namespace game::states
                     game->playUIClick();
                     game->getWindow().setMouseCursorVisible(false);
 
-                    // Bezpieczne przeladowanie gry
                     game->getStateMachine().popState();
                     game->getStateMachine().changeState(StateType::Playing);
                     return;

@@ -486,16 +486,18 @@ namespace game::states
                 {
                     std::cout << "[PlayingState] Player is dead!\n";
 
-                    if (stats->getLastDamageSourceKey().empty()) {
-                        game->lastSessionResults.killerNameKey = "unknown_organism";
+                    std::string killer = stats->getLastDamageSourceKey();
+
+                    if (killer.empty() || killer == "Unidentified Biomass") {
+                        game->lastSessionResults.killerNameKey = "Unknown Organism"; // U¿ywamy "Unknown", by odró¿niæ czy b³¹d jest tu
                     }
                     else {
-                        game->lastSessionResults.killerNameKey = stats->getLastDamageSourceKey();
+                        game->lastSessionResults.killerNameKey = killer;
                     }
+
                     game->lastSessionResults.wavesSurvived = world->getEvolutionManager()->getCurrentWave() - 1;
                     game->lastSessionResults.biomassCollected = game->profile.biomassJuice;
 
-                    // Przejscie na ekran smierci
                     game->getStateMachine().pushState(StateType::Death);
                     game->getWindow().setMouseCursorVisible(true);
                     return;
@@ -507,7 +509,7 @@ namespace game::states
 
                 if (hpBarFillSprite) {
                     sf::Vector2u texSize = hpBarFillSprite->getTexture().getSize();
-                    int visibleWidth = static_cast<int>(texSize.x * hpPercent);
+                    int visibleWidth = std::ceil(texSize.x * hpPercent);
                     
                     hpBarFillSprite->setTextureRect(sf::IntRect({0, 0}, {visibleWidth, static_cast<int>(texSize.y)}));
                 }

@@ -69,7 +69,7 @@ namespace game::systems
 
         void startFirstWave();
         void update(float dt);
-        void onEnemyDeath(const game::genetics::DNA& fallenDNA);
+        void onEnemyDeath(game::genetics::DNA fallenDNA);
         int getCurrentWave() const;
         float getWaveTimeLeft() const;
         float getShopDelayTimeLeft() const;

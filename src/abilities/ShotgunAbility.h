@@ -18,7 +18,8 @@ namespace game::components
     public:
         explicit ShotgunAbility(
             game::ArenaContext* context,
-            game::entities::Entity* owner);
+            game::entities::Entity* owner,
+            std::string sourceName = "Undefined Biomass");
 
         void update(float deltaTime) override;
 

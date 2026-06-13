@@ -154,7 +154,7 @@ namespace game::factories
 
             // ab
             abilities->setWeapon(std::make_unique<game::components::ShootAbility>(
-                &context, entity, projTex, bulletScale, attackCooldown, projDamage));
+                &context, entity, projTex, bulletScale, attackCooldown, projDamage, "Player"));
         }
 
         else if (name == "MultiShoot")
@@ -170,13 +170,13 @@ namespace game::factories
 
             // ab
             abilities->setWeapon(std::make_unique<game::components::MultiShootAbility>(
-                &context, entity, projTex, count, burstDelay, bulletScale, attackCooldown, projDamage));
+                &context, entity, projTex, count, burstDelay, bulletScale, attackCooldown, projDamage, "Player"));
         }
         else if (name == "Shotgun") {
-            abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(&context, entity));
+            abilities->setWeapon(std::make_unique<game::components::ShotgunAbility>(&context, entity, "Player"));
         }
         else if (name == "Dash") {
-            abilities->setSkill(std::make_unique<game::components::DashAbility>(entity));
+            abilities->setSkill(std::make_unique<game::components::DashAbility>(entity, "Player"));
         }
         else if (name == "AcidSquirt") {
 			// JSON
@@ -189,20 +189,21 @@ namespace game::factories
                 key + "_bullet",
                 splashKey,
                 bulletScale,
-                true
+                true,
+                "Player"
                 ));
         }
         else if (name == "RindRoll") {
             const float kRadius = 130.0f;
             const float kForce = 400.0f;
             abilities->setSkill(std::make_unique<game::components::RindRollAbility>(
-                entity, &context, &enemies, kRadius, kForce));
+                entity, &context, &enemies, kRadius, kForce, "Player"));
         }
         else if (name == "Cider Dash") {
-            abilities->setSkill(std::make_unique<game::components::CiderDashAbility>(&context, entity, "apple_puddle"));
+            abilities->setSkill(std::make_unique<game::components::CiderDashAbility>(&context, entity, "apple_puddle", "Player"));
         }
         else if (name == "AcidPoolUlt") {
-            abilities->setUltimate(std::make_unique<game::components::AcidPoolUltimate>(entity, &context));
+            abilities->setUltimate(std::make_unique<game::components::AcidPoolUltimate>(entity, &context, "Player"));
         }
     }
 }

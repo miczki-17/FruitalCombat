@@ -22,7 +22,8 @@ namespace game::components
             const std::string& textureKey = "",
             float projectileScale = 1.0f,
             float cooldown = 0.3f,
-            float damage = 1.0f);
+            float damage = 1.0f,
+            std::string sourceName = "Undefined Biomass");
 
         void update(float deltaTime) override;
 

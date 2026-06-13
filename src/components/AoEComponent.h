@@ -23,10 +23,13 @@ namespace game::components
         bool isVisible = true;
         bool isFriendly;
 
+        std::string sourceName_ = "";
+
         AoEComponent(float r, sf::Color color, float damagePerSec = 0.0f,
             bool poison = false, float pDps = 0.0f,
             bool slow = false, float slowMult = 1.0f,
-            bool friendly = true);
+            bool friendly = true,
+            std::string sourceName = "Undefined Biomass");
 
         void setTexture(std::shared_ptr<sf::Texture> tex);
 

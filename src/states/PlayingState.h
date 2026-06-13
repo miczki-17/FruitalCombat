@@ -19,10 +19,13 @@ namespace game::states
         std::optional<sf::Sprite> mapSprite;
         sf::Vector2f mapLimits;
         sf::Image collisionMask;
-        float mapScale = 1.5f;
+        float mapScale = 0.95f;
 
         sf::View cameraView;
         float shakeIntensity = 0.0f;
+
+        // language
+        std::string lastLangCode;
 
         // --- HUD & UI ---
         std::optional<sf::Sprite> settingsBtnSprite;

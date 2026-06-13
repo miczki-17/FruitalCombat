@@ -6,11 +6,10 @@
 
 namespace game::components
 {
-    ProjectileComponent::ProjectileComponent(sf::Vector2f startPos, sf::Vector2f direction)
-
-        : position_(startPos)
+    ProjectileComponent::ProjectileComponent(sf::Vector2f startPos, sf::Vector2f direction, std::string sourceName)
+        : position_(startPos),
+        sourceName_(sourceName)
     {
-
         float len = std::sqrt(direction.x * direction.x + direction.y * direction.y);
 
         if (len != 0.0f) {
@@ -19,15 +18,11 @@ namespace game::components
         }
         velocity_ = direction * speed_;
 
-
-
         shape_.setRadius(radius_);
         shape_.setOrigin({ radius_, radius_ });
         shape_.setFillColor(color_);
         shape_.setPosition(position_);
     }
-
-
 
     void ProjectileComponent::setupParabolic(sf::Vector2f start, sf::Vector2f target, float customSpeed)
     {
@@ -50,8 +45,6 @@ namespace game::components
         shadowShape_.setOrigin({ radius_, radius_ });
     }
 
-
-
     void ProjectileComponent::setupDropFromSky(sf::Vector2f targetPos, float dropHeight, float customSpeed)
     {
         isDropping_ = true;
@@ -60,33 +53,23 @@ namespace game::components
         position_ = startPos_;
         speed_ = customSpeed;
 
-
-
-        // velocity of scaling only in Y direction
         velocity_ = { 0.f, speed_ };
         totalDistance_ = dropHeight;
-
 
         shadowShape_.setRadius(radius_);
         shadowShape_.setFillColor(sf::Color(0, 0, 0, 150));
         shadowShape_.setOrigin({ radius_, radius_ });
     }
 
-
-
     void ProjectileComponent::addVelocity(sf::Vector2f additionalVelocity)
     {
         velocity_ += additionalVelocity;
     }
 
-
-
     void ProjectileComponent::destroy()
     {
         isActive_ = false;
     }
-
-
 
     bool ProjectileComponent::getIsActive() const { return isActive_; }
     sf::Vector2f ProjectileComponent::getPosition() const { return position_; }
@@ -101,8 +84,6 @@ namespace game::components
         return false;
     }
 
-
-
     void ProjectileComponent::setAppearance(float radius, sf::Color color)
     {
         radius_ = radius;
@@ -112,29 +93,21 @@ namespace game::components
         shape_.setFillColor(color_);
     }
 
-
-
     void ProjectileComponent::setSpeedMultiplier(float multi)
     {
         speedMultiplier_ = multi;
     }
-
-
 
     void ProjectileComponent::setStatusEffect(StatusEffect status)
     {
         payloadStatus_ = status;
     }
 
-
-
     void ProjectileComponent::setWobble(bool state, bool fake3DRoll)
     {
         isWobbly_ = state;
         isFake3DRoll_ = fake3DRoll;
     }
-
-
 
     void ProjectileComponent::setAnimation(std::shared_ptr<sf::Texture> tex, int frames, float animSpeed, sf::Vector2i size)
     {
@@ -153,14 +126,9 @@ namespace game::components
 
         if (!isWobbly_ && !isParabolic_ && !isDropping_) {
             float angle = std::atan2(velocity_.y, velocity_.x) * 180.0f / 3.14159f;
-
-            // --- +90.0f ---
-            // Ustawia "górê" obrazka zgodnie z wektorem lotu
             sprite_->setRotation(sf::degrees(angle + 90.0f));
         }
     }
-
-
 
     void ProjectileComponent::setSpriteScale(float scaleX, float scaleY)
     {
@@ -169,16 +137,10 @@ namespace game::components
         }
     }
 
-
-
     void ProjectileComponent::update(float dt, const sf::Image& collisionMask, float mapScale)
     {
         if (!isActive_) return;
         lifetime_ += dt;
-
-
-
-        // --- Move from sky (vertical drop) ---
 
         if (isDropping_)
         {
@@ -191,15 +153,10 @@ namespace game::components
                 return;
             }
 
-
             position_ += velocity_ * dt * speedMultiplier_;
             float progress = std::clamp(1.0f - (distLeft / totalDistance_), 0.0f, 1.0f);
 
-
-
-            // shadow goes from 2.5x scale to 0 as it falls, and becomes more transparent
             float shadowScale = 2.5f * (1.0f - progress);
-
             shadowShape_.setPosition(targetPos_);
             shadowShape_.setScale({ shadowScale, shadowScale });
             shadowShape_.setFillColor(sf::Color(0, 0, 0, static_cast<std::uint8_t>(150 * (1.0f - progress))));
@@ -207,14 +164,11 @@ namespace game::components
             shape_.setPosition(position_);
             if (sprite_.has_value()) sprite_->setPosition(position_);
         }
-
-        // --- PARABOLIC MOVEMENT ---
         else if (isParabolic_)
         {
             sf::Vector2f diffStart = position_ - startPos_;
             float distMoved = std::sqrt(diffStart.x * diffStart.x + diffStart.y * diffStart.y);
 
-            // Je?li przelecia? swój przewidziany dystans, wybuchnij pewnie i bez b??dów!
             if (distMoved >= totalDistance_ - 10.0f)
             {
                 position_ = targetPos_;
@@ -224,12 +178,9 @@ namespace game::components
             }
 
             position_ += velocity_ * dt * speedMultiplier_;
-
-            // Post?p lotu (od 0.0 na starcie do 1.0 na ko?cu)
             float progress = distMoved / totalDistance_;
             progress = std::clamp(progress, 0.0f, 1.0f);
 
-            // Rysowanie matematycznego ?uku z u?yciem Sinusa
             float currentArcHeight = maxArcHeight_ * std::sin(progress * 3.14159f);
             if (currentArcHeight < minArcHeight_) currentArcHeight = minArcHeight_;
 
@@ -237,16 +188,12 @@ namespace game::components
             visualPos.y -= currentArcHeight;
 
             shadowShape_.setPosition(position_);
-
             float shadowScale = 1.0f - (currentArcHeight / maxArcHeight_) * 0.5f;
             shadowShape_.setScale({ shadowScale, shadowScale * 0.4f });
 
             shape_.setPosition(visualPos);
             if (sprite_.has_value()) sprite_->setPosition(visualPos);
         }
-
-        // --- STANDARD MOVEMENT ON PLANE ---
-
         else
         {
             position_ += velocity_ * dt * speedMultiplier_;
@@ -254,11 +201,7 @@ namespace game::components
             shape_.setPosition(position_);
             if (sprite_.has_value()) sprite_->setPosition(position_);
 
-
-
-            // 1. check if projectile is out of bounds of the collision mask
             sf::Vector2i pixelPos(static_cast<int>(position_.x / mapScale), static_cast<int>(position_.y / mapScale));
-
 
             if (pixelPos.x < 0 || pixelPos.x >= static_cast<int>(collisionMask.getSize().x) ||
                 pixelPos.y < 0 || pixelPos.y >= static_cast<int>(collisionMask.getSize().y))
@@ -267,20 +210,14 @@ namespace game::components
                 return;
             }
 
-            // 2. get pixel color from collision mask
             sf::Color pixel = collisionMask.getPixel({ static_cast<unsigned int>(pixelPos.x), static_cast<unsigned int>(pixelPos.y) });
 
-
-
-            // if projectile hits a dark pixel (wall) -> destroy it
             if (pixel.r < 50 && pixel.g < 50 && pixel.b < 50)
             {
                 destroy();
                 return;
             }
         }
-
-        // --- ANIMATION ---
 
         if (useTexture_ && sprite_.has_value())
         {
@@ -305,7 +242,6 @@ namespace game::components
 
     void ProjectileComponent::update(float /*dt*/)
     {
-        // empty 
     }
 
     void ProjectileComponent::render(sf::RenderWindow& window)
@@ -341,4 +277,3 @@ namespace game::components
         return impactSoundId_;
     }
 }
-

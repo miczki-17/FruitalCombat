@@ -82,5 +82,36 @@
   "enemy_broccoli_name": "Skaczący \nBrokul",
   "enemy_broccoli_desc": "Trauma z dzieciństwa powraca\npod postacią zmutowanego\ndrzewka.\n\nTrenuje parkour od kiełkowania.\nZanim zdążysz powiedzieć\n'zdrowa dieta', on już ląduje\nz impetem na twojej głowie.",
   "enemy_corn_name": "Kukurydz \nCKM",
-  "enemy_corn_desc": "Zwykły chłopak z pola, ale ma\npełen magazynek. Stoi w miejscu\njak wmurowany i wypluwa z\n siebie popcorn z prędkością\n karabinu maszynowego.\n\nPodobno w kinie robi za przekąskę."
+  "enemy_corn_desc": "Zwykły chłopak z pola, ale ma\npełen magazynek. Stoi w miejscu\njak wmurowany i wypluwa z\n siebie popcorn z prędkością\n karabinu maszynowego.\n\nPodobno w kinie robi za przekąskę.",
+
+  "prefix_goliath": "Goliat",
+  "prefix_pygmy": "Karłowaty",
+  "prefix_synthetic": "Syntetyczny",
+  "prefix_aberrant": "Aberracyjny",
+  "behavior_aggressor": "Agresor",
+  "behavior_marksman": "Strzelec",
+  "behavior_stalker": "Łowca",
+  "behavior_sentinel": "Strażnik",
+  "behavior_volatile": "Wybuchowy",
+  "trait_swift": "Zwinności",
+  "trait_carapace": "Pancerza",
+  "trait_toxic": "Toksyczności",
+  "trait_mitosis": "Mitozy",
+  "trait_projectile": "Pocisków",
+  "trait_unknown": "Zmutowana",
+  "word_trait": "Cecha",
+
+  "char_Carrot_name": "Marchew",
+  "char_Broccoli_name": "Brokuł",
+  "char_Potato_name": "Ziemniak",
+  "char_Corn_name": "Kukurydza",
+  "char_Garlic_name": "Czosnek",
+  "char_Fry_name": "Frytka",
+
+  "hazard_knife_name": "Nóż",
+  "hazard_spore_name": "Zarodnik",
+  "hazard_ice_shatter_name": "Roztrzaskanie Lodu",
+  "hazard_icicle_shard_name": "Odłamki Soplów",
+
+  "Poison_name": "Trucizna"
 }

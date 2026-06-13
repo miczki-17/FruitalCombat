@@ -82,5 +82,36 @@
   "enemy_broccoli_name": "Brócoli \nSaltarín",
   "enemy_broccoli_desc": "El trauma de la infancia regresa\nen forma de un pequeño árbol\nmutado.\n\nEntrena parkour desde la germinación.\nAntes de que puedas decir\n'dieta saludable', ya está aterrizando\ncon ímpetu sobre tu cabeza.",
   "enemy_corn_name": "Maíz \nAmetrallador",
-  "enemy_corn_desc": "Un simple chico del campo, pero tiene\nun cargador lleno. Se queda inmóvil\ny escupe palomitas a la velocidad\nde una ametralladora.\n\nSe rumorea que en el cine sirve de merienda."
+  "enemy_corn_desc": "Un simple chico del campo, pero tiene\nun cargador lleno. Se queda inmóvil\ny escupe palomitas a la velocidad\nde una ametralladora.\n\nSe rumorea que en el cine sirve de merienda.",
+
+  "prefix_goliath": "Goliat",
+  "prefix_pygmy": "Pígmeo",
+  "prefix_synthetic": "Sintético",
+  "prefix_aberrant": "Aberrante",
+  "behavior_aggressor": "Agresor",
+  "behavior_marksman": "Tirador",
+  "behavior_stalker": "Acechador",
+  "behavior_sentinel": "Centinela",
+  "behavior_volatile": "Volátil",
+  "trait_swift": "Rápido",
+  "trait_carapace": "Caparazón",
+  "trait_toxic": "Tóxico",
+  "trait_mitosis": "Mitosis",
+  "trait_projectile": "Proyectil",
+  "trait_unknown": "Mutado",
+  "word_trait": "Rasgo",
+
+  "char_Carrot_name": "Zanahoria",
+  "char_Broccoli_name": "Brócoli",
+  "char_Potato_name": "Patata",
+  "char_Corn_name": "Maíz",
+  "char_Garlic_name": "Ajo",
+  "char_Fry_name": "Patata Frita",
+
+  "hazard_knife_name": "Cuchillo",
+  "hazard_spore_name": "Espora",
+  "hazard_ice_shatter_name": "Estallido de Hielo",
+  "hazard_icicle_shard_name": "Fragmentos de Carámbano",
+
+  "Poison_name": "Veneno"
 }

@@ -20,7 +20,7 @@ namespace game::components
     class ProjectileComponent final : public Component
     {
     public:
-        ProjectileComponent(sf::Vector2f startPos, sf::Vector2f direction);
+        ProjectileComponent(sf::Vector2f startPos, sf::Vector2f direction, std::string sourceName = "Undefined Biomass");
 
         void update(float dt, const sf::Image& collisionMask, float mapScale);
         void update(float dt) override;
@@ -62,6 +62,10 @@ namespace game::components
 		// AoE radius for explosion-type projectiles (0 means no AoE)
         void setAoERadius(float radius) { aoeRadius_ = radius; }
         float getAoERadius() const { return aoeRadius_; }
+
+
+        // owner
+        std::string sourceName_ = "";
 
 
     private:

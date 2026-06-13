@@ -16,7 +16,8 @@ namespace game::components
             float radius,
             float dps,
             float duration,
-            const std::string& textureKey);
+            const std::string& textureKey,
+            std::string sourceName = "Undefined Biomass");
 
         void update(float deltaTime) override;
 
@@ -30,6 +31,7 @@ namespace game::components
         game::entities::Entity* owner_;
 
         std::string textureKey_;
+
 
         float radius_;
         float dps_;

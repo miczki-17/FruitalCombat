@@ -82,5 +82,36 @@
   "enemy_broccoli_name": "Brócolis \nSaltador",
   "enemy_broccoli_desc": "O trauma de infância retorna\nna forma de uma arvorezinha\nmutante.\n\nTreina parkour desde a germinação.\nAntes que você possa dizer\n'dieta saudável', ele já está pousando\ncom força na sua cabeça.",
   "enemy_corn_name": "Milho \nMetralhadora",
-  "enemy_corn_desc": "Um garoto comum do campo, mas tem\num pente cheio. Fica parado no lugar\ne cospe pipoca com a velocidade\nde uma metralhadora.\n\nDizem que no cinema ele serve de lanche."
+  "enemy_corn_desc": "Um garoto comum do campo, mas tem\num pente cheio. Fica parado no lugar\ne cospe pipoca com a velocidade\nde uma metralhadora.\n\nDizem que no cinema ele serve de lanche.",
+
+  "prefix_goliath": "Golias",
+  "prefix_pygmy": "Pigmão",
+  "prefix_synthetic": "Sintético",
+  "prefix_aberrant": "Aberrante",
+  "behavior_aggressor": "Agressor",
+  "behavior_marksman": "Atirador",
+  "behavior_stalker": "Perseguidor",
+  "behavior_sentinel": "Sentinela",
+  "behavior_volatile": "Volátil",
+  "trait_swift": "Ágil",
+  "trait_carapace": "Carapaça",
+  "trait_toxic": "Tóxico",
+  "trait_mitosis": "Mitose",
+  "trait_projectile": "Projétil",
+  "trait_unknown": "Mutado",
+  "word_trait": "Traço",
+
+  "char_Carrot_name": "Cenoura",
+  "char_Broccoli_name": "Brócolis",
+  "char_Potato_name": "Batata",
+  "char_Corn_name": "Milho",
+  "char_Garlic_name": "Alho",
+  "char_Fry_name": "Batata Frita",
+
+  "hazard_knife_name": "Faca",
+  "hazard_spore_name": "Esporo",
+  "hazard_ice_shatter_name": "Estilhaço de Gelo",
+  "hazard_icicle_shard_name": "Fragmentos de Gelo",
+
+  "Poison_name": "Veneno"
 }

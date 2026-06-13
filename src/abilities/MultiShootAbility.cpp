@@ -1,3 +1,5 @@
+// --- MultiShootAbility.cpp ---
+
 #include "MultiShootAbility.h"
 #include "../entities/Entity.h"
 #include "../components/TransformComponent.h"
@@ -23,8 +25,10 @@ namespace game::components
         float burstDelay,
         float projectileScale,
         float cooldown,
-        float damage)
-        : context_(context), owner_(owner), textureKey_(textureKey),
+        float damage,
+        std::string sourceName)
+        : Ability(std::move(sourceName)),
+        context_(context), owner_(owner), textureKey_(textureKey),
         projectileCount_(projectileCount), burstDelay_(burstDelay),
         projectileScale_(projectileScale), cooldown_(cooldown), damage_(damage)
     {
@@ -32,32 +36,27 @@ namespace game::components
 
     void MultiShootAbility::update(float deltaTime)
     {
-        // 1. Je?li jeste?my w trakcie strzelania seri?
+        // 1. Jeœli jesteœmy w trakcie strzelania seri¹
         if (isBursting_)
         {
             burstTimer_ -= deltaTime;
             if (burstTimer_ <= 0.0f)
             {
-                // Aktualizujemy pozycj? startow? -> mozliwosc ruchu miedzy strzalami
                 auto* transform = owner_->getComponent<TransformComponent>();
                 sf::Vector2f currentOrigin = transform ? transform->position : sf::Vector2f(0.f, 0.f);
 
-                // Strzelamy w zamro?onym kierunku
                 spawnProjectile(currentOrigin, burstDirection_, burstOwnerVelocity_);
                 projectilesFired_++;
 
                 if (projectilesFired_ >= projectileCount_) {
-                    // Seria zako?czona - odpalamy g?ówny cooldown
                     isBursting_ = false;
                     resetCooldown();
                 }
                 else {
-                    // Resetujemy czas do kolejnego strza?u z serii
                     burstTimer_ = burstDelay_;
                 }
             }
         }
-        // 2. Standardowy cooldown po zako?czeniu serii
         else
         {
             if (cooldownTimer_ > 0.0f) cooldownTimer_ -= deltaTime;
@@ -69,13 +68,12 @@ namespace game::components
         const sf::Vector2f& targetPosition,
         const sf::Vector2f& ownerVelocity)
     {
-        // Blokujemy wywo?anie, je?li ?adujemy atak, LUB je?li w?a?nie strzelamy seri?
         if (isOnCooldown() || isBursting_) return;
 
         auto* stats = owner_->getComponent<StatsComponent>();
         if (stats && owner_->getComponent<PlayerInputComponent>()) {
             if (stats->getMana() < manaCost_) return;
-            stats->consumeMana(manaCost_); // P?acimy za ca?? seri? z góry
+            stats->consumeMana(manaCost_); // P³acimy za ca³¹ seriê z góry
         }
 
         burstDirection_ = calculateBaseDirection(origin, targetPosition);
@@ -83,16 +81,15 @@ namespace game::components
 
         burstOwnerVelocity_ = ownerVelocity;
 
-        // B?YSKAWICZNA REAKCJA: Wystrzeliwujemy pierwszy pocisk od razu
         spawnProjectile(origin, burstDirection_, burstOwnerVelocity_);
         projectilesFired_ = 1;
 
         if (projectileCount_ > 1) {
             isBursting_ = true;
-            burstTimer_ = burstDelay_; // Ustawiamy timer dla drugiego pocisku
+            burstTimer_ = burstDelay_;
         }
         else {
-            resetCooldown(); // Zabezpieczenie: je?li kto? ustawi 1 pocisk w serii
+            resetCooldown();
         }
     }
 
@@ -114,7 +111,7 @@ namespace game::components
         auto bulletEntity = std::make_unique<game::entities::Entity>();
         bulletEntity->addComponent(std::make_unique<game::components::TransformComponent>(origin));
 
-        auto projectile = std::make_unique<game::components::ProjectileComponent>(origin, direction);
+        auto projectile = std::make_unique<game::components::ProjectileComponent>(origin, direction, sourceName_);
         projectile->addVelocity(ownerVelocity);
         projectile->setDamage(damage_);
 

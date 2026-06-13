@@ -18,8 +18,9 @@ namespace game::components
         game::ArenaContext* ctx,
         std::vector<std::unique_ptr<game::entities::Entity>>* targetsList,
         float kRadius,
-        float kForce)
-        : owner_(owner), context_(ctx), enemies_(targetsList), singleTarget_(nullptr), knockbackRadius_(kRadius), knockbackForce_(kForce)
+        float kForce,
+        std::string sourceName)
+        : owner_(owner), context_(ctx), enemies_(targetsList), singleTarget_(nullptr), knockbackRadius_(kRadius), knockbackForce_(kForce), Ability(std::move(sourceName))
     {
     }
 
@@ -92,7 +93,7 @@ namespace game::components
                         float effectMulti = 1.0f - (dist / knockbackRadius_);
 
                         if (auto* stats = enemy->getComponent<StatsComponent>()) {
-                            stats->takeDamage(60.0f * effectMulti * dt);
+                            stats->takeDamage(60.0f * effectMulti * dt, sourceName_);
                         }
 
                         if (dist > 0.001f) {
@@ -115,7 +116,7 @@ namespace game::components
                         float effectMulti = 1.0f - (dist / knockbackRadius_);
 
                         if (auto* stats = singleTarget_->getComponent<StatsComponent>()) {
-                            stats->takeDamage(20.0f * dt);
+                            stats->takeDamage(20.0f * dt, sourceName_);
                         }
 
                         if (dist > 0.001f) {
