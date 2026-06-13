@@ -30,7 +30,7 @@
     "idleFrames": 4,
     "walkTexturePath": "assets/textures/entities/characters/peel_zero/walk.png",
     "walkFrames": 2,
-    "abilities": [ "Bananarang", "Phantom Peel" ]
+    "abilities": [ "Shoot", "Dash" ]
   },
   "Cherry": {
     "name": "Twin-Kaze",
@@ -44,7 +44,7 @@
     "idleFrames": 4,
     "walkTexturePath": "assets/textures/entities/characters/twin_kaze/walk.png",
     "walkFrames": 2,
-    "abilities": [ "Gatling Pits", "Cherry Bomb" ]
+    "abilities": [ "Shoot", "Dash" ]
   },
   "Strawberry": {
     "name": "Juice Lee",
@@ -63,7 +63,7 @@
     "idleFrames": 4,
     "walkTexturePath": "assets/textures/entities/characters/juice_lee/walk.png",
     "walkFrames": 2,
-    "abilities": [ "MultiShoot", "Jam Flurry" ]
+    "abilities": [ "MultiShoot", "Dash" ]
   },
   "Blackberry": {
     "name": "Black-Bruiser",
@@ -80,7 +80,7 @@
     "idleFrames": 4,
     "walkTexturePath": "assets/textures/entities/characters/black_brusier/walk.png",
     "walkFrames": 2,
-    "abilities": [ "Shoot", "Thorn Armor" ]
+    "abilities": [ "Shoot", "Dash" ]
   },
   "Orange": {
     "name": "Citrus Maximus",

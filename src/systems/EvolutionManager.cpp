@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include "vector"
 
 namespace game::systems
 {
@@ -426,10 +427,18 @@ namespace game::systems
 
             childDNA.behavior = game::genetics::AiBehavior::Charger;
 
-            auto it = std::find(childDNA.abilities.begin(), childDNA.abilities.end(), "SplitOnDeath");
-            if (it != childDNA.abilities.end()) {
-                childDNA.abilities.erase(it);
-            }
+            std::vector<std::string> abilitiesToErase = 
+            {
+                "SplitOnDeath",
+                "WindBruisier"
+            };
+
+            for (const auto& ability : abilitiesToErase) {
+                auto it = std::find(childDNA.abilities.begin(), childDNA.abilities.end(), ability);
+                if (it != childDNA.abilities.end()) {
+                    childDNA.abilities.erase(it);
+                }
+            }            
 
             // Tworzymy mutanta
             auto childMutant = mutantFactory.createMutant(childDNA, targetPlayer);

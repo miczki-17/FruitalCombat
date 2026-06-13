@@ -19,7 +19,7 @@ namespace game::states
         std::optional<sf::Sprite> mapSprite;
         sf::Vector2f mapLimits;
         sf::Image collisionMask;
-        float mapScale = 0.95f;
+        float mapScale = 0.9f;
 
         sf::View cameraView;
         float shakeIntensity = 0.0f;
