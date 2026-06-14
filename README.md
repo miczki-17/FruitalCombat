@@ -1,5 +1,6 @@
 🍎 Fruital Combat
 Zabawna, dynamiczna gra akcji/survival napisana w C++ i SFML3. Wybierz swojego owocowego bohatera i odeprzyj nieskończone fale inteligentnych, zmutowanych warzyw!
+LINK DO FILMU Z GAMEPLAYU ->  https://youtu.be/Ps6aVrfcljI
 
 📖 Krótki zarys fabularny (Hook)
 W sercu Wielkiej Dżungli od tysiącleci panował pokój. Jednak gdy Mroczny Nawóz skaził Ziemię, zwykłe warzywa zyskały świadomość i chcą zdominować cały ogród. Wybierz swojego owocowego bohatera i oczyść grządki z mutacji.
