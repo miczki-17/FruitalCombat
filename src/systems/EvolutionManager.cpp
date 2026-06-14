@@ -300,11 +300,11 @@ namespace game::systems
         }
 
         // 3. Wstrzykiwanie "Œwie¿ej Krwi" (¯eby zapobiec stagnacji genetycznej)
-        // Wrzucamy 5 losowych, czystych genotypów z JSON-a do puli rozrodczej
+        // Wrzucamy 6 losowych, czystych genotypów z JSON-a do puli rozrodczej
         std::vector<game::genetics::DNA> cleanPool = getCleanGenomesFromConfig();
         if (!cleanPool.empty()) {
             std::uniform_int_distribution<size_t> dist(0, cleanPool.size() - 1);
-            for (int i = 0; i < 5; ++i) {
+            for (int i = 0; i < 6; ++i) {
                 game::genetics::DNA freshDNA = cleanPool[dist(rng)];
 
                 // Czyste DNA równie¿ musi dostaæ buffy fali!
@@ -362,7 +362,7 @@ namespace game::systems
             // --- (Rzadkie Mutacje) ---
 
             // Szansa roœnie z ka¿d¹ fal¹
-            float rareChance = 0.02f + (currentWave * 0.5 * 0.005f);
+            float rareChance = 0.02f + (currentWave * 0.008f);
 
             if (chanceDist(rng) <= rareChance)
             {
@@ -407,7 +407,7 @@ namespace game::systems
     bool EvolutionManager::isSpawningActive() const { return spawnTimer <= 0; }
 
     // spawn splits
-    void EvolutionManager::spawnSplits(const game::genetics::DNA& parentDNA, sf::Vector2f position, int count, const std::string& splitSkinKey, float splitScale) // <--- Dodany argument
+    void EvolutionManager::spawnSplits(const game::genetics::DNA& parentDNA, sf::Vector2f position, int count, const std::string& splitSkinKey, float splitScale)
     {
         if (targetPlayer == nullptr) return;
 
