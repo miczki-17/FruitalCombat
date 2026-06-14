@@ -1,7 +1,7 @@
 🍎 Fruital Combat
 Zabawna, dynamiczna gra akcji/survival napisana w C++ z pełnym wykorzystaniem najnowszej wersji biblioteki SFML 3.0.2!
 
-🎥 LINK DO FILMU Z GAMEPLAYU -> Obejrzyj na YouTube
+🎥 LINK DO FILMU Z GAMEPLAYU -> https://youtu.be/Ps6aVrfcljI
 
 Architektura ECS (Entity Component System)
 Najważniejszym założeniem i celem technicznym projektu było napisanie gry w oparciu o nowoczesną architekturę ECS. Jest to wzorzec projektowy, który odchodzi od klasycznego i często problematycznego dziedziczenia obiektowego na rzecz kompozycji, opierając się na trzech głównych filarach. Byt (Entity) to jedynie unikalny identyfikator reprezentujący konkretny obiekt w świecie gry, taki jak truskawka czy zmutowany brokuł. Komponenty (Component) to "czyste" pakiety danych przypisywane do Bytów, przechowujące informacje o ich stanie (np. pozycja, prędkość, zdrowie), ale pozbawione jakiejkolwiek logiki. Cała logika gry znajduje się w Systemach (System), które operują na wszystkich Bytach posiadających określony zestaw Komponentów. System ruchu przetwarza na przykład wszystkie obiekty mające pozycję i prędkość, aktualizując ich współrzędne. Takie podejście zapewnia ogromną elastyczność przy dodawaniu nowych mechanik w locie oraz doskonałą optymalizację dzięki strukturze przyjaznej dla pamięci podręcznej procesora.
