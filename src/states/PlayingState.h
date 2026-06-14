@@ -44,6 +44,8 @@ namespace game::states
         std::optional<sf::Text> biomassText;
         std::optional<sf::Text> waveTimerText;
 
+        std::string musicKey;
+
         // Fertilizer
         std::optional<sf::Sprite> activeFertilizerSprite;
         std::optional<sf::Text> activeFertilizerText;

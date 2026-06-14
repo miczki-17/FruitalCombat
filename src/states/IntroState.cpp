@@ -282,6 +282,8 @@ namespace game::states
         auto& rm = game::core::ResourceManager::get();
         rm.loadSound("mouse_click", "assets/audio/ui/click.mp3", game::core::AssetGroup::Global);
         rm.loadMusic("bg_music", "assets/audio/menu/Victory_at_Canopy_Peak.mp3", game::core::AssetGroup::Menu);
+
+        
     }
 
     // --- LOGIC ---

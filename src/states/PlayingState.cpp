@@ -47,6 +47,14 @@ namespace game::states
         // Ustawienie kamery
         cameraView = game->getWindow().getDefaultView();
         cameraView.zoom(1.1f);
+
+
+        // Ustawienia Audio
+        //sf::Listener::setGlobalVolume(35.0f);
+        auto& audio = AudioManager::get();
+        if (!audio.isMusicPlaying(musicKey)) {
+            audio.playMusic(musicKey);
+        }
     }
 
     PlayingState::~PlayingState()
@@ -170,15 +178,21 @@ namespace game::states
             rm.loadTexture("hazard_icicle", "assets/textures/hazards/icicle.png", AssetGroup::Playing);
             rm.loadTexture("hazard_icicle_shard", "assets/textures/hazards/icicle_shard.png", AssetGroup::Playing);
             rm.loadSound("icicle_shatter", "assets/sounds/icicle_shatter.mp3", AssetGroup::Playing);
+            rm.loadMusic("game_track_2", "assets/audio/game/MusicInGame_2.mp3", game::core::AssetGroup::Playing);
+            musicKey = "game_track_2";
         }
         else if (mapKey == "ChoppingBlock") {
             rm.loadTexture("hazard_knife", "assets/textures/hazards/knife.png", AssetGroup::Playing);
             rm.loadSound("knife_hit", "assets/sounds/knife_hit.mp3", AssetGroup::Playing);
+            rm.loadMusic("game_track_1", "assets/audio/game/MusicInGame_1.mp3", game::core::AssetGroup::Playing);
+            musicKey = "game_track_1";
         }
         else if (mapKey == "WildOrchard") {
             rm.loadTexture("hazard_spore", "assets/textures/hazards/spore.png", AssetGroup::Playing);
             rm.loadTexture("hazard_spore_splash", "assets/textures/hazards/spore_splash_1.png", AssetGroup::Playing);
             rm.loadSound("spore_splat", "assets/sounds/spore_splat.mp3", AssetGroup::Playing);
+            rm.loadMusic("game_track_3", "assets/audio/game/MusicInGame_3.mp3", game::core::AssetGroup::Playing);
+            musicKey = "game_track_3";
         }
 
         // 3. Opcje ogolne
